@@ -9,7 +9,6 @@ type Step = 'credentials' | 'password';
 const messages: Record<string, string> = {
   CREDENTIALS_REQUIRED: 'Username and password are required.',
   INVALID_CREDENTIALS: 'Username or password is not correct.',
-  TOO_MANY_ATTEMPTS: 'Too many attempts. Please wait a few minutes and try again.',
   ORIGIN_DENIED: 'This address is not allowed to sign in. Open the official workspace URL.',
   UNIFIED_AUTH_DISABLED: 'Unified sign-in is not enabled in this environment.',
   CURRENT_PASSWORD_INVALID: 'The current password is not correct.',

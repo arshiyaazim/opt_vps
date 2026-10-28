@@ -90,8 +90,8 @@ test('login reuses the stored Cash credential verification path', () => {
   assert.match(unified, /verifyPassword\(password, row\.password_hash\)/);
   assert.match(unified, /createSession\(request, row\)/);
   assert.match(unified, /requireUnifiedOrigin\(request\)/);
-  assert.match(unified, /loginRateLimited\(request\)/);
-  assert.match(unified, /noteLoginFailure\(request\)/);
+  // Login throttling was removed by policy (single-owner system); see login-rate-limit-removed.mjs.
+  assert.doesNotMatch(unified, /loginRateLimited|noteLoginFailure|clearLoginFailures/);
   assert.match(authRoute, /Set-Cookie/);
   assert.match(authRoute, /cookieHeader\(result\.token\)/);
   assert.match(authRoute, /sanitizeReturnTo/);

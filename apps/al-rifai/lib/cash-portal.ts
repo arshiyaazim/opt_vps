@@ -8,7 +8,6 @@ const SESSION_MS=8*60*60*1000;
 const IDLE_MS=30*60*1000;
 const COOKIE="__Host-alrifai_cash";
 const HASH_RE=/^pbkdf2-sha256:600000:[a-f0-9]{32}:[a-f0-9]{64}$/;
-const loginFailures=new Map<string,{count:number;until:number}>();
 let db:pg.Pool|undefined;
 
 export type CashUser={id:string;username:string;role:"ADMIN"|"USER";displayName:string;email:string|null;mobile:string|null;whatsappNumber:string|null;mustChangePassword:boolean;active:boolean;lastSeenAt:string|null};
@@ -68,10 +67,8 @@ export function isCashSuperAdmin(user:Pick<CashUser,"id"|"role">){
 export function requireCashSuperAdmin(user:Pick<CashUser,"id"|"role">){
  if(!isCashSuperAdmin(user))throw new CashPortalError("SUPER_ADMIN_REQUIRED",403);
 }
-function clientKey(request:Request){return (request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim().slice(0,80);}
-export function loginRateLimited(request:Request){const now=Date.now(),entry=loginFailures.get(clientKey(request));if(!entry||entry.until<=now){if(entry)loginFailures.delete(clientKey(request));return false;}return entry.count>=8;}
-export function noteLoginFailure(request:Request){const key=clientKey(request),now=Date.now(),prior=loginFailures.get(key);const next=!prior||prior.until<=now?{count:1,until:now+15*60*1000}:{count:prior.count+1,until:prior.until};loginFailures.set(key,next);}
-export function clearLoginFailures(request:Request){loginFailures.delete(clientKey(request));}
+// Session metadata only (client_ip column). Not a rate-limit key.
+function clientAddress(request:Request){return (request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim().slice(0,80);}
 async function getSession(request:Request){
  const token=cookieToken(request);if(!token)throw new CashPortalError("AUTHENTICATION_REQUIRED",401);
  const result=await pool().query<SessionRow>(`SELECT s.id AS session_id,s.csrf_hash,s.last_seen_at AS session_last_seen_at,s.expires_at,u.* FROM public.cash_portal_sessions s JOIN public.cash_portal_users u ON u.id=s.user_id WHERE s.id=$1`,[hashToken(token)]);
@@ -94,7 +91,7 @@ export async function refreshCsrf(token:string){
 }
 export async function createSession(request:Request,row:UserRow){
  const token=randomBytes(32).toString("hex"),csrf=randomBytes(32).toString("hex");
- await pool().query("INSERT INTO public.cash_portal_sessions(id,user_id,csrf_hash,expires_at,user_agent,client_ip) VALUES($1,$2,$3,$4,$5,$6)",[hashToken(token),row.id,hashToken(csrf),new Date(Date.now()+SESSION_MS),request.headers.get("user-agent")?.slice(0,500)??null,clientKey(request)]);
+ await pool().query("INSERT INTO public.cash_portal_sessions(id,user_id,csrf_hash,expires_at,user_agent,client_ip) VALUES($1,$2,$3,$4,$5,$6)",[hashToken(token),row.id,hashToken(csrf),new Date(Date.now()+SESSION_MS),request.headers.get("user-agent")?.slice(0,500)??null,clientAddress(request)]);
  return {token,csrf,user:publicUser(row)};
 }
 export async function findUser(username:string){const result=await pool().query<UserRow>("SELECT * FROM public.cash_portal_users WHERE lower(username)=lower($1) AND active=true",[username]);return result.rows[0]??null;}

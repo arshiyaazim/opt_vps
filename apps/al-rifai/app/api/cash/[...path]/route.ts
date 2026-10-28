@@ -1,5 +1,5 @@
 import {NextRequest} from "next/server";
-import {auth,audit,bodyOptional,bodyString,CashPortalError,clearCookie,clearLoginFailures,createSession,cookieHeader,database,findUser,hashPassword,hashToken,json,loginRateLimited,noStoreHeaders,noteLoginFailure,publicUser,refreshCsrf,requireOrigin,requireCashSuperAdmin,verifyPassword,userById,isCashSuperAdmin,revokeOtherSessions} from "@/lib/cash-portal";
+import {auth,audit,bodyOptional,bodyString,CashPortalError,clearCookie,createSession,cookieHeader,database,findUser,hashPassword,hashToken,json,noStoreHeaders,publicUser,refreshCsrf,requireOrigin,requireCashSuperAdmin,verifyPassword,userById,isCashSuperAdmin,revokeOtherSessions} from "@/lib/cash-portal";
 import {assertCanCreateUser,assertCanManageUser,assertCanResetPassword,CashUserPolicyError} from "@/lib/cash-user-policy";
 import {assertNotRemovingLastSuperAdmin,UnifiedAuthError,validateCapabilityRequest} from "@/lib/unified-auth-policy";
 import {validateSubmission} from "@/lib/cash-submission";
@@ -27,11 +27,11 @@ function approvalReply(error:ApprovalError){throw new CashPortalError(error.code
 async function handle(request:NextRequest,segments:string[]){
  const action=segments[0]||"";
  if(request.method==="POST"&&action==="login"){
-  requireOrigin(request);if(loginRateLimited(request))return reply({error:"TOO_MANY_ATTEMPTS"},429,{"Retry-After":"900"});
+  requireOrigin(request);
   const body=await readBody(request),username=cleanUsername(body.username),password=typeof body.password==="string"?body.password:"";
   if(!username||!password)return reply({error:"CREDENTIALS_REQUIRED"},400);
-  const row=await findUser(username);if(!row||!(await verifyPassword(password,row.password_hash))){noteLoginFailure(request);return reply({error:"INVALID_CREDENTIALS"},401);}
-  clearLoginFailures(request);const session=await createSession(request,row);await audit(row.id,row.id,"LOGIN",{});
+  const row=await findUser(username);if(!row||!(await verifyPassword(password,row.password_hash))){return reply({error:"INVALID_CREDENTIALS"},401);}
+  const session=await createSession(request,row);await audit(row.id,row.id,"LOGIN",{});
   return reply({user:session.user,csrf:session.csrf},200,{"Set-Cookie":cookieHeader(session.token)});
  }
  if(action==="me"&&request.method==="GET"){try{const result=await auth(request);return reply({user:result.user,csrf:await refreshCsrf(result.token)});}catch(e){return reply({error:e instanceof CashPortalError?e.code:"AUTHENTICATION_REQUIRED"},401);}}

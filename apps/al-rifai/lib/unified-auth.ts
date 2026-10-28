@@ -92,48 +92,6 @@ export function requireUnifiedOrigin(request: Request): void {
   }
 }
 
-// ---- Login throttling -------------------------------------------------------
-// Keyed on the real client address injected by the private entry (which strips
-// client-supplied x-forwarded-* headers) so one noisy source cannot lock the
-// Owner out. Thresholds mirror the Cash Portal policy.
-const FAILURE_WINDOW_MS = 15 * 60 * 1000;
-const MAX_FAILURES_PER_CLIENT = 8;
-const MAX_FAILURES_SHARED = 40;
-const failures = new Map<string, {count: number; until: number}>();
-
-function clientKey(request: Request): string {
-  const direct = request.headers.get('x-alrifai-client-ip');
-  if (direct) return direct.trim().slice(0, 80);
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim().slice(0, 80);
-  return 'unknown';
-}
-
-export function loginRateLimited(request: Request): boolean {
-  const key = clientKey(request);
-  const entry = failures.get(key);
-  if (!entry) return false;
-  if (entry.until <= Date.now()) {
-    failures.delete(key);
-    return false;
-  }
-  return entry.count >= (key === 'unknown' ? MAX_FAILURES_SHARED : MAX_FAILURES_PER_CLIENT);
-}
-
-export function noteLoginFailure(request: Request): void {
-  const key = clientKey(request);
-  const now = Date.now();
-  const prior = failures.get(key);
-  const next = !prior || prior.until <= now
-    ? {count: 1, until: now + FAILURE_WINDOW_MS}
-    : {count: prior.count + 1, until: prior.until};
-  failures.set(key, next);
-}
-
-export function clearLoginFailures(request: Request): void {
-  failures.delete(clientKey(request));
-}
-
 // ---- Login / logout ---------------------------------------------------------
 
 export type LoginResult = {
@@ -144,7 +102,7 @@ export type LoginResult = {
 
 /**
  * Verifies the *existing* Cash Portal credential — the same stored PBKDF2 hash,
- * the same rate limit, the same session table. The password is never stored,
+ * the same session table. The password is never stored,
  * echoed, logged or compared against any other store.
  */
 export async function loginWithCashCredential(
@@ -153,16 +111,13 @@ export async function loginWithCashCredential(
 ): Promise<LoginResult> {
   if (!isEnabled()) throw new UnifiedAuthError('UNIFIED_AUTH_DISABLED', 404);
   requireUnifiedOrigin(request);
-  if (loginRateLimited(request)) throw new UnifiedAuthError('TOO_MANY_ATTEMPTS', 429);
   const username = typeof input.username === 'string' ? input.username.trim().slice(0, 80) : '';
   const password = typeof input.password === 'string' ? input.password : '';
   if (!username || !password) throw new UnifiedAuthError('CREDENTIALS_REQUIRED', 400);
   const row = await findUser(username);
   if (!row || !(await verifyPassword(password, row.password_hash))) {
-    noteLoginFailure(request);
     throw new UnifiedAuthError('INVALID_CREDENTIALS', 401);
   }
-  clearLoginFailures(request);
   const session = await createSession(request, row);
   await audit(row.id, row.id, 'LOGIN', {surface: 'unified'});
   return {
