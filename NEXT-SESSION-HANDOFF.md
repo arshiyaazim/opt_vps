@@ -54,12 +54,19 @@
 **PostgreSQL:** `vps-infra-postgres-1` (`postgres:16-alpine`), healthy, up 10 days. Database `alrifai`.
 
 **Verification baseline**
-- Canonical suite (`package.json` "test" command) before Phase 6: 179 tests, 178 pass, 0 fail,
-  1 pre-existing skip. Phase 6 result is recorded below once run.
+- Canonical suite (`package.json` "test" command), after Phase 6: **181 tests, 179 pass, 0 fail,
+  2 skipped** (1 pre-existing WhatsApp fixture skip; 1 live lifecycle skip when no isolated
+  server is configured). Canonical run writes nothing to any database.
+- Phase 6 live lifecycle (`tests/cash-user-lifecycle.mjs`): passed in the isolated harness on
+  `cace72aa…` with migration 0031 applied to the clone. The same run gave API lifecycle 17/17 and
+  browser UI 15/15.
+- Migration 0031 functional test (Owner, 2026-10-29): officeassistant submitted via the UI,
+  screen showed PENDING_REVIEW. Database verified: 1 row, USER, method `cash`, state
+  `PENDING_REVIEW`, reviews 0, postings Current 0, ledger 32.
 
 **Open items (need the Owner)**
 1. Review the test submission (row `f42fd870…`). Options: keep and label, or accept that it is permanent.
-2. Confirm that the Admin review queue shows the test row (not yet reported).
+2. Confirm that the Admin review queue shows the test row (not yet reported by the Owner).
 3. Decide whether session `client_ip` should keep reading `x-forwarded-for` (metadata only;
    the limiter that used it is gone).
 4. WA-01 failing group chat: diagnosis recorded; fix deferred by the Owner.
