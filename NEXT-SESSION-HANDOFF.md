@@ -1,5 +1,88 @@
 # Next-Session Handoff — Updated After Session 3
 
+## CURRENT STATE — 2026-10-29 (authoritative; supersedes the dated sections below)
+
+**Production application**
+- Container `al-rifai-app-1` (compose project `al-rifai`, service `app`), healthy.
+- Image `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2`
+  (source `67ec02b`; compose pin commit `74c3931`).
+- `ALRIFAI_UNIFIED_AUTH_MODE=shadow`. Legacy Basic guard still answers workspace pages.
+- Rollback chain (all present locally, ids verified 2026-10-29):
+  `cace72aa…` → `80129758bf77…` (frontend USER fix, source `86379fb`) →
+  `946635bd…` (session-revocation parity, source `c113784`) → `d405d54f…` → `2c0833c4…`.
+- Login rate limiter **removed** (`67ec02b`, deployed on `cace72aa…`). Verified: 12
+  consecutive wrong passwords from one client all return 401, never 429.
+
+**Accounts (3 users in `cash_portal_users`)**
+- `Admin` — ADMIN, Owner, active. Password set by the Owner on 2026-10-28 23:06 UTC
+  through the UI; audit `PASSWORD_CHANGED`, `otherSessionsRevoked: 3`. Hash fingerprint
+  `7a7b0d57` at 2026-10-29 pre-flight (fingerprints are md5 prefixes of `password_hash`).
+- `officeassistant` — USER, active. Reset by the operator on 2026-10-29 04:38 UTC at the
+  Owner's request (audit `PASSWORD_RESET`, surface `operator-sql`); the Owner then set
+  their own password through the UI. Clean state.
+- `officeazzistant2` — USER, active. Password changed by the user on 2026-10-28 22:26 UTC
+  (`otherSessionsRevoked: 1`). Clean state, fingerprint `b0da7c4d` at pre-flight.
+
+**Database and migrations**
+- Migration `0031_cash_submissions_and_reviews.sql` **applied** 2026-10-29 04:30:42 UTC.
+  Creates `cash_submissions`, `cash_submission_reviews`, view
+  `cash_submission_review_state`, append-only triggers (`alrifai_foundation_append_only`),
+  grants `SELECT, INSERT` to `ir_review_runtime`. Sha256 of the reviewed file `f803dbc6…`.
+- Migration `0033_unified_auth_sessions.sql` applied 2026-10-28 05:50 UTC.
+- Migration `0032_vessel_program_commands.sql` **NOT applied** (Vessel command API is
+  unavailable; do not apply without a separate approval).
+- Ledger `alrifai_schema_migrations`: **32 rows** (new baseline; was 31 before 0031).
+- Freeze: **0 current postings**; 1,863 current instructions; postings across all epochs
+  1,586 (legacy archive, not Current).
+- Submissions: **1 row**, role `USER`, method `cash`, state `PENDING_REVIEW`, reviews 0.
+  It is a functional-test row with purpose `TEST – migration 0031 acceptance – not a real
+  payment`, but its employee name is `Muradul Alam`. Submissions are append-only, so the row
+  is permanent. Owner decision required (see open items).
+
+**WhatsApp (WA-01 degraded; WA-02 identity-only)**
+- WA-01 `vps-whatsapp-wa-01-cap4-20261011`, up 46 h, bridge tree intact.
+- 8 of 9 approved chats ingest normally. One **group** chat returns
+  `NATIVE_READER_UNAVAILABLE` on every poll. Its last stored message is 2026-10-28 05:21 UTC.
+- The bridge redacts all diagnostics by design (`whatsapp-mcp-server/capabilities.py`,
+  `consumer_broker.py`). No environment switch exists, so the cause is not visible from logs.
+- Newest WA-01 row 2026-10-29 03:40:53 UTC; 76 rows in the last 24 h vs 127 in the previous 24 h.
+- No WA restarts were made. Bridge-side changes and consumer restarts are **deferred** on the
+  Owner's instruction. Do not touch WA-01 without approval.
+- WA-02 `vps-whatsapp-wa-02-cap4-20261011`, up 7 days, identity-only by policy. No rows since
+  2026-10-25; not a fault.
+
+**PostgreSQL:** `vps-infra-postgres-1` (`postgres:16-alpine`), healthy, up 10 days. Database `alrifai`.
+
+**Verification baseline**
+- Canonical suite (`package.json` "test" command) before Phase 6: 179 tests, 178 pass, 0 fail,
+  1 pre-existing skip. Phase 6 result is recorded below once run.
+
+**Open items (need the Owner)**
+1. Review the test submission (row `f42fd870…`). Options: keep and label, or accept that it is permanent.
+2. Confirm that the Admin review queue shows the test row (not yet reported).
+3. Decide whether session `client_ip` should keep reading `x-forwarded-for` (metadata only;
+   the limiter that used it is gone).
+4. WA-01 failing group chat: diagnosis recorded; fix deferred by the Owner.
+5. Off-host copy of backups (see `docs/VPS_MAP.md`, Backup convention).
+
+**Deferred items and revisit triggers**
+- Admin Panel reachability (`/admin` unreachable in shadow): revisit when a second Admin is added or credential rotation becomes routine.
+- `/account` route: revisit when non-Owner users need profile management beyond the Cash Portal card.
+- `on` mode: revisit when the Owner approves unified enforcement (this also removes the legacy Basic prompts).
+- Username rename: revisit on Owner request; requires `on` mode.
+- Sign-up queue: revisit when public sign-up requests need an approval workflow.
+- Vessel Register redesign: revisit on Owner request.
+- Public contact details: revisit when the Owner supplies verified contact information.
+- PageNotice 360px: carried from the Owner's list; no detail is recorded in this session. Revisit with the Owner.
+- Migration 0032 (Vessel commands): revisit when the Vessel command API is authorised.
+- WA-01 failing group chat: revisit when the Owner prioritises it (needs bridge-side safe error codes, and a consumer restart or container recreate, each with approval).
+
+**Process rules in force:** see `AGENTS.md` §13 (Operating rules).
+
+---
+
+## HISTORY — dated sections follow (superseded by the block above where they conflict)
+
 ## SESSION-REVOCATION PARITY DEPLOYED — 2026-10-28 20:53 (+01:00)
 
 Image `sha256:946635bd3ba7e17c712d7ff4c96e6e1c93601323501fcc947b194306c0dcff96`

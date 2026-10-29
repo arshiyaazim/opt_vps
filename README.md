@@ -77,6 +77,16 @@ Account isolation and one native bridge writer per account protect session/trans
 
 Production WhatsApp restart policy remains manual (`no`); restarts, deployments, account activation and cutover require separate explicit approval. Failures retain evidence and review state rather than silently posting or retrying uncertain payments/sends. Existing mobile-only WhatsApp backup, accepted VPS-history-loss/re-pairing risk and deferred additional recovery remain owner decisions. AL-RIFA’I recovery tooling retains its execution locks; shared PostgreSQL recovery requires separately authorized verification and cutover. See the canonical guides for actual boundaries.
 
+## Current production state — 2026-10-29
+
+- Application image: `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2` (source `67ec02b`).
+- Mode: `ALRIFAI_UNIFIED_AUTH_MODE=shadow`. Login rate limiter removed.
+- Users: 3 Cash Portal accounts (1 ADMIN Owner, 2 USER).
+- Migrations: 0031 applied (cash submissions), 0032 not applied, 0033 applied. Ledger baseline 32.
+- Freeze: 0 current postings.
+- WhatsApp WA-01: degraded (1 of 9 approved chats failing; diagnosis recorded; fix deferred by the Owner).
+- Details and open items: [`NEXT-SESSION-HANDOFF.md`](NEXT-SESSION-HANDOFF.md) → "CURRENT STATE — 2026-10-29". Audit and decision record: [`apps/al-rifai/docs/AUDIT-20261028-CASH-LOGIN.md`](apps/al-rifai/docs/AUDIT-20261028-CASH-LOGIN.md).
+
 ## Current Qualification Status
 
 ### Unified Super Admin authentication — 28 October 2026 (stages 1–3 complete)

@@ -12,6 +12,14 @@
 
 ## 0. Current Production Position (verified 2026-10-27)
 
+> **Current production position — 2026-10-29 (authoritative; supersedes the banners below):**
+> app image `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2`
+> (source `67ec02b`), mode `shadow`, 3 Cash Portal users (Owner `Admin`, USER
+> `officeassistant`, USER `officeazzistant2`), ledger 32 (migration 0031 applied, 0032 not
+> applied, 0033 applied), 0 current postings, freeze intact. Login rate limiter removed.
+> WA-01 degraded (1 of 9 chats failing; diagnosis recorded, bridge fix deferred by Owner).
+> Full state, open items and deferred triggers: `NEXT-SESSION-HANDOFF.md` → "CURRENT STATE — 2026-10-29".
+
 > **UI visibility repair — 2026-10-27:** commit `a157f58` exposes the workspace
 > routes through boundary-exact private-entry allowlists and adds the
 > “PLATFORM WORKSPACE” groups to the legacy Cash/Vessel sidebars. Deployed image
@@ -622,3 +630,20 @@ safe next steps. The 2026-10-24, 2026-10-25 and earlier 2026-10-27 sections
 remain historical evidence and are superseded by that section and by §0 of this
 file. Source changes now follow §2.4; production actions still require Owner
 approval.
+
+## 13. Operating rules (proven 2026-10-28 and 2026-10-29)
+
+These rules are not negotiable. If an incident seems to require breaking one, stop and ask the Owner, even if recovery is delayed. A delayed recovery is preferable to an unauthorised one.
+
+1. **No credential changes without explicit instruction.** This covers the Owner's account and every other account. During incident recovery, propose a disposable test account or ask first. An explicit, scoped Owner instruction is required for any reset, and the reset is limited to the named account.
+2. **No session deletion without explicit instruction.** A reset that ends one named account's sessions is allowed only when the reset itself was explicitly instructed.
+3. **Deploy the exact verified artifact.** Never re-cut an image to piggyback changes. The digest that passed verification is the digest that is deployed.
+4. **Keep two rollback images locally at all times.** Verify both are present and id-matched before any deploy.
+5. **Take a separate pg_dump before every deploy or migration.** Hash it (`.sha256` sidecar), label it `pre-<change>-<YYYYMMDD-HHMM>.dump`, and keep it even if it is never used.
+6. **Static guards in tests** must assert single implementation, write-after-verify ordering, audit-field presence, and that security guards and cookie attributes are unchanged.
+7. **The full canonical suite must pass before any deploy report.** Spot checks are not sufficient. Canonical means the `package.json` "test" command, run as written.
+8. **Never run production services with `docker run` outside compose.** Use `docker compose -f compose.yaml up -d --no-deps app`, or `docker compose -f compose.yaml restart app` to clear in-memory state. Outside compose, HTTPS, networks, and dependencies are dropped.
+9. **`app.env` must remain `600 root:root` at all times.** Verify after any container recreation.
+10. **No file-permission changes on `app.env` or any secrets file.**
+11. **No WhatsApp container restarts and no bridge changes without explicit approval.** Read-only diagnosis is allowed.
+12. **Record the deployed commit SHA and image digest** in every deployment note, and push source before deploying.

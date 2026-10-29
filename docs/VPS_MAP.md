@@ -215,6 +215,20 @@ docker compose -f /opt/vps/infra/compose.yaml exec -T postgres \
 
 Verify the restored data before any cutover. Drop only the explicitly designated temporary restore database after verification. Backups are sensitive and require encryption/access controls; an off-host backup destination and retention policy remain to be selected.
 
+## Current container identities and backups — 2026-10-29
+
+- **Application:** `al-rifai-app-1`, compose project `al-rifai`, service `app`, file `apps/al-rifai/compose.yaml`. Image `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2`. Healthy. Mode `shadow`.
+- **PostgreSQL:** `vps-infra-postgres-1`, image `postgres:16-alpine`, healthy, database `alrifai`.
+- **WhatsApp WA-01:** `vps-whatsapp-wa-01-cap4-20261011`, image `ae009303de09`. Degraded: 1 of 9 approved chats fails with `NATIVE_READER_UNAVAILABLE` (see `NEXT-SESSION-HANDOFF.md`).
+- **WhatsApp WA-02:** `vps-whatsapp-wa-02-cap4-20261011`, image `local/vps-whatsapp:20261020-ingestion`. Identity-only by policy.
+- **Backup location in use:** `/var/lib/vps/al-rifai/backups/`. It holds the current pre-change dumps (about 1.3 GB). This differs from the staging path named in the Backups section below, `/var/backups/vps/postgres`. Owner decision needed on the canonical location and the off-host copy.
+- **Backup convention:**
+  - Dump with `docker exec vps-infra-postgres-1 pg_dump -U vps_pg_admin -d alrifai -Fc`.
+  - Name `pre-<change>-<YYYYMMDD-HHMM>.dump`, with a `.sha256` sidecar.
+  - Set mode `600`, then confirm it lists with `pg_restore -l`.
+  - Keep every pre-change dump. Prune only with Owner approval.
+  - A compose backup is kept beside the dumps as `compose.yaml.pre-<digest-prefix>`.
+
 ## Backups
 
 - PostgreSQL: consistent logical backups under `/var/backups/vps/postgres`.
