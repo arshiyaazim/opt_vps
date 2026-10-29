@@ -54,7 +54,7 @@ function SignOutButton({className}:{className?:string}){
 function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;collapsed:boolean;onToggle:()=>void;navigateAway?:()=>void}){  const pathname=usePathname();
   const [query,setQuery]=useState('');
   const current=navItemForPath(pathname);
-  const visible=NAV_ITEMS.filter((item)=>(!item.restricted||user.superAdmin===true)&&(!query
+  const visible=NAV_ITEMS.filter((item)=>(!item.restricted||user.superAdmin===true)&&(!item.adminOnly||user.admin===true)&&(!query
     ||item.label.toLowerCase().includes(query.toLowerCase())
     ||item.description.toLowerCase().includes(query.toLowerCase())));
   const renderItem=(item:NavItem)=>{

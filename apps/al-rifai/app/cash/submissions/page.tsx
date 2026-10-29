@@ -4,7 +4,7 @@ import "../cash-dashboard.css";
 import {useCallback,useEffect,useState} from "react";
 
 type User={id:string;username:string;role:"ADMIN"|"USER";displayName:string;mustChangePassword:boolean};
-type Submission={id:string;submitted_by_user_ref:string;employee_name:string;employee_mobile:string|null;payout_mobile:string|null;method:string;amount_minor:number;transaction_date:string;review_state:string;decided_at?:string|null};
+type Submission={id:string;submitted_by_user_ref:string;submitted_by_username:string|null;employee_name:string;employee_mobile:string|null;payout_mobile:string|null;method:string;amount_minor:number;purpose:string;transaction_date:string;review_state:string;decided_at?:string|null};
 type Decision={id:string;decision:string;actor_user_ref:string;note:string;decided_at:string};
 type ApiError={error?:string;reasons?:string[];migration?:string;available?:boolean};
 
@@ -126,9 +126,9 @@ export default function CashSubmissionsPage(){
 
   {available&&<section className="cash-table-card">
    <div className="cash-card-head"><div><h2>{user.role==='ADMIN'?'Review queue':'My submissions'}</h2><p>Latest decision per submission · append-only history retained.</p></div><button onClick={()=>void loadSubmissions()} disabled={busy}>Refresh</button></div>
-   <div className="cash-table-wrap"><table><thead><tr><th>Date</th><th>Employee</th><th>Amount</th><th>Method</th><th>State</th><th>Actions</th></tr></thead><tbody>
-    {rows.map(row=><tr key={row.id}><td>{row.transaction_date}</td><td><strong>{row.employee_name}</strong><small>{row.employee_mobile??'—'}</small></td><td>{money(Number(row.amount_minor))}</td><td>{row.method}</td><td>{row.review_state}</td><td><span style={{display:'flex',gap:6,flexWrap:'wrap'}}><button onClick={()=>void openDetail(row)}>History</button>{user.role==='ADMIN'&&row.review_state==='PENDING_REVIEW'&&<><button onClick={()=>void decide(row,'APPROVED')} disabled={busy||row.submitted_by_user_ref===user.id}>Approve</button><button onClick={()=>void decide(row,'REJECTED')} disabled={busy||row.submitted_by_user_ref===user.id}>Reject</button><button onClick={()=>void decide(row,'CORRECTION_REQUESTED')} disabled={busy||row.submitted_by_user_ref===user.id}>Correction</button></>}</span></td></tr>)}
-    {!rows.length&&<tr><td colSpan={6} className="cash-empty">No submissions in scope.</td></tr>}
+   <div className="cash-table-wrap"><table><thead><tr><th>Date</th><th>Submitter</th><th>Employee</th><th>Amount</th><th>Method</th><th>Purpose</th><th>State</th><th>Actions</th></tr></thead><tbody>
+    {rows.map(row=><tr key={row.id}><td>{row.transaction_date}</td><td>{row.submitted_by_username??'—'}</td><td><strong>{row.employee_name}</strong><small>{row.employee_mobile??'—'}</small></td><td>{money(Number(row.amount_minor))}</td><td>{row.method}</td><td>{row.purpose}</td><td>{row.review_state}</td><td><span style={{display:'flex',gap:6,flexWrap:'wrap'}}><button onClick={()=>void openDetail(row)}>History</button>{user.role==='ADMIN'&&row.review_state==='PENDING_REVIEW'&&<><button onClick={()=>void decide(row,'APPROVED')} disabled={busy||row.submitted_by_user_ref===user.id}>Approve</button><button onClick={()=>void decide(row,'REJECTED')} disabled={busy||row.submitted_by_user_ref===user.id}>Reject</button><button onClick={()=>void decide(row,'CORRECTION_REQUESTED')} disabled={busy||row.submitted_by_user_ref===user.id}>Correction</button></>}</span></td></tr>)}
+    {!rows.length&&<tr><td colSpan={8} className="cash-empty">No submissions in scope.</td></tr>}
    </tbody></table></div>
   </section>}
 

@@ -61,10 +61,15 @@ async function handle(request:NextRequest,segments:string[]){
   const id=cleanId(request.nextUrl.searchParams.get("id"));
   try{
    const rows=await database().query<Row>(
-    `SELECT submission_id AS id,scope_account,submitted_by_user_ref,employee_name,employee_mobile,payout_mobile,method,amount_minor,purpose,transaction_date,created_at,review_state,decision,decided_by,decided_at
-     FROM public.cash_submission_review_state
-     WHERE ($1::boolean OR submitted_by_user_ref=$2)
-     ORDER BY created_at DESC LIMIT 200`,
+    `SELECT v.submission_id AS id,v.scope_account,v.submitted_by_user_ref,
+            u.username AS submitted_by_username,
+            v.employee_name,v.employee_mobile,v.payout_mobile,v.method,v.amount_minor,
+            v.purpose,v.transaction_date,v.created_at,v.review_state,
+            v.decision,v.decided_by,v.decided_at
+     FROM public.cash_submission_review_state v
+     LEFT JOIN public.cash_portal_users u ON u.id=v.submitted_by_user_ref
+     WHERE ($1::boolean OR v.submitted_by_user_ref=$2)
+     ORDER BY v.created_at DESC LIMIT 200`,
     [result.user.role==="ADMIN",result.user.id]);
    const visible=id?rows.rows.filter(row=>row.id===id):rows.rows;
    if(id&&!visible.length)return reply({error:"SUBMISSION_NOT_FOUND"},404);
