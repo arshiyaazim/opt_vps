@@ -64,6 +64,19 @@ test('static: forced-change and Admin-only decision guards are unchanged', () =>
   assert.match(route, /decision"&&request\.method==="POST"\)\{\s*forced\(result\.user\);requireAdmin\(result\.user\);/);
 });
 
+test('static: the submission-create branch is path-scoped so the decision handler is reachable', () => {
+  // Without the !segments[1] guard the create branch captures
+  // POST /api/cash/submissions/<id>/decision, validateSubmission rejects the
+  // decision body with 400 SUBMISSION_INVALID, and the decision handler on the
+  // later branch is dead code. This guard is what keeps that branch reachable.
+  assert.match(route, /if\(action==="submissions"&&!segments\[1\]&&request\.method==="POST"\)\{/);
+  const create = route.indexOf('if(action==="submissions"&&!segments[1]&&request.method==="POST")');
+  const decide = route.indexOf('segments[2]==="decision"&&request.method==="POST"');
+  assert.ok(create >= 0, 'path-scoped create branch present');
+  assert.ok(decide > 0, 'decision branch present');
+  assert.ok(create < decide, 'create branch is declared before the decision branch it must not shadow');
+});
+
 test('static: the review queue renders Submitter and Purpose', () => {
   assert.match(queuePage, /submitted_by_username:string\|null/);
   assert.match(queuePage, /purpose:string/);
@@ -177,6 +190,25 @@ live('live: Admin sees pending submissions with submitter and purpose; USER scop
       await call('PATCH', `/api/cash/users/${userId}`, {body: {active: false}, cookie: admin.cookie, csrf: admin.json.csrf});
     }
   }
+
+  // Admin decision end-to-end: approved isolated-clone write that proves the
+  // decision handler is reachable and records exactly one append-only review.
+  const target = pending[0].id;
+  const decided = await call('POST', `/api/cash/submissions/${target}/decision`, {
+    body: {decision: 'APPROVED', note: ''}, cookie: admin.cookie, csrf: admin.json.csrf,
+  });
+  assert.equal(decided.status, 201);
+  assert.equal(decided.json.reviewState, 'ACTIVE_REVIEWED');
+  assert.equal(decided.json.postingAuthorized, false);
+
+  const after = await call('GET', `/api/cash/submissions?id=${target}`, {cookie: admin.cookie});
+  assert.equal(after.status, 200);
+  assert.equal(after.json.rows.length, 1);
+  assert.equal(after.json.rows[0].review_state, 'ACTIVE_REVIEWED');
+  assert.equal(typeof after.json.rows[0].submitted_by_username, 'string');
+  assert.equal(typeof after.json.rows[0].purpose, 'string');
+  assert.equal(after.json.decisions.length, 1, 'exactly one decision record');
+  assert.equal(after.json.decisions[0].decision, 'APPROVED');
 
   // Nothing above may have changed the ledger.
   const summary = await call('GET', '/api/cash/summary?limit=1', {cookie: admin.cookie});

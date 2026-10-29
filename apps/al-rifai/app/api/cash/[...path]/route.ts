@@ -38,7 +38,7 @@ async function handle(request:NextRequest,segments:string[]){
  const result=await auth(request,request.method!=="GET");
  if(action==="logout"&&request.method==="POST"){await database().query("DELETE FROM public.cash_portal_sessions WHERE id=$1",[hashToken(result.token)]);await audit(result.user.id,result.user.id,"LOGOUT",{});return reply({ok:true},200,{"Set-Cookie":clearCookie()});}
  // ---- Cash submissions: submission is not approval and never posts. ----
- if(action==="submissions"&&request.method==="POST"){
+ if(action==="submissions"&&!segments[1]&&request.method==="POST"){
   forced(result.user);
   const body=await readBody(request),validation=validateSubmission(body);
   if(!validation.ok)return reply({error:"SUBMISSION_INVALID",reasons:validation.reasons},400);
