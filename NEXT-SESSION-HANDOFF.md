@@ -1,5 +1,82 @@
 # Next-Session Handoff — Updated After Session 3
 
+## CURRENT STATE — 2026-10-29 14:20 UTC (authoritative; supersedes the block below)
+
+**Deployment — Cash review navigation release**
+- Commit chain: `ff13046` (nav relabel, Cash queue submitter/purpose, `adminOnly`
+  presentation flag, regression test) -> `9bc9f85` (decision-endpoint reachability
+  fix, Cash sidebar relabel, static guard) -> `3a6624c` (compose pin).
+- Deployed image `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`
+  (source `9bc9f85`), pinned in `apps/al-rifai/compose.yaml`. Healthy.
+- Not pushed to origin: the Owner withheld push authorisation for this cycle.
+  Local `main` is 3 commits ahead of `origin/main`.
+- Rollback images, id-matched and present:
+  `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2`
+  (`local/al-rifai:20261029-no-ratelimit`) and
+  `sha256:80129758bf77ebbcfb80830e24136e90ed6f8d3b6560cff804fcc100dd14304a`
+  (`local/al-rifai:20261028-cash-audit-fix`). Previous candidate
+  `sha256:0950a823789a92a5ef6eb8022d3c9b8205b8235767b51b8b5c939dd6dc7716ae` also local.
+- Pre-deploy backup: `/var/lib/vps/al-rifai/backups/pre-review-nav-deploy-20261029-1318.dump`
+  (sha256 `9fc205de71a480afcd0b01bce143af3bd889f2829a775bd932791e33af050a84`, 536 restore
+  entries, mode 600). Compose backup `compose.yaml.pre-ef06c2ef`.
+
+**Decision-endpoint defect: fixed and deployed (audit trail)**
+- `POST /api/cash/submissions/<id>/decision` was unreachable. The submission-create
+  branch matched on action+method only, captured the decision POST, and returned
+  `400 SUBMISSION_INVALID`; the decision handler was dead code. Present since
+  `b8bd93d`, and in the previously deployed source `67ec02b`. No decision had ever
+  been recorded (reviews stayed 0), so nothing was corrupted.
+- Fix: `app/api/cash/[...path]/route.ts` create branch now requires `!segments[1]`.
+  Verified in the deployed artifact: `if("submissions"===c&&!b[1]&&"POST"===a.method)`
+  precedes `if("submissions"===c&&b[1]&&"decision"===b[2]&&"POST"===a.method)`.
+- Regression guard added: the static test asserts the create branch is path-scoped
+  and declared before the decision branch. The live harness test approves a
+  PENDING_REVIEW row in the isolated clone and asserts exactly one decision record.
+
+**Cash review navigation**
+- Platform shell: `Sources & Review` -> `Escort & WhatsApp Review`; new
+  Admin-presented `Cash Submissions` entry to `/cash/submissions` using a
+  presentation-only `adminOnly` flag gated on the existing `ShellUser.admin`
+  (`restricted`/`superAdmin` semantics untouched, so the Admin still sees the entry
+  under the legacy validation credential in shadow mode).
+- Cash sidebar: `Submissions` -> `Cash Submissions & Review` (still rendered for
+  every signed-in role, so USER keeps access to their own submissions); platform
+  group link relabelled to `Escort & WhatsApp Review`.
+- Queue columns: Submitter username (resolved via `LEFT JOIN public.cash_portal_users`)
+  and Purpose. Row scope unchanged: ADMIN sees all, USER sees own.
+
+**Known incomplete relabel (open item)**
+- `app/archive/view.tsx:82` still renders a hardcoded button labelled
+  `Sources & Review` linking to `/sources-review`. It is page content, not nav
+  chrome, and was outside the approved diff, so it was not changed. Requires a
+  one-string fix and Owner approval. The Cash sidebar and platform shell are clean
+  (verified in the deployed artifact).
+
+**Verification evidence (Gate 2, image `ef06c2ef`)**
+- Canonical suite (`package.json` test): **192 tests, 189 pass, 0 fail, 3 skipped**
+  (2 gated live tests + 1 pre-existing WhatsApp fixture skip).
+- Isolated harness (clone of the pre-0033 dump + 0033 + 0031): API lifecycle 17/17,
+  canonical USER lifecycle 2/2, review-navigation 11/11 (10 static + 1 live),
+  browser UI 20/20. Clone recorded exactly 1 decision row; production reviews
+  remained 0.
+- Browser: 360px sidebar pill for `Cash Submissions & Review` is not clipped
+  (`clipped=0`, width 202px, height 34px, strip scroll 274px), zero page overflow
+  at 360/390/1280.
+
+**Production state after deploy**
+- 3 users (`Admin` ADMIN, `officeassistant` USER, `officeazzistant2` USER), 1
+  submission (PENDING_REVIEW, method `cash`), 0 review decisions, 0 current
+  postings, 1,863 current instructions, ledger 32, migrations 0031 and 0033 applied,
+  0032 not applied, mode `shadow`, `app.env` 600 root:root.
+- Basic guard on `/sources-review`: 401 + `WWW-Authenticate`. Anonymous Cash API:
+  401 `AUTHENTICATION_REQUIRED` on `/api/cash/submissions` and `/api/cash/me`.
+- An authenticated USER production spot-check of the decision endpoint was not
+  possible without account credentials; the check is covered by the harness on the
+  identical image (403 `ADMIN_REQUIRED`) and by the deployed compiled guard.
+
+---
+
+
 ## CURRENT STATE — 2026-10-29 (authoritative; supersedes the dated sections below)
 
 **Production application**
