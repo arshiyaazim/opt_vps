@@ -240,11 +240,70 @@
 .wx-page label, .wx-shell label { text-align: left; }
 .wx-page [data-slot="label"], .wx-shell [data-slot="label"] { align-self: start; }
 
+/* ---------- dashboard module links ---------- */
+.wx-module-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(12rem, 1fr);
+  gap: .85rem;
+}
+.wx-module-card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  gap: .75rem;
+  padding: 1.1rem;
+  color: var(--wx-ink);
+  background: var(--wx-surface);
+  border: 1px solid var(--wx-line);
+  border-radius: var(--wx-radius);
+  box-shadow: var(--wx-shadow);
+  text-decoration: none;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.wx-module-card:hover {
+  background: var(--wx-brand-soft);
+  border-color: var(--wx-line-strong);
+}
+.wx-module-card:focus-visible {
+  outline: 2px solid var(--wx-brand);
+  outline-offset: 2px;
+}
+.wx-module-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+}
+.wx-module-card-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  color: var(--wx-brand);
+  background: var(--wx-brand-soft);
+  border-radius: 10px;
+}
+.wx-module-card-arrow { color: var(--wx-ink-soft); }
+.wx-module-card-title {
+  overflow-wrap: anywhere;
+  font-size: .98rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.wx-module-card-description {
+  color: var(--wx-ink-soft);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .wx-header { gap: .75rem; }
   .wx-header-actions { width: 100%; }
   .wx-header-actions > * { flex: 1 1 auto; }
+  .wx-module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 768px) {
@@ -291,6 +350,7 @@
 
 @media (max-width: 420px) {
   .wx-kpis { grid-template-columns: 1fr; }
+  .wx-module-grid { grid-template-columns: 1fr; }
   .wx-table.stackable tbody td { grid-template-columns: 1fr; gap: .15rem; }
 }
 

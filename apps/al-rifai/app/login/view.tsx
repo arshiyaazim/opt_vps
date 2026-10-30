@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -15,6 +15,7 @@ const messages: Record<string, string> = {
   PASSWORD_POLICY: 'The new password must be at least 12 characters.',
   PASSWORD_CONFIRMATION_MISMATCH: 'The new password and confirmation do not match.',
   PASSWORD_UNCHANGED: 'The new password must be different from the current one.',
+  PASSWORD_CHANGE_REQUIRED: 'Change your password before opening workspace pages.',
   CSRF_DENIED: 'Security check failed. Reload the page and try again.',
   AUTHENTICATION_REQUIRED: 'The session has expired. Sign in again.',
   USERNAME_INVALID: 'Username must be 3-80 characters: letters, digits, dot, dash or underscore.',
@@ -39,10 +40,12 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export default function LoginView({next, mode, verifiedName}: {next: string; mode: 'off' | 'shadow' | 'on'; verifiedName?: string | null}) {
-  const [step, setStep] = useState<Step>('credentials');
+export default function LoginView({next, mode, verifiedName, forcePasswordChange = false}: {next: string; mode: 'off' | 'shadow' | 'on'; verifiedName?: string | null; forcePasswordChange?: boolean}) {
+  const [step, setStep] = useState<Step>(forcePasswordChange ? 'password' : 'credentials');
   const [login, setLogin] = useState({username: '', password: ''});
   const [change, setChange] = useState({currentPassword: '', newPassword: '', confirmPassword: ''});
+  const [needsCurrentPassword, setNeedsCurrentPassword] = useState(forcePasswordChange);
+  const [sessionReady, setSessionReady] = useState(!forcePasswordChange);
   const [csrf, setCsrf] = useState('');
   const [target, setTarget] = useState(next);
   const [error, setError] = useState('');
@@ -51,6 +54,30 @@ export default function LoginView({next, mode, verifiedName}: {next: string; mod
   // Shadow mode: a verified credential is reported, never forwarded to a page
   // that the session cannot authorise yet.
   const [verified, setVerified] = useState<string | null>(verifiedName ?? null);
+
+  useEffect(() => {
+    if (!forcePasswordChange) return;
+    let active = true;
+    void call<{user: {mustChangePassword: boolean}; csrf: string}>('session')
+      .then(result => {
+        if (!active) return;
+        if (!result.user.mustChangePassword) {
+          window.location.assign(target || '/dashboard');
+          return;
+        }
+        setCsrf(result.csrf);
+        setNotice('Set a new password before continuing to the workspace.');
+        setSessionReady(true);
+      })
+      .catch(e => {
+        if (!active) return;
+        setNeedsCurrentPassword(false);
+        setStep('credentials');
+        setSessionReady(true);
+        setError(friendly(e));
+      });
+    return () => { active = false; };
+  }, [forcePasswordChange, target]);
 
   async function submitCredentials(event: React.FormEvent) {
     event.preventDefault();
@@ -64,6 +91,7 @@ export default function LoginView({next, mode, verifiedName}: {next: string; mod
       setCsrf(result.csrf);
       setTarget(result.redirect || next);
       setChange(value => ({...value, currentPassword: login.password}));
+      setNeedsCurrentPassword(false);
       setLogin(value => ({...value, password: ''}));
       if (result.user.mustChangePassword) {
         setStep('password');
@@ -160,6 +188,19 @@ export default function LoginView({next, mode, verifiedName}: {next: string; mod
         ) : (
           <form className="mt-5 flex flex-col gap-3" onSubmit={submitPassword}>
             <p className="text-sm text-muted-foreground">{notice}</p>
+            {needsCurrentPassword && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="currentPassword">Current password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={change.currentPassword}
+                  onChange={e => setChange({...change, currentPassword: e.target.value})}
+                />
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="newPassword">New password (12+ characters)</Label>
               <Input
@@ -185,10 +226,13 @@ export default function LoginView({next, mode, verifiedName}: {next: string; mod
               />
             </div>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Set password and continue'}</Button>
+            <Button type="submit" disabled={busy || !sessionReady}>{busy ? 'Saving…' : 'Set password and continue'}</Button>
           </form>
         )}
 
+        <p className="mt-4 text-sm text-muted-foreground">
+          Need access? <a className="underline underline-offset-4" href="/signup">Request an account</a>
+        </p>
         <p className="mt-4 text-[11px] text-muted-foreground">
           Sessions are server-side, HttpOnly and expire after 30 minutes idle.{' '}
           {mode === 'shadow' && 'Sign-in is in rehearsal mode: protected pages still require the existing private entry credential.'}

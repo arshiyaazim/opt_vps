@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {usePathname,useRouter} from 'next/navigation';
 import * as Icons from 'lucide-react';
 import type {LucideIcon} from 'lucide-react';
-import {NAV_ITEMS,CONSOLIDATED_LINKS,NAV_ICONS,navItemForPath,type NavItem} from '@/app/platform/nav';
+import {NAV_GROUPS,NAV_ITEMS,NAV_ICONS,navItemForPath,type NavItem} from '@/app/platform/nav';
 import {
   Breadcrumb,BreadcrumbItem,BreadcrumbList,BreadcrumbLink,BreadcrumbPage,BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
@@ -19,17 +19,6 @@ export type ShellUser=ChatGPTUser&{admin:boolean;superAdmin?:boolean};
 
 function iconFor(name:string):LucideIcon{
   return NAV_ICONS[name]??Icons.Menu;
-}
-
-function LegacyLinks(){
-  return <div className="mt-2 border-t pt-2">
-    <p className="px-2 pb-1 text-[11px] uppercase tracking-wide text-muted-foreground">Consolidated tools</p>
-    {Object.entries(CONSOLIDATED_LINKS).map(([oldLabel,href])=>(
-      <Button key={href} asChild variant="ghost" className="h-8 w-full justify-start px-2 text-xs text-muted-foreground">
-        <Link href={href} title={`${oldLabel} — functionality preserved, integrated elsewhere`}>↳ {oldLabel}</Link>
-      </Button>
-    ))}
-  </div>;
 }
 
 function SignOutButton({className}:{className?:string}){
@@ -51,7 +40,8 @@ function SignOutButton({className}:{className?:string}){
   </Button>;
 }
 
-function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;collapsed:boolean;onToggle:()=>void;navigateAway?:()=>void}){  const pathname=usePathname();
+function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;collapsed:boolean;onToggle:()=>void;navigateAway?:()=>void}){
+  const pathname=usePathname();
   const [query,setQuery]=useState('');
   const current=navItemForPath(pathname);
   const visible=NAV_ITEMS.filter((item)=>(!item.restricted||user.superAdmin===true)&&(!item.adminOnly||user.admin===true)&&(!query
@@ -85,8 +75,14 @@ function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;c
         <Input type="search" value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search navigation…" aria-label="Search navigation"/>
       )}
       <nav aria-label="Main navigation" className="flex flex-col gap-1 overflow-y-auto">
-        {visible.map(renderItem)}
-        {!collapsed&&<LegacyLinks/>}
+        {NAV_GROUPS.map((group)=>{
+          const items=group.items.filter((item)=>visible.includes(item));
+          if(!items.length)return null;
+          return <div key={group.label??items[0].href} role="group" aria-label={group.label??items.map((item)=>item.label).join(', ')} className="flex flex-col gap-1">
+            {!collapsed&&group.label&&<p className="px-2 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</p>}
+            {items.map(renderItem)}
+          </div>;
+        })}
       </nav>
       <div className="mt-auto border-t pt-2 text-xs text-muted-foreground">
         {!collapsed&&(
@@ -95,7 +91,6 @@ function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;c
             <p>role: {user.admin?'admin / supervisor':'standard'} · Private workspace</p>
           </>
         )}
-        <Link href="/cash" className="mt-1 inline-block underline-offset-2 hover:underline">Cash portal ↗</Link>
         {user.source==='session'&&<SignOutButton className="mt-1 h-7 w-full justify-start px-0 text-xs"/>}
       </div>
     </div>
@@ -106,8 +101,10 @@ function Breadcrumbs({label}:{label:string}){
   return (
     <Breadcrumb className="hidden sm:block">
       <BreadcrumbList>
-        <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Workspace</Link></BreadcrumbLink></BreadcrumbItem>
-        <BreadcrumbSeparator/>
+        {label!=='Dashboard'&&<>
+          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Dashboard</Link></BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbSeparator/>
+        </>}
         <BreadcrumbItem><BreadcrumbPage>{label}</BreadcrumbPage></BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

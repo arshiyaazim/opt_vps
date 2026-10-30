@@ -1,7 +1,7 @@
 'use client';
 import {useMemo} from 'react';
 import Link from 'next/link';
-import {ArrowRight, Banknote, ClipboardList, ShieldCheck, Users} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,Banknote,ChartLine,ClipboardCheck,ClipboardList,Ship,Sparkles,Users,Wallet} from 'lucide-react';
 import {
   EmptyState,ErrorState,KpiCard,KpiGrid,LoadingSkeleton,PageHeader,PageNotice,SectionCard,StatusPill,TableShell,
   fmtBDT,useApi,
@@ -10,6 +10,17 @@ import {opUrl,instructionBuckets,type OperationsSnapshot,ESCORT_SUMMARY_URL} fro
 import type {EscortSummaryResponse} from '@/app/sources-review/view';
 
 const RECENT_LIMIT=8;
+
+const MODULE_CARDS=[
+  {href:'/cash',title:'Cash',description:'Open Cash Portal and review authorized Cash activity.',icon:Wallet},
+  {href:'/vessel-register',title:'Vessel Register',description:'Review vessel programs, assignments and audit history.',icon:Ship},
+  {href:'/employees',title:'Employees',description:'Open employee records and payment statements.',icon:Users},
+  {href:'/sources-review',title:'Review Queue',description:'Review Vessel and WhatsApp source items; decisions remain separately authorized.',icon:ClipboardCheck},
+  {href:'/assistant',title:'Assistant',description:'Ask questions about verified records.',icon:Sparkles},
+  {href:'/transactions',title:'Transactions',description:'View source-linked Cash instructions and payment evidence.',icon:Banknote},
+  {href:'/cash/submissions',title:'Cash Submissions',description:'Submit and track your Cash items or open the reviewer queue.',icon:ClipboardList},
+  {href:'/income-expenditure',title:'Income & Expenditure',description:'Explore financial analysis from verified data.',icon:ChartLine},
+] as const;
 
 export default function DashboardView(){
   const ops=useApi<OperationsSnapshot>(opUrl('cash'));
@@ -50,20 +61,27 @@ export default function DashboardView(){
         eyebrow="Operations workspace"
         title="Operations overview"
         description="Instruction, workforce and review activity across the Current dataset. Every figure is traceable to its source message; instruction amounts are not payments."
-        actions={
-          <>
-            <Link className="wx-pill" data-tone="brand" href="/cash">Cash portal <ArrowRight className="size-3"/></Link>
-            <Link className="wx-pill" data-tone="neutral" href="/employees"><Users className="size-3"/>Employees</Link>
-            <Link className="wx-pill" data-tone="neutral" href="/transactions"><Banknote className="size-3"/>Transactions</Link>
-            <Link className="wx-pill" data-tone="neutral" href="/sources-review"><ShieldCheck className="size-3"/>Review</Link>
-          </>
-        }
         meta={ops.data?<><StatusPill status="ACTIVE" label="Snapshot live"/><span className="text-xs text-muted-foreground">checked {ops.data.checkedAt.slice(0,16).replace('T',' ')}</span></>:null}
       />
 
       {ops.error&&<ErrorState message={`Cash snapshot could not be loaded: ${ops.error}`}/>}
 
       {ops.data&&<PageNotice notice={ops.data.notice} sourceLabel={ops.data.sourceLabel} checkedAt={ops.data.checkedAt}/>}
+
+      <SectionCard title="Platform modules" description="Open the existing Cash, Vessel, workforce and review workflows.">
+        <div className="wx-module-grid">
+          {MODULE_CARDS.map(({href,title,description,icon:Icon})=>(
+            <Link key={href} href={href} className="wx-module-card">
+              <span className="wx-module-card-heading">
+                <span className="wx-module-card-icon"><Icon className="size-5" aria-hidden="true"/></span>
+                <ArrowUpRight className="wx-module-card-arrow size-4" aria-hidden="true"/>
+              </span>
+              <span className="wx-module-card-title">{title}</span>
+              <span className="wx-module-card-description">{description}</span>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
 
       <SectionCard title="Financial overview" description="Instruction amounts describe what was requested. They are never shown as completed payments.">
         {ops.loading&&!ops.data?<LoadingSkeleton rows={2}/>:<KpiGrid>{financial}</KpiGrid>}

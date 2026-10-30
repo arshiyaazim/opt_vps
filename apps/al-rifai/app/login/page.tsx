@@ -29,7 +29,12 @@ export default async function LoginPage({searchParams}: {searchParams: Promise<R
   if (mode === 'off') redirect('/');
   const identity = await currentIdentity();
   const target = signedInRedirectTarget(mode, next);
-  if (identity && target) redirect(target);
+  if (identity && target && !identity.mustChangePassword) redirect(target);
   // Shadow: report that the credential was verified, never navigate onwards.
-  return <LoginView next={next} mode={mode} verifiedName={mode === 'shadow' ? identity?.displayName ?? null : null} />;
+  return <LoginView
+    next={next}
+    mode={mode}
+    verifiedName={mode === 'shadow' ? identity?.displayName ?? null : null}
+    forcePasswordChange={mode === 'on' && identity?.mustChangePassword === true}
+  />;
 }
