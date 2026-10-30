@@ -12,12 +12,11 @@
 
 ## 0. Current Production Position (verified 2026-10-27)
 
-> **Current production position — 2026-10-29 (authoritative; supersedes the banners below):**
-> app image `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`
-> (tag `local/al-rifai:20261029-review-nav-fix`, source `9bc9f85`; verified 2026-10-30
+> **Current production position — 2026-10-30 (authoritative; supersedes the banners below):**
+> app image `sha256:1d4602c308101fed0019cc864e45154eb97ceee9fe56a4574c1921d8e85020da`
+> (tag `local/al-rifai:20261030-phase2`, source `9e09fa9`; verified 2026-10-30
 > via `docker inspect al-rifai-app-1`), mode `shadow`, 3 Cash Portal users (Owner `Admin`, USER
-> `officeassistant`, USER `officeazzistant2`), ledger 32 (migration 0031 applied, 0032 not
-> applied, 0033 applied), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 applied 2026-10-30, throttle active).
+> `officeassistant`, USER `officeazzistant2`), ledger 32 (migrations 0031-0036 applied), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 applied 2026-10-30, throttle deployed; shadow mode).
 > WA-01 degraded (1 of 9 chats failing; diagnosis recorded, bridge fix deferred by Owner).
 > Full state, open items and deferred triggers: `NEXT-SESSION-HANDOFF.md` → "CURRENT STATE — 2026-10-29".
 

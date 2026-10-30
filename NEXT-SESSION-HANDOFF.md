@@ -13,7 +13,7 @@ applied, no deployment, no configuration change, no Production access.
   filters unchanged.
 - Verification: canonical suite 240 tests (238 pass, 2 skip, 0 fail);
   TypeScript, ESLint, `git diff --check` pass.
-- **0035 is applied** (employee active); **0034 is applied** (signup active); **0032 is applied** (vessel active); **0036 is applied** (throttle active) — each requires
+- **0035 is applied** (employee deployed; shadow); **0034 is applied** (signup deployed; shadow); **0032 is applied** (vessel deployed; shadow); **0036 is applied** (throttle deployed; shadow) — each requires
   separate Owner approval (see roadmap in `AL-RIFAI-AUDIT-2026-10-30.md`).
 - Remaining dirty worktree paths (uncommitted) are reserved for Phase 2–4
   review; see roadmap.
@@ -369,7 +369,7 @@ selected, and no Production configuration, database, image, or service was
 changed.
 
 - Runtime inspection identified `al-rifai-app-1` on image
-  `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`.
+  `sha256:1d4602c308101fed0019cc864e45154eb97ceee9fe56a4574c1921d8e85020da`.
   The effective non-secret configuration has
   `ALRIFAI_UNIFIED_AUTH_MODE=shadow` and
   `ALRIFAI_REVIEW_PROFILE=B01-B03-LIVE`. The
@@ -933,7 +933,7 @@ configuration, data, migration, service, or deployment was changed.
   page shell, while its data APIs remain protected. These checks used no
   credentials and read no business rows.
 - The running app container was read-only observed running image
-  `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`.
+  `sha256:1d4602c308101fed0019cc864e45154eb97ceee9fe56a4574c1921d8e85020da`.
   The deployed homepage therefore does not match the current source root
   redirect. Production remains on the documented shadow/legacy-entry posture;
   no authenticated production browser test was attempted.
@@ -1081,7 +1081,7 @@ production application.
 - Commit chain: `ff13046` (nav relabel, Cash queue submitter/purpose, `adminOnly`
   presentation flag, regression test) -> `9bc9f85` (decision-endpoint reachability
   fix, Cash sidebar relabel, static guard) -> `3a6624c` (compose pin).
-- Deployed image `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`
+- Deployed image `sha256:1d4602c308101fed0019cc864e45154eb97ceee9fe56a4574c1921d8e85020da`
   (source `9bc9f85`), pinned in `apps/al-rifai/compose.yaml`. Healthy.
 - Not pushed to origin: the Owner withheld push authorisation for this cycle.
   Local `main` is 3 commits ahead of `origin/main`.
