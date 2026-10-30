@@ -1,6 +1,1061 @@
 # Next-Session Handoff — Updated After Session 3
 
-## CURRENT STATE — 2026-10-29 14:20 UTC (authoritative; supersedes the block below)
+## EMPLOYEE LIST PAGINATION — 2026-10-30 09:28 CET
+
+Source-only UI improvement continuing from the synthetic canonical verification.
+Branch `main`, HEAD `76183e9`; all existing 38 dirty paths remain preserved and
+unstaged. Production remains `shadow`; no Production access or operational
+change occurred.
+
+- The payment-derived Employee statement API already returns the full filtered
+  read-only set for `export=1`; the page previously showed only the first 200
+  rows with no way to navigate beyond them.
+- Added client-side 40-row pagination after the existing search/identity-scope
+  filters, explicit result range and Previous/Next controls. Filtering resets
+  to page one, and page bounds clamp if the result count changes. Filtered
+  totals remain over the full filtered result, not only the visible page.
+- Portal Activated Employees remain a separate source/status section and were
+  not combined into the payment-derived page data. Cash posting, Employee
+  identity, and Vessel behavior are unchanged.
+- Focused offline Employee/Cash/Vessel regression group: **34/34 PASS**,
+  including page boundaries for a 233-row fixture, Admin self-review,
+  rejection reason/audit consistency guards, activation authorization, Cash
+  approval, and Vessel commands. TypeScript check, ESLint on changed files,
+  and `git diff --check`: **PASS**.
+- Changed paths: `apps/al-rifai/app/employees/view.tsx`,
+  `apps/al-rifai/lib/employee-directory-view.ts`,
+  `apps/al-rifai/tests/employee-directory-view.mjs`, this handoff,
+  `apps/al-rifai/README.md`, and `docs/VPS_MAP.md`. No files staged or committed.
+- The previous full canonical package test and production build used disposable
+  synthetic fixtures and passed as recorded in the 09:18 entry. They were not
+  rerun for this UI-only pagination change; production build remains unchanged
+  and not deployed.
+
+## SYNTHETIC EVIDENCE AND CANONICAL VERIFICATION — 2026-10-30 09:18 CET
+
+The prior isolated test/build blocker is resolved without accessing private
+evidence. Branch `main`, HEAD `76183e9`; the existing 38 dirty paths were
+preserved. Production remains `shadow`; no Production access, migration,
+deployment, restart, business-data operation, or live configuration change
+occurred.
+
+- Inspected `tests/source-register.mjs`. It requires exactly 3,677 messages,
+  1,204 program rows (582 Escort programs and 622 Vessel references), 33
+  August 2026 program rows, 149 Payment record entries, the three asserted
+  example IDs/fields, one `sensitiveExcluded` message, an anomalous-date
+  quality issue, a payment-correction issue, and privacy/excluded-field
+  assertions.
+- Generated disposable, clearly marked synthetic JSON fixtures satisfying
+  only those test invariants. The generator made no reads from the private
+  evidence directory. The fixtures were mounted read-only into a network-none
+  Node 22.23.3 container via `ALRIFAI_EVIDENCE_DIR`; they were never placed in
+  the repository or application evidence directory.
+- For the production build, generated synthetic `accounts-snapshot.json`,
+  `conversation-snapshot.json`, `operations.json`, `recovered-programs.json`,
+  and a matching synthetic checksum manifest. The manifest was bind-mounted
+  over `docs/evidence-checksums.json` only inside the isolated build container;
+  no repository manifest or evidence file was changed. Build used network
+  isolation, a read-only repository mount, and ephemeral `.next` output.
+- **Canonical package test script: PASS.** Executed the exact `scripts.test`
+  command from `package.json` in the isolated container using the synthetic
+  evidence directory. It completed the Node test group, `tests/workflows.mjs`,
+  `tests/source-register.mjs` and `tests/phase1-unit.mjs`. The test group
+  reported **225 passed, 0 failed, 3 skipped**; source-register assertions
+  reported PASS, including 25 duplicate suggestions without merging.
+- **Production build: PASS.** `next build --webpack` compiled, completed
+  TypeScript, collected page data, generated all static pages and collected
+  traces successfully.
+- **Changed-file/relevant verification: PASS.** Standalone TypeScript check
+  and ESLint on changed source/test files passed. Canonical coverage included
+  Cash/Vessel isolation and Employee lifecycle tests; the PostgreSQL 0035
+  synthetic rehearsal remains as recorded below.
+- All temporary fixture files and isolated build output were removed after
+  verification. No fixture or manifest overlay remains. Worktree is still
+  unstaged; no commit was created. Actual private evidence remains unverified
+  and was neither opened, copied, mounted nor modified.
+
+## OWNER-APPROVED EMPLOYEE POLICY IMPLEMENTATION — 2026-10-30 00:14 CET
+
+Source and isolated-test work only. Branch `main`, HEAD `76183e9`; all
+pre-existing dirty paths were preserved. Production remains `shadow`; there was
+no Production connection/API access, migration, business-data read/write,
+deployment, restart or live configuration change.
+
+- **Employee source separation:** the existing payment-derived Employee master
+  and `employee_master` remain unchanged. `/employees` now renders a distinct
+  Portal Activated Employees table with explicit `Portal activation` source and
+  `Portal ACTIVE` status. It reads the authorized employee-submissions API
+  separately from `/api/operations?view=employees`. If mobile values collide,
+  both records remain separate and the portal row is labeled; no automatic
+  merge or write to `employee_master` occurs. A second portal activation with
+  the same mobile is rejected by the existing portal-directory unique
+  constraint.
+- **Decision policy:** backend decision guard compares the authenticated
+  `actor_user_ref` with the request's `submitted_by_user_ref`; an Admin creator
+  cannot approve or reject their own request. The GET projection also marks
+  each row's `canDecide`, hiding self-review actions in the drawer. Another
+  Admin can make one decision. Rejection requires a trimmed, nonblank reason
+  (maximum 500 characters); approval note remains optional. Migration 0035
+  independently checks the rejection reason. The same normalized note is
+  inserted in `employee_submission_decisions.note` and the audit event
+  `details.note` in the same transaction.
+- **Activation/domain boundaries:** configured Super Admin authorization,
+  explicit `ACTIVATE_EMPLOYEE` confirmation, and separate activation are
+  unchanged. Employee lifecycle routes write no `cash_postings`,
+  `cash_movements`, `employee_master`, or Vessel programs. Cash/Vessel
+  regression tests passed; the canonical posting function and Vessel writer
+  were not modified.
+- **Migration ordering and isolated rehearsal:** candidate 0035 declares its
+  schema dependency on migration 0017 and no dependency on 0032/0034. The
+  release-plan position for current Production history is after applied 0031
+  and 0033; migration 0032 remains unapplied. Candidate 0035 is still outside
+  normal `db/migrations/*.sql` discovery and must be included explicitly in an
+  approved migration plan. A disposable PostgreSQL 16 rehearsal replayed
+  migrations 0000–0019 with only synthetic fixtures and a synthetic external
+  `alrifai_app` role, then applied candidate 0035. The container used
+  `network=none`, read-only root filesystem, tmpfs-only storage and no bind
+  mounts. It verified the blank-rejection database check, audit/decision note
+  equality, runtime SELECT/INSERT grants on the candidate tables, and no
+  runtime Cash-posting INSERT grant,
+  same-mobile separation between payment-derived and portal tables, and
+  duplicate portal activation rejection. Runtime SELECT grant passed.
+- **Backup/rollback rehearsal:** a synthetic pre-0035 custom-format `pg_dump`
+  had SHA-256
+  `090da1c48d2095472a1e69bc572e9846bb96116015b2918361f60fd7e0126186`.
+  Restore into a separate disposable database succeeded and confirmed the
+  pre-migration schema had no candidate tables. The disposable container was
+  removed. This is not a Production backup; any future Production migration
+  still requires a separately named/hash-verified `pg_dump`, restore/rollback
+  plan and Owner authorization.
+- **Verification:** isolated Node 22.23.3 network-disabled full `node --test`
+  group: **225 passed, 0 failed, 3 skipped**; Cash/Vessel regressions included.
+  `tests/workflows.mjs`: **PASS**. `tests/phase1-unit.mjs`: **PASS**.
+  Standalone TypeScript check and ESLint on changed files: **PASS**. The full
+  package test script cannot finish in this isolated environment because
+  `tests/source-register.mjs` requires
+  `/var/lib/vps/al-rifai/evidence/chat-archive.json`; that private evidence was
+  not mounted or read. Full Next build compiled and passed its build-time
+  TypeScript step, then stopped at page-data collection because
+  `/var/lib/vps/al-rifai/evidence/accounts-snapshot.json` is absent. Neither
+  data file was accessed. The repository-wide lint wrapper also reports
+  existing `no-require-imports` errors in ignored `data/` and `qualification/`
+  material; changed-file lint passed. Canonical full suite/build therefore
+  remain **BLOCKED on isolated evidence fixtures**, not reported as full PASS.
+- **Superseded by the 2026-10-30 09:18 CET verification entry above:** the
+  earlier synthetic evidence fixture and canonical suite/build blocker is
+  resolved. Do not infer that synthetic fixtures verify actual business
+  evidence or Production behavior.
+- Changed source/test paths include `app/api/cash/[...path]/route.ts`,
+  `app/employees/view.tsx`, `app/platform/ui.tsx`,
+  `lib/employee-submission-policy.ts`, new
+  `lib/employee-directory-view.ts`, candidate
+  `db/migration-candidates/0035_employee_submission_requests.sql`,
+  `tests/employee-submission-lifecycle.mjs`, new
+  `tests/employee-directory-view.mjs`, `tests/workspace-submissions.mjs`,
+  `tests/cash-review-navigation.mjs` (corrected the Cash-specific route-branch
+  assertion to ignore the preceding Employee decision branch), and
+  `package.json`. Documentation updates are in the Employee workflow guide,
+  app README, VPS map and this handoff. No files were staged or committed.
+
+## EMPLOYEE LIFECYCLE PRE-RELEASE INTEGRATION REVIEW — 2026-10-30 00:09 CET
+
+Read-only source/migration review. Branch `main`, HEAD `76183e9`; dirty paths
+preserved. Production remains `shadow`; no Production access, migration,
+configuration, deployment, service action or business-data access occurred.
+
+- **Existing Employee page source:** `/employees` renders
+  `app/employees/view.tsx`; it calls `/api/operations?view=employees`, whose
+  `employeeStatements(rows)` are built from the selected Cash snapshot. The
+  description and table identify these as verified-payment instruction
+  statements. The page uses `AddEmployeeDrawer` only for portal requests.
+- **Portal lifecycle source:** `/api/cash/employee-submissions` reads
+  `employee_submission_requests`, `employee_submission_decisions` and
+  `employee_directory_records`. The activated row is displayed in the drawer’s
+  request list/status only. No `/employees` query or `employeeStatements`
+  projection reads `employee_directory_records`. Therefore approved requests
+  and activated portal-directory records do **not** appear in the existing
+  Employee master/table/profile. This is source-verified; no browser test was
+  run. The records stay separate from the payment-derived
+  `employee_master`; no write path from this lifecycle targets that table.
+- **Authorization:** the shared Cash Portal `auth()` path requires a valid
+  session; mutation requests also pass Origin/CSRF checks and the employee
+  routes enforce the first-login password gate. Admin role is sufficient for
+  request queue visibility and one-time approve/reject. Activation requires
+  `requireCashSuperAdmin()` / the configured Super Admin identity and exact
+  `ACTIVATE_EMPLOYEE` confirmation. Users remain self-scoped and cannot decide
+  or activate. Existing focused tests reported 57/57 PASS for the prior
+  lifecycle implementation; these tests were not rerun during this read-only
+  review.
+- **Decision/audit integrity:** the decision table has a unique request id and
+  append-only UPDATE/DELETE/TRUNCATE triggers; the activation table has a
+  unique source request and employee mobile, an approved-decision insert
+  trigger, and append-only triggers. Cash Portal audit writer access is
+  INSERT-only for the runtime role (the audit table itself has no immutable
+  trigger in migration 0017). The decision row stores the optional note, but
+  the cash audit event stores the decision without that note. Request and
+  activation audit inserts share their API transactions. Existing DB
+  rehearsal was synthetic and disposable, not Production evidence.
+- **Authorization gap:** Employee decisions do not reject an Admin who
+  submitted the request; unlike Cash review policy, no reviewer-not-submitter
+  rule is present. A rejection note is optional. These are policy/integration
+  decisions to close before release; this review made no code change.
+- **Cash/Vessel isolation:** source paths for decision/activation write only
+  employee request/decision/directory and Cash Portal audit tables. They do
+  not write `cash_postings`, `cash_movements`, `employee_master` or `programs`.
+  The existing canonical Cash posting function remains in migration 0012;
+  Vessel writes remain in the separate `/api/vessel-programs` command path.
+  No posting or Vessel behavior was modified or exercised.
+- **Migration 0035 compatibility:** its base foreign-key/audit dependencies
+  are defined by migration 0017 (`cash_portal_users`, `cash_portal_audit`);
+  the authorized runtime role receives SELECT/INSERT on the candidate tables,
+  and existing 0017 grants audit INSERT. The table set is additive and
+  independent of candidate 0034 signup tables and migration 0032. The normal
+  migration runner enumerates only `db/migrations/*.sql`; candidates under
+  `db/migration-candidates/` are not automatically discovered. Production
+  handoff says ledger 33 with 0031 and 0033 applied, 0032 not applied; 0034 and
+  0035 remain candidates, and this review did not query Production. A schema
+  rehearsal of candidate 0035 does not validate runner ordering, production
+  grants, backup/rollback or deployed route behavior.
+- **Integration/release gaps:** decide whether the portal directory should
+  remain a distinct request directory or be safely surfaced in the Employee
+  UI; if combined, preserve separate origins/statuses and never infer
+  payment/posting from activation. Define identity collision handling against
+  existing payment-derived mobile identities without merging or writing
+  `employee_master`. Decide whether self-review is forbidden and whether a
+  rejection reason is mandatory. Before release, resolve those policies,
+  formally place candidate 0035 in the reviewed ordered migration path
+  (documenting whether unrelated candidate 0034 is excluded), rehearse against
+  the exact supported base schema, verify backup/rollback and grants, run the
+  full canonical suite/build, then obtain separate Owner approval for migration
+  and exact verified-artifact deployment. Production stays `shadow`.
+
+## EMPLOYEE DECISION AND ACTIVATION LIFECYCLE — 2026-10-30 00:01 CET
+
+Source-only implementation; Production remains `shadow`. Candidate 0035 is
+expanded but remains unapplied. No Production database/API, business data,
+configuration, image, or service was accessed or changed.
+
+- Any authenticated Admin can make one final `APPROVED` or `REJECTED` decision
+  for a pending Employee request. Decisions, actor, optional note and timestamp
+  are written to append-only `employee_submission_decisions`; the same
+  transaction records the Cash Portal audit event. Unique `request_id`,
+  request-state checks and HTTP 409 handling prevent duplicate decisions.
+- Approval does not activate or create an employee. Only the configured
+  Super Admin can use the separate activation endpoint, and the request body
+  must explicitly contain `ACTIVATE_EMPLOYEE`. Activation is only allowed
+  after approval and creates one immutable `employee_directory_records` row
+  plus an audit event. Database trigger rejects pending/rejected activation;
+  unique request and mobile constraints prevent repeated activation and
+  duplicate active identities.
+- The portal directory is distinct from payment-derived `employee_master`;
+  Employee actions do not write Cash postings or Vessel programs/assignments.
+  Decision and activation records have SELECT/INSERT grants only and
+  UPDATE/DELETE/TRUNCATE guards. The Employee request GET projects state and
+  decision/activation actor and timestamps; Admins see the bounded queue,
+  Users remain self-scoped.
+- Changed implementation paths for this work: `apps/al-rifai/app/api/cash/
+  [...path]/route.ts`, `apps/al-rifai/app/platform/ui.tsx`,
+  `apps/al-rifai/lib/employee-submission-policy.ts`,
+  `apps/al-rifai/db/migration-candidates/0035_employee_submission_requests.sql`,
+  `apps/al-rifai/tests/employee-submission-lifecycle.mjs`,
+  `apps/al-rifai/tests/workspace-submissions.mjs`, and the `test` script in
+  `apps/al-rifai/package.json`. Documentation updated in this handoff,
+  `apps/al-rifai/docs/EMPLOYEE-TRANSACTION-SUBMISSIONS.md`,
+  `apps/al-rifai/README.md` and `docs/VPS_MAP.md`. Existing dirty paths were
+  preserved; nothing was staged or committed.
+- Focused offline suite: **57/57 PASS** (Node 22.23.3, network disabled,
+  repository read-only): Employee qualification, request validation,
+  decision/activation policy and API boundaries, Cash submission/review
+  restrictions, Vessel match and command checks. Typecheck: **PASS**.
+- Expanded candidate 0035 PostgreSQL rehearsal: **PASS** using disposable
+  PostgreSQL 16 image
+  `sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea`.
+  Inspection showed `network=none`, zero mounts and read-only rootfs; data
+  existed only on ephemeral tmpfs. Synthetic checks covered grants, unique
+  one-time decisions, approved-only activation, rejection/pending denial,
+  duplicate mobile and repeated activation conflicts, audit persistence and
+  immutable lifecycle rows. The test container was removed; no rehearsal
+  container remains. This is isolated synthetic evidence only, not Production
+  schema or endpoint verification.
+- No production migration, deployment, restart, Cash posting, Vessel command,
+  business-data write or credential/configuration change occurred. Candidate
+  0035 and all source changes remain pending review/Owner authorization before
+  any Production migration or release.
+
+## DRAWER PERSISTENCE AND EMPLOYEE QUALIFICATION — 2026-10-29 23:48 CET
+
+Source-only implementation; no Production API, business data, migration,
+configuration, image, or service was accessed or changed.
+
+- Transactions drawer now submits through the existing authenticated
+  `/api/cash/submissions` API. It obtains a current CSRF token from
+  `/api/cash/me`, reports the real API result, and displays recent records from
+  the existing scoped GET endpoint. The payload preserves the separate
+  employee and payout mobiles and contains no Vessel field. Each request stays
+  `PENDING_REVIEW`; no Cash posting is requested. It uses the schema from
+  migration 0031; the current authoritative Production position in `AGENTS.md`
+  records 0031 applied and 0032 unapplied. No Production state was checked in
+  this implementation segment.
+- Employee drawer now submits minimal requests through
+  `/api/cash/employee-submissions`, with the same session/CSRF/Origin and
+  first-login controls. New requests are idempotent per submitter/payload,
+  append-only, audited transactionally, and remain `PENDING_APPROVAL`; Users
+  read only their own rows and authenticated Admins read the bounded queue.
+  The new candidate 0035 stores name, normalized employee mobile, optional
+  plain-text assignment reference, requested date and note. It does not write
+  `employee_master`, Cash facts, Vessel programs or assignments. NID, salary
+  and emergency-contact values are not collected without a protected HR
+  storage/review design. At the time of this earlier update, no Admin decision
+  or employee-activation endpoint was included; see the lifecycle update above.
+- Candidate 0035 is **prepared only** and requires separate Owner approval and
+  isolated rehearsal before any deployment could persist employee requests.
+  Migration 0031 provides transaction request storage; its Production applied
+  status is as recorded in `AGENTS.md`, not newly verified here.
+  Migration 0032 remains unapplied and unrelated to either drawer.
+- The previous `employee-program-qualification.mjs` line-9 assertion expected
+  an obsolete source expression and prevented all tests from loading. The test
+  now calls the current pure `buildHistoricalRoster()` projection with
+  synthetic records. Tests exercise distinct mobile identities, no name-only
+  merging, review-only identity conflicts, and source-scope boundaries; no
+  qualification source behavior was changed.
+- **Focused source tests: PASS, 50/50** across
+  `employee-program-qualification.mjs`, `workspace-submissions.mjs`,
+  `cash-submission.mjs`, `cash-approval.mjs`, `vessel-match.mjs` and
+  `vessel-commands.mjs`; Node.js `22.23.3`, container network disabled and
+  repository mounted read-only. **Typecheck: PASS** (`tsc --noEmit`, with its
+  incremental cache redirected to container `/tmp`).
+- **Candidate 0035 schema rehearsal: PASS** on disposable PostgreSQL 16 image
+  `sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea`.
+  Container inspection showed `network=none`, `mounts=0`,
+  `readonly=true`; database lived only on ephemeral tmpfs. Synthetic fixtures
+  verified migration application, `ir_review_runtime` SELECT/INSERT grants,
+  per-submitter idempotency, User/Admin queue scope, the API-projected
+  `PENDING_APPROVAL` state, audit insertion, and UPDATE/DELETE/TRUNCATE
+  rejection. `state` is projected by the API rather than stored as a table
+  column. Initial rehearsal attempts exposed disposable-harness setup/fixture
+  assertion errors; after correcting them, the complete rehearsal passed
+  without source or migration edits.
+- **Cleanup: PASS** — the successful PostgreSQL container was removed by its
+  run-scoped cleanup trap; follow-up inventory found no containers matching
+  the rehearsal name. No production or shared volume/network was mounted.
+  Production remains `shadow`; no deployment, restart, migration, business
+  data write, Cash posting or live configuration change occurred.
+
+## PRODUCTION PROFILE AND DATASET MARKERS — 2026-10-29 23:24 +01 (READ-ONLY)
+
+This narrowly scoped follow-up supplements the readiness review below. No API
+was called, no secret value was read, no snapshot payload or business row was
+selected, and no Production configuration, database, image, or service was
+changed.
+
+- Runtime inspection identified `al-rifai-app-1` on image
+  `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`.
+  The effective non-secret configuration has
+  `ALRIFAI_UNIFIED_AUTH_MODE=shadow` and
+  `ALRIFAI_REVIEW_PROFILE=B01-B03-LIVE`. The
+  `ALRIFAI_CASH_POSTING_ENABLED` variable is absent. In the reviewed
+  `cash-commands.ts` implementation this leaves `access.post` false, regardless
+  of candidate-session role/grant checks. No `/candidate-api` request or
+  posting action was attempted. This verifies the configured gate only; it is
+  not a live authorization test.
+- A transaction explicitly begun `READ ONLY` reported database `alrifai`,
+  role `alrifai_app`, and `transaction_read_only=on`. Aggregate inspection used
+  only snapshot identifiers, kinds, and content-hash metadata (never payload):
+  2 dataset groups, each with exactly one `:complete` manifest; 0 missing or
+  duplicate manifests; both manifest chunk-count hashes matched their
+  corresponding stored chunk counts.
+- `dataset_scope` aggregate metadata showed one `CASH/ARCHIVE` and one
+  `VESSEL/ARCHIVE` marker; each key linked to a snapshot dataset. No
+  `CURRENT` scope marker was present in the aggregate. This is not by itself a
+  missing-Current blocker: `conversation-snapshot.ts::importedRows()` includes
+  unclassified snapshots in Current and excludes only those explicitly marked
+  Archive; Accounts snapshot reads require their separate completion manifest.
+  Live Cash and Vessel readers use fixed `dataset_epoch` predicates, not
+  `dataset_scope`. The aggregate markers therefore establish archive
+  separation, not canonical business-table epoch distribution, record quality,
+  or endpoint contents; those remain unverified without a separately
+  authorized business-row check.
+- This confirms completion-marker presence/consistency for the two stored
+  snapshot datasets and the candidate manual-posting flag is off. It does not
+  establish end-to-end Production readiness or authorize enabling the flag,
+  changing the profile, migration, or release.
+
+## FINAL CASH/VESSEL READINESS REVIEW — 2026-10-30 (READ-ONLY)
+
+Source and prior-test evidence were reviewed without Production API calls,
+business-row queries, migrations, service operations, or application changes.
+Branch `main` remains at `76183e9`; the worktree remains dirty.
+
+- Cash and Vessel share original WhatsApp persistence, but routing is exclusive:
+  `classifyBusinessSource()` in `lib/escort-register.mjs` fails closed on
+  source conflicts; the ingestion worker creates per-domain queue entries,
+  and `process-cash.ts` / `process-vessel.ts` consume only their respective
+  domains. Existing `tests/escort-register.mjs`,
+  `tests/vessel-health-isolation.mjs`, and
+  `tests/whatsapp-archive-ingestion.mjs` cover source exclusivity, WA-01 and
+  authorization predicates. No Vessel writer to Cash postings was found.
+- Cash submissions remain separate from canonical postings:
+  `app/api/cash/[...path]/route.ts` records review decisions and returns
+  `postingAuthorized:false`; summary posting facts are read from canonical
+  `cash_postings`. `cash-submission.mjs` and `cash-approval.mjs` cover
+  pending-review, role/reviewer rules, and the absence of posting authority.
+  Migration `0012_business_workflows.sql` defines the separate canonical
+  posting function, which permits only `MANUAL_READY` or properly approved
+  `PENDING_ADMIN` instructions; `REVIEW` is rejected and posting is
+  idempotent.
+- A separate candidate manual-posting endpoint is source-reachable:
+  `app/candidate-api/[...path]/route.ts` dispatches to `handleHost()`, and
+  `candidates/identity-review/api.ts` maps `/business/cash/post` to
+  `postCashEntry()`. The host requires the private validation identity plus
+  the configured host and peer marker; the API additionally requires its
+  candidate session/CSRF checks, current Admin/Super-Admin role, exact
+  `cash.post` grant, and `ALRIFAI_CASH_POSTING_ENABLED=APPROVED_MANUAL_V1`.
+  This is a distinct manual command path, not the Cash Submission review
+  handler. Whether this candidate profile/feature flag is active in the
+  currently running Production artifact was not checked and remains
+  **NOT VERIFIED**; no claim is made that the route was invoked.
+- Unified-auth policy tests and the prior 2026-10-29 isolated Chromium run
+  cover exact-ID Super Admin checks, first-login password change, session
+  expiry/revocation/logout, role denials, and Cash/Vessel navigation. These
+  are source/isolated synthetic evidence, not authenticated Production
+  evidence. Production remains `shadow`, so deployed unified-session
+  enforcement and Owner login are **NOT VERIFIED**.
+- Production catalog inspection previously confirmed the required relation
+  and column definitions for `/api/operations`, `/api/escort-register`, and
+  `/api/register`; marker row values and current/archive dataset completion
+  remain **INCONCLUSIVE** because business rows/marker values were not read.
+  Synthetic isolated API success does not establish Production dataset
+  readiness.
+- Known functional gaps remain: `0032` is unapplied, so Vessel command
+  endpoints remain migration-dependent; general-user Vessel submission,
+  employee/transaction saves, server-backed typeahead, usable pagination,
+  general business-record soft-delete/recovery audit, and consistent
+  `/cash` styling are incomplete. `app/api/vessel-programs/route.ts` shows
+  `GET` checks command-function availability and reads programs, while `POST`
+  invokes the five command functions supplied by candidate `0032`. The
+  migration readiness record lists its prerequisites: `programs` (0000/0001),
+  `program_assignments` (0012), `identity_review_candidate.records` (0006),
+  command-history support (0007), and append-only support (0011). Thus `0032`
+  is required for Vessel command writes, not the read path; it remains
+  unapplied.
+- Focused synthetic tests were run in cached Node 22.23.3 with networking
+  disabled, the app tree mounted read-only, and no credentials or database
+  volumes mounted. Eight files passed: `business-workflows.mjs`,
+  `cash-intake-safety.mjs`, `cash-submission.mjs`, `cash-approval.mjs`,
+  `vessel-commands.mjs`, `escort-register.mjs`,
+  `vessel-health-isolation.mjs`, and `employee-program.mjs` — 175/175 tests.
+  Adding `employee-program-qualification.mjs` yields a load-time assertion
+  failure at line 9 (`original.split(old).length`, actual 1, expected 2);
+  its test cases do not run because the legacy source expression asserted
+  there is absent from current `lib/vessel-source.ts`. This is a stale
+  source-pattern assertion, not behavioral evidence, and was not changed.
+  There is no test here for Employee/transaction drawer persistence; the
+  drawers in `app/platform/ui.tsx` still have disabled submit buttons and
+  explicitly pending backend writers.
+- Readiness disposition: **NOT YET PROVEN READY — evidence is incomplete**.
+  No Production configuration or release decision is implied by this review.
+
+## PRODUCTION IMAGE PROVENANCE RECONCILIATION — 2026-10-29 23:11 CET
+
+Owner-authorized read-only inspection reconciles the previously noted
+`ef06…` versus `cace…` discrepancy. No application API or business data was
+accessed. No source, configuration, image tag or Production service was changed.
+
+**Reconciled evidence**
+- The hashes identify two distinct locally built images. Docker metadata:
+  `cace72…` was created `2026-10-29T00:09:32+01:00`, tagged
+  `local/al-rifai:20261029-no-ratelimit`; `ef06c2…` was created
+  `2026-10-29T14:16:38+01:00`, tagged
+  `local/al-rifai:20261029-review-nav-fix`. Both image IDs match their local
+  `RepoDigests`; neither image has OCI config labels recording source commit.
+- Git history records the expected transition: `74c3931` (05:26 +01) pins
+  `cace72…`; later source changes are `ff13046` and `9bc9f85`; `3a6624c`
+  (14:18:56 +01) changes the Compose pin from `cace72…` to `ef06c2…` and
+  names source commit `9bc9f85`. The contemporaneous deployment entry below
+  records `ef06c2…` as deployed from `9bc9f85`, with the prior `cace72…`
+  image retained as rollback.
+- Read-only runtime inspection confirms `al-rifai-app-1` is running and
+  healthy on image ID `ef06c2…`; its configured image is the same digest, and
+  the current tracked `apps/al-rifai/compose.yaml` pins that digest. The
+  container was created at `2026-10-29T13:19:00Z`, immediately after the
+  image build and pin-commit timestamps. `cace72…` remains available locally
+  under its recorded rollback tag.
+- **Conclusion: provenance is reconciled at the deployment-record/config/
+  runtime level.** The earlier `cace72…` entry is a prior Production state;
+  it was superseded by the documented, later `ef06c2…` release. This
+  difference is consistent with the recorded release sequence and is not
+  evidence of an unrecorded or unauthorized deployment.
+- The Docker build contains no source-commit label, so independent
+  binary-to-source attestation is unavailable. The exact build inputs cannot
+  be cryptographically reconstructed from these local image metadata alone.
+
+**Endpoint metadata**
+
+| Endpoint | Relations and required columns | Effective SELECT grants | Marker state |
+|---|---|---|---|
+| `/api/operations` | Present: `site_operation_notes` (`id`, `status`, `note`); Current Cash relations `cash_instructions`, `cash_postings`, `source_refs` with the route-used columns including `dataset_epoch`; optional `site_cash_archive`, `site_payment_drafts`, and `site_settlement_drafts` also present. | `alrifai_app` can SELECT the `site_*` tables; it cannot SELECT the three Cash tables. `ir_review_runtime` can SELECT all three Cash tables, matching `lib/live-cash-read.ts`. | `cash_instructions.dataset_epoch` exists with canonical default. No epoch values or Cash rows inspected. |
+| `/api/escort-register` | Present: `escort_order_register`, `escort_client_contacts`, `escort_order_events`, `whatsapp_messages_original`, `whatsapp_messages_processing`; all selected/joined columns from the route exist, including `escort_order_register.dataset_epoch`. | `alrifai_app` can SELECT all five relations. | `dataset_epoch` exists with canonical default. No epoch values or Escort/message rows inspected. |
+| `/api/register` | Present: `programs`, `site_source_snapshots`, `dataset_scope`; required columns include `programs.dataset_epoch`, snapshot `id`/`datasetId`/`kind`/`payload`/`contentHash`, and scope `dataset_key`/`scope`. | `alrifai_app` can SELECT all three relations. | Scope constraints allow `CURRENT`/`ARCHIVE`; completion-marker and scope-marker row presence/values were not inspected, so runtime marker availability is **INCONCLUSIVE**. |
+
+`alrifai_app` also has INSERT/UPDATE/DELETE privileges on
+`site_operation_notes`, `site_cash_archive`, `site_payment_drafts`,
+`site_settlement_drafts`, `site_source_snapshots`, `programs`, and both
+WhatsApp message tables; it has INSERT/UPDATE (not DELETE) on `dataset_scope`.
+It has SELECT-only grants on the Escort register/contact/event tables. The
+`ir_review_runtime` role has SELECT/INSERT (not UPDATE/DELETE) on
+`cash_instructions` and `source_refs`, and SELECT-only on `cash_postings`.
+These are catalog grant observations, not proof of API runtime behavior or
+authorization to write. The inspected GET handlers remain read-only by source;
+this check invoked no writes or posting function.
+
+All required relation and route-used column metadata is **PRESENT**. Missing
+table/column/grant is not indicated by this check. Actual CURRENT/ARCHIVE
+classification rows, register completion markers, endpoint payloads, and
+deployed-code behavior remain **NOT VERIFIED** because inspecting them would
+require business-row reads or API calls outside this task's scope.
+
+The database metadata observations above are retained from the authorized
+23:01 check; they are separate from and not needed to establish image
+provenance.
+
+## ISOLATED API VERIFICATION — 2026-10-29 22:45 CET
+
+The three read endpoints previously unavailable in the minimal authentication
+harness were exercised against a disposable PostgreSQL database using
+synthetic-only records. This does not establish anything about Production
+schema state or data. Branch `main` remains at `76183e9`; the existing dirty
+worktree was preserved.
+
+**Isolation and runtime**
+- Disposable app image:
+  `sha256:687206cd3a136960fd1fea5fafe1cd88313c8adce551d8fb68d1c29e9562fe7c`;
+  app runtime Node `v22.23.3`. PostgreSQL image `postgres:16-alpine`,
+  server `16.15`.
+- App and database were the only endpoints on the newly created bridge
+  `alrifai-api-e2e-net-20261029-2245`; Docker confirmed `Internal=true`,
+  blank gateway, and no published ports. The database had tmpfs-only storage
+  and no volume. The app had only read-only synthetic evidence and test-secret
+  mounts. Live Cash sync, Cash intent capture, Vessel processing and Mirror
+  worker were disabled. No Production database, volume, credential, service,
+  bridge or external business-writing integration was reachable or used.
+- Test resources were cleaned up after evidence capture: both named containers,
+  the internal network, the test image, and the four named `/tmp/alrifai-api-e2e-*`
+  directories were removed. No shared Docker cache was pruned.
+
+**Endpoint results**
+
+| Endpoint | Empty/incomplete test schema | Existing dependencies plus synthetic data |
+|---|---|---|
+| `GET /api/operations` | After fixing a test-fixture permission issue, `503` with the route's saved-records-preserved error. Server log identified missing `site_operation_notes`, SQLSTATE `42P01` (`undefined_table`). The earlier `500` occurred only while the synthetic evidence mount was unreadable (`EACCES` opening `accounts-snapshot.json`) before the route's database-error handler; it was not a Production observation. | `200`; valid empty Current Cash response, `canWrite:false`; no instruction or posting was created. |
+| `GET /api/escort-register` | `503`, `Escort intake schema is not installed yet.` The route's `to_regclass` check found `public.escort_order_register` absent; this branch is a schema-presence check, not a SQL permission error. | `200`; returned the one synthetic contact, order, event and review message, with read-only Current scope. |
+| `GET /api/register` | `503` generic register-load response. PostgreSQL logs showed missing `programs` and `site_source_snapshots`, SQLSTATE `42P01`. | `200`; returned the one synthetic program. The required completion snapshot and CURRENT dataset-scope marker were present. |
+
+- In the successful schema, `programs.dataset_epoch` and
+  `escort_order_register.dataset_epoch` existed. The synthetic dataset had one
+  CURRENT scope marker and one explicit completion marker. No missing-column,
+  missing-marker or `42501` permission error was observed in the successful
+  requests. The disposable setup granted the test `alrifai_app` role only the
+  required read access to these endpoint tables; the Cash review runtime's
+  existing read grants were also present. These manual test grants are not
+  evidence of Production privileges. The code treats absent `dataset_scope`
+  join rows as CURRENT; a missing completion snapshot is separately required
+  by register loading and is not the same as a missing table/column.
+- The database used existing migration DDL only: `0000`–`0013`, `0020`,
+  `0021`, and `0026`; migration `0018` was limited to its existing table/index/
+  grant DDL and excluded its embedded non-synthetic client seed rows. The
+  `0013` sequential baseline was applied only in this disposable database and
+  is not required by these GET routes. No schema objects or existing migration
+  files were invented or changed. Migrations `0032` and `0034` were not
+  applied. No route write action was invoked.
+
+**Disposition**
+- The prior browser-harness 503s are now explained in this disposable
+  environment by missing migration-provided relations; all three GET routes
+  passed after their existing dependencies and synthetic records were present.
+  The `/api/operations` 500 is explained by the test fixture's initial
+  directory permissions, not by a Production diagnosis.
+- Missing database permission was not the cause of the captured empty-schema
+  failures; no Production grant state was checked. Production behavior and
+  schema remain **NOT VERIFIED**. No application or migration correction is
+  justified by this isolated run, and `0032` is not a dependency for these
+  read endpoints.
+- No Production deployment, restart, migration, credential change, query or
+  business-data access occurred.
+
+## ISOLATED AUTH BROWSER E2E — 2026-10-29
+
+This follow-up adds actual Chromium evidence to the HTTP/API-only run below.
+Branch `main` remains at `76183e9`; the worktree remains dirty and uncommitted.
+The existing Dashboard, Signup, navigation, Vessel, Cash and authentication
+changes were preserved. No production service, database, volume, credential,
+configuration, migration or business record was accessed or changed.
+
+**Disposable environment and isolation evidence**
+- Built a temporary application image from a disposable source copy and
+  synthetic evidence fixtures: app image
+  `sha256:2ceb936f019604398473e89b6e8b982ab373f142938d032f61ded1c6fe282f9e`.
+  The copied source omitted runtime business data, credentials, imports,
+  staging, qualification evidence and Git history. Build completed the pinned
+  pnpm install, `pnpm typecheck`, `pnpm lint` (0 errors, 0 warnings), and
+  `pnpm build`. An initial build with empty evidence failed on the expected
+  missing `accounts-snapshot.json`; rebuilding used synthetic fixture files
+  and did not copy the private production evidence.
+- Browser runtime: Playwright `1.56.1`, Node `v22.20.0`, Chromium
+  `141.0.7390.37`; temporary test image
+  `sha256:da3756ecf8a76161f1d17edc247213d3a8b69c47d5b912a4266b911e78ac8d6f`.
+  App runtime was Node `v22.23.3`; disposable PostgreSQL was `16.15`.
+- App, browser and PostgreSQL were attached only to the newly created Docker
+  bridge `alrifai-auth-e2e-net-20261029-2145` (`Internal=true`, no gateway).
+  There were no published container ports. PostgreSQL had tmpfs-only data and
+  no volume. The browser had no mounts. App mounts were only read-only
+  synthetic password files and synthetic evidence under `/tmp`; it had no
+  production network, volume, credential, evidence, socket or bridge mount.
+  Cash Live Sync, Cash intent capture, Vessel processing and the Mirror worker
+  were disabled; no external business-writing integration was configured.
+- The HTTPS reverse proxy was local to the browser container at
+  `https://127.0.0.1:3443`; no host port was exposed. The browser verified
+  Secure cookies over HTTPS. This was an isolated test origin, not the
+  production hostname or production private-entry proxy.
+- The disposable schema contained synthetic auth identities, session/audit
+  tables, a synthetic append-only trigger function and empty business tables.
+  Migration candidates `0031`, `0033` and `0034` were rehearsed only there.
+  `0032` was not applied. No production or restored production data was used.
+
+**Browser journey results**
+
+| Status | Journey and evidence |
+|---|---|
+| PASS | Chromium rendered public `/`, `/login` and `/signup` (HTTP 200). |
+| PASS | Anonymous `/dashboard` redirected to Login. Protected `/api/register` and `/api/vessel-programs` returned 401; the legacy Basic challenge was present on these unauthenticated API responses. |
+| PASS | Signup UI returned 202 and stored a pending request, with zero matching account rows. Duplicate email remained one request; invalid signup returned 400. |
+| PASS | Only the configured Super Admin listed, approved or rejected requests. Ordinary ADMIN was denied with 403; invalid decision returned 400, missing request 404, repeated decision 409. Approval returned `accountCreated:false`; explicit account creation was a separate Super-Admin-authorized workflow. Login before that creation returned 401. |
+| PASS | Explicitly provisioned USER was active only after account creation and required a temporary-password change. Before the change the protected API returned 403 `PASSWORD_CHANGE_REQUIRED` and direct Dashboard navigation returned to Login. Password change preserved the same secure cookie and resumed Dashboard without another login. |
+| PASS | With a valid session, Chromium navigated `/cash`, `/cash/submissions`, `/employees` and `/vessel-register` (HTTP 200) without a Basic challenge or login prompt. `/api/cash/me` returned 200. |
+| PASS | USER submitted a synthetic Cash item through the UI: `PENDING_REVIEW`, `postingAuthorized:false`. USER approval was denied with 403. Ordinary ADMIN approval through the UI recorded `ACTIVE_REVIEWED`, `postingAuthorized:false`, plus one review and audit row. No posting endpoint was invoked. The isolated schema had no Cash ledger/posting table, so this verifies the review boundary, not production ledger state. |
+| PASS | Vessel read endpoint returned 200 with commands unavailable in the `0032`-free schema; USER command attempt returned 403. Cash and Vessel authorization remained separate. |
+| PASS | Sign-out invalidated the session; changing the password revoked a second session; setting an isolated session expiry in the synthetic database caused protected API 401 and one redirect to Login, with no loop. |
+
+**Captured browser diagnostics and limits**
+- Expected HTTP errors included anonymous/revoked/expired 401s; forced-change,
+  role and authorization 403s; invalid-input 400s; missing-request 404; and
+  duplicate-decision 409. The test also captured business-page API responses
+  `/api/operations?...` = 500, `/api/escort-register?...` = 503 and
+  `/api/register` = 503 because historical/business schemas were intentionally
+  absent from the minimum synthetic database. These are **NOT VERIFIED**
+  business-data views; the valid-session `/api/register` 503 occurred after
+  the authentication gate and is not evidence that the route returned data.
+- Browser `requestfailed` events were Next.js RSC prefetch/navigation requests
+  cancelled with `net::ERR_ABORTED` while the test navigated between pages.
+  No uncaught page JavaScript exception was observed. The failed API responses
+  above remain real environment-limited failures, not silently treated as
+  passes.
+- Production `https://alrifai.iamazim.com`, its private-entry proxy, deployed
+  auth mode, production session behaviour and production data/API payloads
+  remain **NOT VERIFIED**. Production remains in `shadow`; no deployment or
+  service restart occurred.
+
+**Rate-limit trust boundary and outstanding work**
+- No login rate limiter was implemented. `private-entry.mjs` strips inbound
+  `x-forwarded-*`, `x-wf02-peer` and `x-alrifai-client-ip`, then injects
+  `x-wf02-peer` and `x-alrifai-client-ip` from its configured peer secret and
+  socket. The Next application does not authenticate that peer marker or
+  validate the injected client-IP value. `cash-portal.ts` instead records
+  `x-forwarded-for`, which the entry proxy strips. Therefore the application
+  has no verified client identity key for a limiter. Do not trust client
+  headers or add a process-local substitute; first establish an authenticated
+  proxy-to-app trust contract, then consider a shared limiter.
+- Existing scope gaps are unchanged: disabled Employee/transaction saves;
+  no server-backed employee/ID/payout typeahead; capped lists without usable
+  pagination; no general-user Vessel submission; Vessel commands dependent
+  on unapplied `0032`; no general business-record edit/soft-delete/recovery
+  audit workflow; and styling not consistently shared with `/cash`.
+- Temporary test containers, the internal network, test images and synthetic
+  host directories were removed. The shared Docker BuildKit cache was not
+  pruned to avoid deleting other users' cache; it may retain build layers but
+  no production secrets or business-data fixture. No test database volume or
+  container remains.
+
+## READ-ONLY READINESS REVIEW — API SCHEMA DEPENDENCIES — 2026-10-29 22:38 +0100
+
+Static inspection of the current dirty source and prior isolated browser
+evidence refines the earlier blanket attribution to “historical/business
+schemas.” No production database or business rows were queried, and no tests
+were rerun.
+
+**API dependency findings**
+- `/api/escort-register`: `app/api/escort-register/route.ts` explicitly checks
+  for `public.escort_client_contacts`; if absent, it returns 503
+  `Escort intake schema is not installed yet.` Migration
+  `db/migrations/0018_escort_order_register.sql` creates that table together
+  with `escort_order_register` and `escort_order_events`. The endpoint also
+  reads `dataset_epoch` (added to the register by `0026_approved_conversation_scope.sql`)
+  and joins WhatsApp original/processing records (created by
+  `0021_whatsapp_message_ingestion.sql`). The observed 503 is therefore
+  consistent with the harness intentionally omitting `0018`/its dependencies;
+  the browser record did not capture the response body or database catalog, so
+  the exact absent relation is **not established**. Candidate `0023` extends
+  the model, but its extra source/group-authorization tables are not queried
+  by this GET handler. No Vessel command migration `0032` is required for this
+  read-only route.
+- `/api/register`: `app/api/register/route.ts` defaults to the historical
+  snapshot. `lib/vessel-source.ts::historicalSnapshot` selects `programs`
+  filtered by `dataset_epoch`, then `lib/conversation-snapshot.ts::importedPrograms`
+  requires `site_source_snapshots`, its explicit completion marker and
+  `dataset_scope`. The existing migration lineage is `0000` for `programs`,
+  `0004` for `site_source_snapshots`, and `0026` for `programs.dataset_epoch`
+  and `dataset_scope`. The loader maps missing/failed dependencies to
+  `RegisterError` (default 503); the observed 503 fits an incomplete isolated
+  schema but does not identify which table, column, grant or snapshot marker
+  was missing. A valid-session response proves only that the auth gate was
+  passed, not that register data was available. No `0032` migration is needed
+  for this read path.
+- `/api/operations`: `app/api/operations/route.ts` performs
+  `SELECT * FROM site_operation_notes` inside its `try` for every view. The
+  default Current view then calls `lib/cash-source.ts::loadCashSnapshot`,
+  which reads `cash_instructions`, `cash_postings` and `source_refs` and uses
+  `dataset_epoch`; lineage includes `0002` (`site_operation_notes`), `0011`
+  (`source_refs`), `0012` (Cash business tables), and `0026` (Cash epoch).
+  Other views additionally need their respective existing tables/evidence:
+  e.g. `0003` provides `site_settlement_drafts`,
+  `0004` provides `site_source_snapshots`, and the default overview reads
+  `programs.dataset_epoch`.
+  **The browser-recorded 500 is not explained by a missing relation in the
+  current handler:** an error from the database calls inside its `try` is
+  caught and returned as 503. The 500 could originate before that `try`
+  (including identity resolution or module initialization), but no captured
+  response body, server log or route-specific trace proves the cause. Treat
+  this as **cause undetermined**, not as a confirmed schema failure.
+- These are existing schema dependencies, not proposals to invent or add
+  tables. The migration files listed above are historical migration lineage,
+  not instructions to apply them. Do not replay them against production or
+  apply Vessel `0032` for these GET endpoints.
+
+**Auth/authorization source review**
+- Identity is the existing `cash_portal_users` / `cash_portal_sessions` store.
+  Unified session role and user ID are loaded from the database, not request
+  headers or client role fields. Super Admin is the stored `ADMIN` role plus
+  exact ID membership in `ALRIFAI_CASH_SUPER_ADMIN_IDS`. Signup request
+  decisions require the authenticated configured Super Admin and mutation
+  origin/CSRF checks; `0034` records one append-only decision and does not
+  create an account. Isolated browser evidence for those paths is recorded
+  above; production behavior remains unverified.
+- In `on` mode the proxy checks stored `must_change_password` before protected
+  paths; forced-change pages/API calls are gated, with only password/session
+  completion/logout paths allowed. The legacy validation identity is checked
+  first and remains a separate bypass/fallback by design. Session records use
+  hashed opaque tokens, an 8-hour absolute expiry, 30-minute idle timeout and
+  inactive-user rejection; logout deletes the current session, and password
+  changes revoke other sessions. These facts are source review plus the
+  isolated tests above, not production-session verification.
+- Cash submissions remain separate from postings: USER submission creates
+  `PENDING_REVIEW` and review responses explicitly report
+  `postingAuthorized:false`; decision is Admin-gated and no posting call is
+  present in that route. Vessel reads use a separate `vessel.read` capability;
+  command writes are separately gated to the private validation identity and
+  depend on the command functions from `0032`. The isolated E2E verified
+  denial/review boundaries, but did not exercise a real Cash posting ledger.
+- `release/private-entry.mjs` strips client-supplied forwarding/peer headers
+  and injects peer and socket address headers. The Next application does not
+  authenticate the peer marker; `cash-portal.ts` still stores
+  `x-forwarded-for`, which this proxy strips. There is no verified application
+  client-IP key for distributed login throttling. No rate limiter should be
+  added until an authenticated proxy-to-app trust contract exists.
+
+**Disposition**
+- No application correction is justified by the current evidence: the 503s
+  come from dependencies intentionally omitted from the small test schema, and
+  the `/api/operations` 500 has no established root cause. Do not invent
+  schema or treat migrations as a release plan.
+- Smallest safe follow-up, if these data endpoints need renewed verification:
+  run only these three GETs in a fresh disposable database seeded with
+  synthetic data, using the existing ordered migrations and only their
+  dependencies; capture response bodies and sanitized server-side SQLSTATE/
+  route logs. Keep `0032` unapplied and production disconnected. This task did
+  not run that follow-up.
+- This review changed only this handoff. Branch remains `main` at `76183e9`;
+  all prior dirty source/test changes remain uncommitted. No deployment,
+  production migration, restart, credential change or business-data access
+  occurred.
+
+## ISOLATED AUTH HTTP E2E — 2026-10-29 21:41 CET
+
+This update continues the existing implementation without redoing the Dashboard
+or navigation work. All prior dirty files were preserved. Branch `main` remains
+at `76183e9`; the worktree is dirty and uncommitted. No production service,
+configuration, credential, database, migration, business record, or Cash/Vessel
+writer was changed.
+
+**Isolated runtime**
+- Created a disposable PostgreSQL 16 database with empty tmpfs storage on a new
+  Docker `--internal` network. It had no persistent volume or published port.
+  The Next.js/Node 22 test app had only the copied working source, a read-only
+  dependency mount, and a synthetic database-password mount. It had no
+  production network, database/WhatsApp credentials, evidence mount, or bridge
+  socket. Both containers were attached only to that internal network.
+- The database contained only synthetic accounts, signup requests, one
+  synthetic Vessel program, and one synthetic Cash submission/review.
+- Migration candidates `0033` and `0034` were applied only to this database.
+  Candidate `0031` was then applied only to verify Cash Submission visibility
+  and review behavior. `0032` was not applied. The actual
+  `alrifai_foundation_append_only()` trigger function body was reproduced in
+  the isolated schema; signup request, decision, and Cash submission write
+  protection was exercised and the runtime role had no UPDATE/DELETE grants.
+- The final test containers, internal network, and synthetic files were removed
+  after verification. No browser binary or Playwright/Puppeteer dependency was
+  available; these were real HTTP/API tests against Next.js, **not browser
+  E2E**.
+
+**Authentication and authorization findings**
+- The first isolated run found that an account with `must_change_password`
+  could use its newly issued session to navigate to Dashboard and read Cash or
+  Vessel APIs before changing that password. The login UI prompted correctly,
+  but server route guards did not enforce the mandatory first-login step.
+- Source now gates forced-change sessions at the existing Next proxy boundary:
+  page requests return to Login and protected APIs return 403 until the user
+  changes the password. Login resumes the existing session and obtains a fresh
+  CSRF token; it asks for the current password if the login form state was lost.
+  No new identity store, cookie, credential, or session architecture was added.
+- In the isolated journey, unauthenticated home redirected to Login; pending
+  signup did not create an account or permit login; only the configured
+  Super Admin could list/approve/reject; duplicate decisions and account
+  creation were rejected; approval remained separate from account creation.
+  The explicitly created user changed the initial password and then navigated
+  Dashboard, Employees, Cash, Cash Submissions, and Vessel Register on the same
+  session without another password prompt. Direct protected-page/API access
+  without a valid session, after logout, after absolute expiry, and after idle
+  expiry was denied.
+- After isolated `0031` rehearsal, a USER could submit a record as
+  `PENDING_REVIEW`, read its own row, and not approve it (`403
+  ADMIN_REQUIRED`). An ordinary ADMIN could review a different User's row;
+  response remained `postingAuthorized:false`. The disposable schema contained
+  no Cash posting table, and no posting was called or created. Super-Admin-only
+  Signup and audit endpoints remained denied to an ordinary Admin. A USER could
+  read the synthetic Vessel program but the separate command API returned
+  `403 VESSEL_COMMAND_FORBIDDEN`.
+- Signup candidates `0033`/`0034` applied cleanly in the minimum synthetic
+  schema with the existing identity tables/role and the exact append-only
+  function body. Signup persistence, case/whitespace-normalized duplicate
+  handling, decisions, explicit later account creation, and append-only trigger
+  behavior passed. This does not substitute for rehearsal against a restored
+  production clone.
+
+**Rate limiting and remaining application gaps**
+- No login limiter was implemented. The production Compose topology has one app
+  replica and shared PostgreSQL, but the app does not verify the entry proxy's
+  `x-wf02-peer`; `cash-portal.ts` reads `x-forwarded-for`, which
+  `private-entry.mjs` strips. Thus the source currently lacks an application-
+  verified client-IP key. The design doc now records the limitation and
+  recommends considering a shared PostgreSQL limiter only after the proxy-peer
+  trust contract is enforced, using reversible progressive delay and no hard
+  account lockout. Existing rate-limit removal and its regression test remain.
+- Previously recorded gaps remain: employee/transaction saves are disabled;
+  no server-backed employee/ID/payout typeahead; capped lists lack usable
+  pagination; no general-user Vessel submission; Vessel commands still require
+  `0032`; no general business-record edit/soft-delete/recovery audit workflow;
+  `/cash` styling is not consistently shared across modules. These were not
+  expanded in this auth slice.
+- Production root/login behavior, browser behavior, Owner login, and production
+  session/logout/expiry remain **NOT VERIFIED**. The latest recorded
+  unauthenticated production observation (21:20 CET) still showed the public
+  homepage and legacy Basic challenge on protected workspace routes; production
+  remains in `shadow`. No production migration/deploy/restart was performed.
+
+**Changed paths in this continuation**
+- `apps/al-rifai/proxy.ts`
+- `apps/al-rifai/app/login/page.tsx`
+- `apps/al-rifai/app/login/view.tsx`
+- `apps/al-rifai/tests/unified-auth-integration.mjs`
+- `apps/al-rifai/docs/UNIFIED-AUTH-DESIGN.md` (rate-limit status corrected)
+- `NEXT-SESSION-HANDOFF.md`
+
+**Validation**
+- Isolated Node 22 static auth/signup/shadow regression selection: 43 passed,
+  0 failed.
+- Isolated HTTP authentication/session/route journey: 45 passed, 0 failed.
+- Isolated Cash submission visibility and review checks after test-only `0031`:
+  9 passed, 0 failed.
+- Isolated PostgreSQL append-only/least-privilege checks and an invalid
+  Super-Admin decision rejection check: passed.
+- TypeScript `tsc --noEmit --incremental false`, focused ESLint, and
+  `git diff --check`: passed.
+- The first HTTP run had 6 failures, including the forced-password-change
+  bypass. After the server-side fix, the complete journey passed. This change
+  was source-only and is not deployed.
+
+## SOURCE-ONLY IMPLEMENTATION AND VERIFICATION UPDATE — 2026-10-29 21:20 CET
+
+This update preserves the earlier Signup Request and Dashboard/navigation
+records below and supersedes their older "next step" statements. No production
+configuration, data, migration, service, or deployment was changed.
+
+**Current source-only changes**
+- Preserved the existing Dashboard cards, grouped sidebar, Review Queue label,
+  and their regression tests.
+- `/api/vessel-programs` detail/source reads now require a verified
+  `vessel.read` capability (or the existing private validation identity).
+  `POST` still uses the separate Owner-validation-only command gate; read access
+  does not grant Vessel commands. Added policy and route-separation tests.
+- Exact paths changed in this update: `apps/al-rifai/lib/vessel-command-policy.ts`,
+  `apps/al-rifai/app/api/vessel-programs/route.ts`,
+  `apps/al-rifai/tests/vessel-commands.mjs`, and this handoff. Other dirty
+  source paths listed in the sections below are preserved work from earlier
+  source slices, not newly reverted or replaced here.
+- Branch `main`, HEAD `76183e9`; the worktree remains dirty and uncommitted.
+
+**Authentication and permissions — verified evidence**
+- Read-only production requests at 2026-10-29 21:20 CET: `/` returned `200`
+  with the public marketing-page title; `/login` and `/signup` returned `200`
+  with their sign-in/request-access titles. `/dashboard` returned `401` with
+  `WWW-Authenticate: Basic` even when sent as a document navigation.
+  `/api/operations`, `/api/auth/session`, `/api/cash/me`, and the old
+  `app.al-rifai.iamazim.com/review` route returned `401`; the legacy review
+  origin has not been migrated or redirected. `/cash/submissions` returns a
+  page shell, while its data APIs remain protected. These checks used no
+  credentials and read no business rows.
+- The running app container was read-only observed running image
+  `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`.
+  The deployed homepage therefore does not match the current source root
+  redirect. Production remains on the documented shadow/legacy-entry posture;
+  no authenticated production browser test was attempted.
+- Source reinspection confirms the existing identity/session store is reused:
+  `cash_portal_users`, `cash_portal_sessions`, and the host-only
+  `__Host-alrifai_cash` cookie (`HttpOnly; Secure; SameSite=Strict`). Server
+  rules enforce an 8-hour absolute and 30-minute idle lifetime, inactive/expired
+  session rejection, CSRF/origin checks on mutations, current-session revocation
+  on logout, and same-origin post-login redirects. These source facts are not a
+  live authenticated login/expiry/logout test.
+- Signup submission and the Super-Admin-only, single-decision review flow exist
+  in the dirty source, but migration candidate `0034_signup_requests.sql` is
+  unapplied. Production signup persistence/approval is therefore NOT VERIFIED;
+  approval records a decision but account creation remains a separate explicit
+  action.
+- Cash Submissions being visible to all signed-in roles is navigation only.
+  The Cash API scopes USER reads to their own submissions, validates writes,
+  creates `PENDING_REVIEW` records with `postingAuthorized:false`, and keeps
+  decisions behind the stored ADMIN role. No posting branch was added.
+- The new Vessel read guard is capability-bound for session identities.
+  Existing Vessel writes remain separately Owner-validation-only and dependent
+  on unapplied migration `0032`; no Cash writer is called by the Vessel route.
+
+**Functional gaps confirmed from current source**
+- Dashboard cards point to existing backend-connected module pages, but card
+  presence does not imply full workflow completion. Cash summaries, Vessel
+  register, employee statements, transaction reads, Cash submissions, and
+  review summaries have existing data sources.
+- The Employees and Transactions add drawers are explicitly draft-only with
+  disabled saves and no authorized submission API. There is no employee
+  approval-request table/workflow. Employee name/ID search is local to the
+  loaded statement rows; no bounded, debounced server typeahead exists for
+  employee or payout lookup.
+- Cash transactions and employee pages do not expose usable page navigation;
+  their current clients fetch export/all data and cap visible rows. Vessel
+  register similarly fetches export data and caps display at 200. Cash
+  submissions are bounded to 200 rows without page navigation; Review Queue
+  surfaces cap displayed rows. True module-wide pagination remains incomplete.
+- Vessel add/edit/release/assign/void controls depend on the command functions
+  from migration `0032`, which is not applied. The source/API is prepared, not
+  production-available. There is no general-user Vessel submission workflow.
+- No general business-record soft-delete/recovery plus audit workflow was
+  found. The employee master is read by existing reporting/sync code, but the
+  UI has no editor/deleter or approval-backed employee writer. Do not add a
+  destructive delete.
+- The existing platform workspace uses shared design tokens; Cash Portal and
+  legacy surfaces retain their own styling and need a deliberate, verified
+  visual integration pass.
+- The current source and tests explicitly record login rate limiting as
+  removed. The requested rate-limit requirement remains unresolved; do not
+  reintroduce a process-local or spoofable-IP limiter without a reviewed,
+  reliable design.
+
+**Validation in this update**
+- Isolated Node 22 targeted suite: 75 tests total, 74 passed, 0 failed,
+  1 live test skipped (no isolated lifecycle server configured). Includes
+  auth policy/session/signup, Cash submission and review controls, navigation,
+  and Vessel command/read-policy checks.
+- TypeScript typecheck passed with build-info directed to `/tmp`.
+- ESLint passed on the focused Vessel policy/API/test and Dashboard/navigation/
+  Review Queue files; `git diff --check` passed.
+- No authenticated live browser test, production signup submission, production
+  migration, build, deployment, restart, commit, or push was performed.
+
+**Next safe continuation**
+- Complete the remaining source-level auth/page/API integration checks and
+  bounded pagination/typeahead/submit requirements in separately scoped,
+  tested slices. Production canonical-root/login behavior cannot be delivered
+  without an explicitly approved artifact release and unified-auth cutover.
+- Migration `0034` (signup) and `0032` (Vessel commands) both remain unapplied;
+  each needs its own isolated restored-clone rehearsal and explicit production
+  approval. Preserve Cash/Vessel writer separation and posting freeze.
+
+## SOURCE-ONLY IMPLEMENTATION UPDATE — 2026-10-29
+
+Owner authorized the exact source paths for a first Signup Request slice. This
+does not authorize applying its migration, changing production configuration,
+deploying/restarting, committing/pushing, or creating an account.
+
+**Implemented in source**
+- `/` redirects to `/login` when unified auth is enabled. With mode `off`, it
+  shows a clear unavailable message rather than looping back to `/login`.
+- `/signup` now accepts only a name and email and posts to the existing unified
+  auth API. The server validates the values and request size, checks the trusted
+  origin, stores a pending request, and never creates a user or session. Repeat
+  requests for the same normalized email return the same generic accepted
+  response.
+- Prepared, unapplied migration candidate
+  `apps/al-rifai/db/migration-candidates/0034_signup_requests.sql` adds the
+  append-only request and decision records, a read projection, and bounded
+  SELECT/INSERT grants for `ir_review_runtime`.
+- The existing configured Super Admin can approve/reject once through a
+  CSRF-protected Cash API route. The decision record contains actor and time.
+  Approval does not activate an account; the Admin must still use the existing
+  account-creation flow, with the approved name/email prefilled.
+- Login links to the request page. The old marketing content at `/` was removed
+  to make the canonical root the sign-in entry; no alternate marketing route was
+  added.
+
+**Verification**
+- Isolated Node 22 targeted authentication/signup checks: 33 passed, 0 failed.
+- Full `node --test` selection from `package.json`: 196 tests, 193 passed,
+  0 failed, 3 skipped. `tests/workflows.mjs` and `tests/phase1-unit.mjs` passed.
+- `tests/source-register.mjs` could not run in the isolated container because
+  `/var/lib/vps/al-rifai/evidence/chat-archive.json` is not mounted there. No
+  message bodies were read.
+- TypeScript typecheck passed with Node 22 and its build-info file directed to
+  the container's temporary directory. ESLint passed on the changed app/test
+  files. Whole-repository lint failed on existing errors in unedited
+  `data/` and `qualification/` artifacts, including archived `.next` output.
+- Candidate 0034 was rehearsed in a disposable, network-isolated PostgreSQL 16
+  container. Schema creation, email deduplication, one-decision projection and
+  append-only guards passed. This is not a rehearsal against the production
+  clone or proof of production grants.
+- No browser/E2E run, application build, production DB access, migration,
+  deployment, restart, account creation, commit or push was performed. The
+  deployed image and `shadow` mode are unchanged.
+
+**Exact source paths changed**
+- `apps/al-rifai/app/admin/view.tsx`
+- `apps/al-rifai/app/api/auth/[...path]/route.ts`
+- `apps/al-rifai/app/api/cash/[...path]/route.ts`
+- `apps/al-rifai/app/login/view.tsx`
+- `apps/al-rifai/app/page.tsx`
+- `apps/al-rifai/app/signup/page.tsx`
+- `apps/al-rifai/app/signup/request-form.tsx` (new)
+- `apps/al-rifai/db/migration-candidates/0034_signup_requests.sql` (new,
+  unapplied)
+- `apps/al-rifai/package.json`
+- `apps/al-rifai/tests/public-site-and-currency.mjs`
+- `apps/al-rifai/tests/signup-requests.mjs` (new)
+- `NEXT-SESSION-HANDOFF.md`
+
+The broader unified-application requirements remain incomplete: sidebar/module
+consolidation, dashboard card changes, Review Queue naming, list/search/typeahead
+work, soft-delete/audit coverage, and route-by-route permission verification
+were not part of this authorized path set. Before the next code slice, obtain
+exact-path Owner authorization for the additional files. Migration 0034 also
+requires an isolated restored-clone rehearsal and separate approval before any
+production application.
+
+## DEPLOYMENT STATE — 2026-10-29 14:20 UTC (confirmed by the provenance review above)
 
 **Deployment — Cash review navigation release**
 - Commit chain: `ff13046` (nav relabel, Cash queue submitter/purpose, `adminOnly`
@@ -77,7 +1132,7 @@
 ---
 
 
-## CURRENT STATE — 2026-10-29 (authoritative; supersedes the dated sections below)
+## HISTORICAL PRODUCTION STATE — 2026-10-29 (superseded by the deployment state above)
 
 **Production application**
 - Container `al-rifai-app-1` (compose project `al-rifai`, service `app`), healthy.
