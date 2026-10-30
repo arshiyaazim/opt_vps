@@ -30,7 +30,7 @@ const migration = source('db/migration-candidates/0033_unified_auth_sessions.sql
 
 test('the legacy Basic credential remains the first and always-accepted check', () => {
   const basic = proxy.indexOf('validationIdentity(request.headers.get("authorization"))');
-  const disabled = proxy.indexOf('if(mode==="off")return unauthorized();');
+  const disabled = proxy.indexOf('if(mode==="off")return isCashPortalPath(pathname)?pass():unauthorized();');
   const session = proxy.indexOf('await sessionIdentityFromCookieHeader');
   assert.ok(basic > -1 && disabled > -1 && session > -1);
   assert.ok(basic < disabled, 'Basic is evaluated before the unified mode branch');
@@ -191,9 +191,20 @@ test('the sign-in page cannot render while unified auth is off, and cannot loop'
   // page looped in shadow mode (/login 307 -> /dashboard 302 -> /login ...).
   assert.doesNotMatch(loginPage, /if \(identity\) redirect\(next\)/);
   assert.match(loginPage, /const target = signedInRedirectTarget\(mode, next\);/);
-  assert.match(loginPage, /if \(identity && target\) redirect\(target\);/);
+  assert.match(loginPage, /if \(identity && target && !identity\.mustChangePassword\) redirect\(target\);/);
   assert.match(loginPage, /sanitizeReturnTo\(raw\)/);
   assert.doesNotMatch(loginPage, /type=["']password["']|name=["']password["']/);
+});
+
+test('a first-login password change is enforced by the server session boundary', () => {
+  const loginView = source('app/login/view.tsx');
+  assert.match(proxy, /identity\.mustChangePassword&&!PASSWORD_CHANGE_PATHS\.has\(pathname\)/);
+  assert.match(proxy, /PASSWORD_CHANGE_REQUIRED/);
+  assert.match(proxy, /pathname\.startsWith\("\/api\/"\)/);
+  assert.match(loginPage, /forcePasswordChange=\{mode === 'on' && identity\?\.mustChangePassword === true\}/);
+  assert.match(loginView, /call<\{user: \{mustChangePassword: boolean\}; csrf: string\}>\('session'\)/);
+  assert.match(loginView, /needsCurrentPassword/);
+  assert.match(loginView, /autoComplete="current-password"/);
 });
 
 test('shadow sign-in reports verification instead of navigating to a protected page', () => {

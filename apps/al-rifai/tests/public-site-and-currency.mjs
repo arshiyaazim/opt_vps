@@ -25,18 +25,21 @@ function walkTsx(dir, out = []) {
   return out;
 }
 
-test('the public homepage and access page are reachable without a credential', () => {
+test('the canonical homepage enters unified sign-in and signup only requests access', () => {
   const home = source('app/page.tsx');
-  assert.doesNotMatch(home, /requireChatGPTUser|currentIdentity|redirect\('\/login/);
-  assert.match(home, /Marine Survey/);
-  assert.match(home, /Security Guard/);
-  assert.match(home, /Vessel Escort/);
-  assert.match(home, /href="\/login"/);
-  assert.match(home, /href="\/signup"/);
+  assert.match(home, /unifiedMode\(\) !== 'off'\) redirect\('\/login'\)/);
+  assert.match(home, /Sign-in is not enabled/);
 
   const signup = source('app/signup/page.tsx');
-  assert.match(signup, /does not create one|never grants access|does not run self-service registration/i);
+  assert.match(signup, /does not create an account|does not grant access/i);
+  assert.match(signup, /SignupRequestForm/);
   assert.doesNotMatch(signup, /createUser|cash_portal_users|INSERT/);
+
+  const form = source('app/signup/request-form.tsx');
+  assert.match(form, /fetch\('\/api\/auth\/signup'/);
+  assert.match(form, /name="name"/);
+  assert.match(form, /name="email"/);
+  assert.match(form, /does not create an account/);
 });
 
 test('only the public marketing paths bypass the guard', () => {
