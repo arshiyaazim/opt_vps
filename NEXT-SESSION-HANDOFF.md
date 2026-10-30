@@ -6,14 +6,14 @@ applied, no deployment, no configuration change, no Production access.
 
 - Login throttle: `lib/login-throttle.ts` + `db/migration-candidates/0036_login_throttle.sql`.
   Integrated in unified login (`lib/unified-auth.ts`) and Cash Portal login
-  (`app/api/cash/[...path]/route.ts`). Fail-open until 0036 is applied.
+  (`app/api/cash/[...path]/route.ts`). Fail-open until 0036 is applied. **0036 is now applied (2026-10-30) — throttle active.**
 - Pagination: `signup-requests`, `employee-submissions`, and Cash review
   queue now support clamped `limit`/`offset` with scope-filtered totals;
   UI has 100-row Previous/Next controls. Authorization and self-scope
   filters unchanged.
 - Verification: canonical suite 240 tests (238 pass, 2 skip, 0 fail);
   TypeScript, ESLint, `git diff --check` pass.
-- Migrations 0032, 0034, 0035, 0036 remain **unapplied** — each requires
+- Migrations 0032, 0034, 0035 remain **unapplied**; **0036 is applied** (throttle active) — each requires
   separate Owner approval (see roadmap in `AL-RIFAI-AUDIT-2026-10-30.md`).
 - Remaining dirty worktree paths (uncommitted) are reserved for Phase 2–4
   review; see roadmap.

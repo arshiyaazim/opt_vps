@@ -78,7 +78,13 @@ is never a lockout, and fails open when its backing table is absent so a
 missing migration cannot lock the Owner out. The backing table is prepared
 as migration candidate `db/migration-candidates/0036_login_throttle.sql`
 and is **unapplied**; applying it (Phase 2.1 of the roadmap below) makes
-the throttle active. Client-IP headers remain unused as a throttle key
+the throttle active.
+
+**Update (Phase 2.1 — applied 2026-10-30):** Migration 0036 has been
+applied to the production database. The `public.login_throttle_state`
+table now exists with `ir_review_runtime` CRUD permissions. The Phase 1
+throttle code (`lib/login-throttle.ts`) is now active and will enforce
+progressive delays on repeated login failures. Client-IP headers remain unused as a throttle key
 until the entry-peer trust contract is enforced at the application
 boundary; this future enhancement is tracked in the roadmap.
 
