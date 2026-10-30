@@ -36,6 +36,12 @@ record the exact source SHA and verified image digest; deploy only the exact
 tested artifact, with the required backup and rollback images. Do not deploy
 or restart without separate Owner approval.
 
+**Update (Phase 4.4 — 2026-10-31):**
+The image discrepancy noted above (cace72… vs ef06c2…) was resolved
+in the Phase 2 deploy cycle. Current production image is
+`sha256:ca27d77c…` (local/al-rifai:20261030-phase4, source a07c57f),
+deployed 2026-10-31. Rollback: `sha256:1d4602c3…`.
+
 ### 2. Signup, employee-request, and Vessel command features are migration-blocked — High
 
 The current source implements signup requests and employee request/decision/

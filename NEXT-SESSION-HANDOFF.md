@@ -1,3 +1,33 @@
+## PHASE 4.4 DEPLOYED — 2026-10-31 (image `ca27d77c`, source `a07c57f`, **not pushed**)
+
+Phase 4 (UI, proxy, tests, docs) landed as four sequential commits — `36cc1f9`
+(UI), `fcc9b66` (proxy), `139f5df` (tests), `a07c57f` (docs) — and a new
+Production image was built from `a07c57f` and deployed.
+
+- Deployed image `sha256:ca27d77cb55e5b48a351a64ae7d2117f732f3926988348e1050e336440d351a4`
+  (tag `local/al-rifai:20261030-phase4`), pinned in `apps/al-rifai/compose.yaml`
+  by commit `bfe81f1`. Mode `on` unchanged (Phase 3.1).
+- Deploy-gate evidence: canonical suite at `a07c57f` = TAP 237/240 pass, 3
+  skip, 0 fail; 56/56 source files shipped in the image are byte-identical to
+  their `a07c57f` git blobs; runtime config (User, WorkingDir, Entrypoint, Cmd,
+  ExposedPorts, ENV) identical to the previous image. The runtime stage does
+  not ship `tests/`, so the "in-image suite" step is vacuous (`1..0`) and is
+  **not** used as gate evidence.
+- Post-deploy checks: health ok; `/api/health` 200, `/login` 200, `/signup`
+  200, `/api/vessel-programs` 401, `/` 307 → `/login`; no new log signature
+  beyond startup lines. The only error-class signature is the documented
+  `NATIVE_READER_UNAVAILABLE` baseline (Phase 3.2, deferred by Owner).
+- Owner browser smoke passed: new nav groups, dashboard module cards, one Cash
+  review view opened read-only (no approve, no post).
+- Backups: DB `/tmp/alrifai-pre-phase4-deploy-20261030-235508.dump` (+ verified
+  `.sha256`); compose `apps/al-rifai/compose.yaml.pre-deploy-20261031-000617`.
+- Rollback images present: `sha256:1d4602c3…`
+  (`local/al-rifai:20261030-phase2`, previous Production) and
+  `sha256:ef06c2ef…` (Phase 1 era).
+- **Not pushed**: `bfe81f1` is 1 commit ahead of `origin/main` (`a07c57f`).
+  The four Phase 4 commits reached `origin/main` via a push made outside the
+  agent session at 2026-10-30 23:51:31 +0100; no agent pushed.
+
 ## PHASE 1 COMPLETE — 2026-10-30 (committed `d74f91e`, **not yet pushed**)
 
 Phase 1 (login throttle + server-side pagination) committed locally as

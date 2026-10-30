@@ -12,13 +12,14 @@
 
 ## 0. Current Production Position (verified 2026-10-27)
 
-> **Current production position — 2026-10-30 (authoritative; supersedes the banners below):**
-> app image `sha256:1d4602c308101fed0019cc864e45154eb97ceee9fe56a4574c1921d8e85020da`
-> (tag `local/al-rifai:20261030-phase2`, source `9e09fa9`; verified 2026-10-30
+> **Current production position — 2026-10-31 (authoritative; supersedes the banners below):**
+> app image `sha256:ca27d77cb55e5b48a351a64ae7d2117f732f3926988348e1050e336440d351a4`
+> (tag `local/al-rifai:20261030-phase4`, source `a07c57f`; verified 2026-10-31
 > via `docker inspect al-rifai-app-1`), mode `on` (Phase 3.1, 2026-10-30), 3 Cash Portal users (Owner `Admin`, USER
-> `officeassistant`, USER `officeazzistant2`), ledger 32 (migrations 0031-0036 applied), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 applied 2026-10-30, throttle deployed).
+> `officeassistant`, USER `officeazzistant2`), ledger 32 rows (schema objects for 0031-0036 applied; ledger rows for 0032/0034/0035/0036 not recorded — see the Migration ledger note in `docs/VPS_MAP.md`), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 applied 2026-10-30, throttle deployed).
+> Phase 4.4 deploy 2026-10-31 (compose pin commit `bfe81f1`); rollback image `sha256:1d4602c3…` (tag `local/al-rifai:20261030-phase2`).
 > WA-01 degraded (1 of 9 chats failing; diagnosis recorded, bridge fix deferred by Owner).
-> Full state, open items and deferred triggers: `NEXT-SESSION-HANDOFF.md` → "CURRENT STATE — 2026-10-29".
+> Full state, open items and deferred triggers: `NEXT-SESSION-HANDOFF.md` → "PHASE 4.4 DEPLOYED — 2026-10-31" and "CURRENT STATE — 2026-10-29".
 
 > **UI visibility repair — 2026-10-27:** commit `a157f58` exposes the workspace
 > routes through boundary-exact private-entry allowlists and adds the
