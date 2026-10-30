@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import Link from 'next/link';
 import {ArrowLeft, ShieldCheck} from 'lucide-react';
 import SiteNav from '../public-site/site-nav';
+import SignupRequestForm from './request-form';
 import '../public-site.css';
 
 export const metadata: Metadata = {
@@ -12,16 +13,16 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    title: 'Speak with your AL-RIFA’I operations contact',
-    body: 'Engagements and portal accounts are arranged directly with the operations desk, so the requesting company and its contact person are verified first.',
+    title: 'Submit your name and email',
+    body: 'The request is stored for review; no password or business data is collected on this page.',
   },
   {
-    title: 'Verification of the requesting party',
-    body: 'We confirm the company, the named contact and the services in scope before an account is created. No account is created from this page.',
+    title: 'An authorised administrator reviews the request',
+    body: 'A decision is recorded against the request. Approval does not itself create an active account.',
   },
   {
-    title: 'Account issued by an administrator',
-    body: 'An administrator provisions the account with a temporary password. You are asked to set your own password at first sign-in.',
+    title: 'Account setup follows approval',
+    body: 'If approved, an administrator creates the account through the existing account-management workflow.',
   },
   {
     title: 'Scoped access only',
@@ -40,10 +41,10 @@ export default function SignUpPage() {
           </Link>
           <section className="site-panel" style={{marginTop: '1.25rem'}}>
             <span className="site-eyebrow">Request access</span>
-            <h1>Accounts are provisioned after verification</h1>
+            <h1>Request an account</h1>
             <p className="site-lead">
-              AL-RIFA’I does not run self-service registration. This page explains how an account is
-              issued; it does not create one and it grants no access to operational data.
+              Submit a request for an administrator to review. This form does not create an account
+              and does not grant access to operational data.
             </p>
             <ol className="site-steps">
               {STEPS.map((step) => (
@@ -55,6 +56,7 @@ export default function SignUpPage() {
                 </li>
               ))}
             </ol>
+            <SignupRequestForm />
             <p className="site-callout">
               <ShieldCheck size={15} style={{verticalAlign: '-2px', marginRight: '.35rem'}} />
               Signing up never grants access to client, personnel or financial records. Access is

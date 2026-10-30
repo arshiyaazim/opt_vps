@@ -1,5 +1,6 @@
 import {NextRequest} from "next/server";
-import {clearCookie,cookieHeader,json,noStoreHeaders} from "@/lib/cash-portal";
+import {randomBytes} from "node:crypto";
+import {clearCookie,cookieHeader,database,hashToken,json,noStoreHeaders} from "@/lib/cash-portal";
 import {
   assertCsrf,
   authErrorBody,
@@ -32,9 +33,65 @@ async function readBody(request: Request): Promise<Row> {
   }
 }
 
+async function readSignupBody(request: Request): Promise<Row> {
+  const reader = request.body?.getReader();
+  if (!reader) throw new UnifiedAuthError("INVALID_JSON", 400);
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  while (true) {
+    const part = await reader.read();
+    if (part.done) break;
+    size += part.value.byteLength;
+    if (size > 4096) {
+      await reader.cancel();
+      throw new UnifiedAuthError("REQUEST_TOO_LARGE", 413);
+    }
+    chunks.push(part.value);
+  }
+  try {
+    const value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    return value && typeof value === "object" && !Array.isArray(value) ? value as Row : {};
+  } catch {
+    throw new UnifiedAuthError("INVALID_JSON", 400);
+  }
+}
+
 async function handle(request: NextRequest, segments: string[]) {
   const action = segments[0] || "";
   if (unifiedMode() === "off") return reply({error: "UNIFIED_AUTH_DISABLED"}, 404);
+
+  if (request.method === "POST" && action === "signup") {
+    requireUnifiedOrigin(request);
+    const body = await readSignupBody(request);
+    const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim() : "";
+    if (
+      displayName.length < 2 ||
+      displayName.length > 150 ||
+      /[\u0000-\u001f\u007f]/.test(displayName) ||
+      email.length > 320 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      return reply({error: "SIGNUP_FIELDS_INVALID"}, 400);
+    }
+
+    try {
+      await database().query(
+        `INSERT INTO public.account_signup_requests(id,display_name,email)
+         VALUES($1,$2,$3)
+         ON CONFLICT (email_normalized) DO NOTHING`,
+        [hashToken(randomBytes(32).toString("hex")), displayName, email],
+      );
+      return reply({ok: true, status: "PENDING_REVIEW"}, 202);
+    } catch (error) {
+      const code = error && typeof error === "object" ? (error as {code?: string}).code : undefined;
+      if (code === "42P01") {
+        return reply({error: "SIGNUP_SCHEMA_REQUIRED", migration: "db/migration-candidates/0034_signup_requests.sql"}, 503);
+      }
+      if (code === "42501") return reply({error: "SIGNUP_PERMISSION_REQUIRED"}, 503);
+      throw error;
+    }
+  }
 
   // Sign in with the existing Cash Portal credential. Same store, same hash,
   // same session table — no second password is introduced.
