@@ -17,7 +17,7 @@
 > (tag `local/al-rifai:20261029-review-nav-fix`, source `9bc9f85`; verified 2026-10-30
 > via `docker inspect al-rifai-app-1`), mode `shadow`, 3 Cash Portal users (Owner `Admin`, USER
 > `officeassistant`, USER `officeazzistant2`), ledger 32 (migration 0031 applied, 0032 not
-> applied, 0033 applied), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 candidate, unapplied, fail-open until applied).
+> applied, 0033 applied), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 applied 2026-10-30, throttle active).
 > WA-01 degraded (1 of 9 chats failing; diagnosis recorded, bridge fix deferred by Owner).
 > Full state, open items and deferred triggers: `NEXT-SESSION-HANDOFF.md` → "CURRENT STATE — 2026-10-29".
 

@@ -77,8 +77,7 @@ login (`lib/unified-auth.ts`) and the Cash Portal login
 is never a lockout, and fails open when its backing table is absent so a
 missing migration cannot lock the Owner out. The backing table is prepared
 as migration candidate `db/migration-candidates/0036_login_throttle.sql`
-and is **unapplied**; applying it (Phase 2.1 of the roadmap below) makes
-the throttle active.
+and was **applied 2026-10-30** (Phase 2.1); the throttle is now active.
 
 **Update (Phase 2.1 — applied 2026-10-30):** Migration 0036 has been
 applied to the production database. The `public.login_throttle_state`
