@@ -235,6 +235,108 @@ auto-confirmation.
 - Reference documents: `docs/VESSEL-WORKFLOW.md` (business rules),
   `NEXT-SESSION-HANDOFF.md` (state), `docs/VPS_MAP.md` (infrastructure).
 
+### Deployment procedure guardrails (verified 2026-10-31, Phase 4.4)
+
+These rules were established or confirmed during the Phase 4.4 deploy
+cycle. Any future deploy that violates them will fail or silently
+produce false evidence. Agents must follow these verbatim unless the
+Owner explicitly suspends a rule for a specific action.
+
+**1. Compose image pin sed — keep the `sha256:` prefix on both sides.**
+
+The deploy pin edit must preserve the `sha256:` prefix:
+
+```bash
+# CORRECT
+sed -i "s|sha256:$OLD_HEX|sha256:$NEW_HEX|" compose.yaml
+```
+
+```bash
+# WRONG — strips the prefix from the replacement side, breaks resolution
+sed -i "s|sha256:$OLD_HEX|$NEW_HEX|" compose.yaml
+sed -i "s|$OLD_PIN|${NEW_IMAGE_ID#sha256:}|" compose.yaml
+```
+
+A bare 64-hex string without the `sha256:` prefix is not a valid image
+reference. Compose will try to resolve it as a repository name and
+fail. The container may continue running from cache, but the next
+`docker compose up -d` will fail. Always verify immediately with:
+
+```bash
+grep '^    image:' compose.yaml   # must start with sha256:
+docker compose config -q          # must exit 0
+```
+
+**2. Deploy gate = TAP block 0 failures, not `pnpm test` exit 0.**
+
+`pnpm test` cannot exit 0 in an isolated container because
+`tests/source-register.mjs` is a post-TAP script that requires real
+Owner evidence. The canonical gate (Owner ruling, 2026-10-30) is:
+
+- TAP block: 0 failures (expected 237/240 pass, 3 skip)
+- Full glob suite (`node --test tests/*.mjs`) subtest-level failures: 0
+- File-level failures acceptable only if they match the known
+  evidence/DB/server-dependent set (see NEXT-SESSION-HANDOFF.md
+  "Expected test failures").
+
+Post-TAP exit code is ignored for the deploy gate.
+
+**3. Runtime Docker image does NOT ship `tests/`.**
+
+The Dockerfile runtime stage is a Next.js standalone output and
+contains only `lib/`, `scripts/`, `db/`, `candidates/identity-review/`,
+build output, and `node_modules`. Running `node --test tests/*.mjs`
+inside the production image yields `1..0` and exits 0, which is NOT
+evidence of passing tests — it's evidence of zero test files found.
+
+Verify tests at the source commit level using the isolated harness:
+
+```bash
+mkdir -p /tmp/alrifai-synthetic-evidence
+echo '[]' > /tmp/alrifai-synthetic-evidence/chat-archive.json
+docker run --rm \
+  -v /opt/vps/apps/al-rifai:/app \
+  -v /tmp/alrifai-synthetic-evidence:/var/lib/vps/al-rifai/evidence:ro \
+  -w /app node:22.23.3-alpine \
+  sh -c "node --test tests/*.mjs"
+```
+
+Pair this with image provenance (byte-identical source files vs
+`git show <commit>:<path>`) to prove the deployed artifact matches the
+tested commit.
+
+**4. Log-based rollback rule — baseline-then-diff.**
+
+Before any restart or deploy, capture a baseline:
+
+```bash
+docker logs al-rifai-app-1 --since 15m 2>&1 \
+  | sed 's/[0-9T:.-]\{10,\}//g' | sort -u > /tmp/alrifai-log-baseline.txt
+```
+
+Roll back only for error signatures ABSENT from the baseline. Known
+baseline lines that are NEVER rollback triggers:
+
+- `WA-01 approved chat ingestion failed; cursor retained (NATIVE_READER_UNAVAILABLE).`
+  (Phase 3.2, deferred by Owner.)
+
+**5. Pre-deploy artifacts stored in `/tmp/` are not durable.**
+
+DB dumps and compose backups written to `/tmp/` survive container
+restarts but NOT host reboots or disk cleanup. If a backup is intended
+as a long-term rollback artifact, copy it to persistent storage
+(outside `/var/lib/vps/al-rifai/evidence/`) with Owner-approved
+destination and mode 600 preserved.
+
+**6. Image digest and short SHA conventions.**
+
+- Full digest: `sha256:<64 hex>` — use in compose.yaml, `docker inspect`
+  outputs, and the authoritative production position banner.
+- Short SHA: first 8 hex chars (e.g. `ca27d77c`) — use in commit
+  messages, chat, log table rows, and informal references.
+- Tag: `local/al-rifai:<YYYYMMDD>-<label>` plus
+  `local/al-rifai:<label>-<git-short-sha>` for source traceability.
+
 ---
 
 ## 1. Cash Domain Development Unfreeze and Owner Boundaries

@@ -1,3 +1,80 @@
+## PHASE 5 SIGN-OFF — 2026-10-31 (next session start here)
+
+**Production state (verified at sign-off):**
+- Image: `sha256:ca27d77cb55e5b48a351a64ae7d2117f732f3926988348e1050e336440d351a4`
+- Tag: `local/al-rifai:20261030-phase4` (also `local/al-rifai:phase4-a07c57f`)
+- Source commit: `a07c57f` (deployed via pin commit `bfe81f1`)
+- Mode: `ALRIFAI_UNIFIED_AUTH_MODE=on` (Phase 3.1 applied 2026-10-30)
+- Health: `{"status":"ok"}`
+- Database migrations: 0031–0036 schema objects applied (ledger gap, see deferred items)
+- HEAD on origin/main: `399e2b4` (or current, after this sign-off commit)
+
+**Rollback chain (both images present on host):**
+- Phase 2 image: `sha256:1d4602c308101fed0019cc864e45154eb97ceee9fe56a4574c1921d8e85020da` (`local/al-rifai:20261030-phase2`)
+- Phase 1 image: `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad` (`local/al-rifai:20261029-review-nav-fix`)
+- Phase 4 compose backup: `apps/al-rifai/compose.yaml.pre-deploy-20261031-000617`
+- Phase 2 compose backup: `apps/al-rifai/compose.yaml.pre-deploy-20261030-214126`
+- Phase 4 DB dump: `/tmp/alrifai-pre-phase4-deploy-20261030-235508.dump` (+ `.sha256`)
+  ⚠️ `/tmp` does not survive host reboot (see AGENTS.md guardrail #5).
+
+**Verification run at commit 399e2b4:**
+- Typecheck: 0 errors (isolated `node:22.23.3-alpine` container)
+- Canonical suite (`pnpm test`): TAP block 237/240 pass, 3 skip, 0 fail
+- Full glob suite (`node --test tests/*.mjs`): 413 tests, 402 pass,
+  7 fail (all DB/server/evidence-dependent), 4 skip, 0 subtest-level failures
+- Compose validation: `docker compose config -q` → VALID
+- Image provenance: 56/56 source files byte-identical to `git show a07c57f`
+- Runtime config: User, WorkDir, Entrypoint, Cmd, Ports, ENV unchanged from previous image
+
+**Expected test failures (NOT regressions):**
+- `tests/database.mjs` — no PostgreSQL in isolated container
+- `tests/identity-review-postgres.mjs` — no DB + imports fixture module
+- `tests/identity-review-candidate.mjs` — imports fixture module
+- `tests/identity-review-fixtures.mjs` — frozen-evidence hash drift (deferred item 2)
+- `tests/phase1-http.mjs` — no running server
+- `tests/source-register.mjs` — needs real Owner evidence
+- `tests/escort-intake-candidate.mjs` — needs private Owner fixture JSON
+
+### Deferred items (require separate Owner approval before any action)
+
+| # | Item | Scope | Approval phrase |
+|---|---|---|---|
+| 1 | WA-01 bridge: `NATIVE_READER_UNAVAILABLE` (1 of 9 chats) | Phase 3.2 | TBD by Owner |
+| 2 | Frozen-evidence hash drift: `891fe6e7…` → `237cfe7f…` in `candidates/identity-review/evidence-baseline.json` for `lib/escort-intake-candidate.mjs` (file last changed in `06356b6` bulk import; not Phase 1-4 related) | Isolated fix | `approve hash update` |
+| 3 | Migration ledger gap: `public.alrifai_schema_migrations` has 32 rows but highest entry is `0033_unified_auth_sessions.sql`. Rows for 0032/0034/0035/0036 missing even though schema objects exist and function. 0025 lives in `whatsapp_mirror.schema_migrations`. | Ledger-only repair (no schema change), AGENTS.md §10 | TBD by Owner |
+| 4 | `apps/al-rifai/README.md:42` is 90 chars (convention ≤79) | Line-wrap nit | Any time |
+
+### Deployment procedure reminders
+
+See **AGENTS.md → Deployment procedure guardrails (verified 2026-10-31, Phase 4.4)**
+for the full checklist. Six rules established this cycle: compose sed
+prefix handling, deploy gate definition, runtime-stage test absence,
+log baseline-and-diff, `/tmp/` durability, and digest/tag conventions.
+
+### Authoritative paths (do not substitute)
+
+```
+Repo root            : /opt/vps
+App root             : /opt/vps/apps/al-rifai
+Compose file         : /opt/vps/apps/al-rifai/compose.yaml
+Dockerfile           : /opt/vps/apps/al-rifai/Dockerfile
+Host app config      : /etc/vps/apps/al-rifai/app.env (600 root:root, NEVER commit)
+Evidence (private)   : /var/lib/vps/al-rifai/evidence/ (NEVER read)
+App container        : al-rifai-app-1
+Postgres container   : vps-infra-postgres-1
+DB name              : alrifai
+DB superuser         : vps_pg_admin (password at /run/secrets/postgres_admin_password INSIDE postgres container only)
+DB app role          : ir_review_runtime
+Compose project      : al-rifai
+```
+
+### First actions for the next session
+
+1. Read this section + AGENTS.md deployment guardrails + the
+   PHASE 4.4 DEPLOYED section below.
+2. Verify production state matches: image `ca27d77c…`, mode `on`, health ok.
+3. Ask Owner which deferred item (if any) to tackle. Do not pick one unilaterally.
+
 ## PHASE 4.4 DEPLOYED — 2026-10-31 (image `ca27d77c`, source `a07c57f`, **not pushed**)
 
 Phase 4 (UI, proxy, tests, docs) landed as four sequential commits — `36cc1f9`
