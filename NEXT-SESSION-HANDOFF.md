@@ -13,7 +13,7 @@ applied, no deployment, no configuration change, no Production access.
   filters unchanged.
 - Verification: canonical suite 240 tests (238 pass, 2 skip, 0 fail);
   TypeScript, ESLint, `git diff --check` pass.
-- Migrations 0032, 0034, 0035 remain **unapplied**; **0036 is applied** (throttle active) — each requires
+- Migrations 0034, 0035 remain **unapplied**; **0032 is applied** (vessel active); **0036 is applied** (throttle active) — each requires
   separate Owner approval (see roadmap in `AL-RIFAI-AUDIT-2026-10-30.md`).
 - Remaining dirty worktree paths (uncommitted) are reserved for Phase 2–4
   review; see roadmap.
