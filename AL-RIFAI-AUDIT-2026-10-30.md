@@ -69,6 +69,19 @@ retention, monitoring, and tests for spoofed headers and distributed requests.
 Avoid account lockout and process-local or client-controlled IP limits; preserve
 the Owner's ability to sign in.
 
+**Resolution (Phase 1 — committed `d74f91e`, 2026-10-30):** A username-keyed,
+hash-only, database-backed progressive-delay throttle was implemented in
+`apps/al-rifai/lib/login-throttle.ts` and integrated into both the unified
+login (`lib/unified-auth.ts`) and the Cash Portal login
+(`app/api/cash/[...path]/route.ts`). The throttle has a 30-second hard cap,
+is never a lockout, and fails open when its backing table is absent so a
+missing migration cannot lock the Owner out. The backing table is prepared
+as migration candidate `db/migration-candidates/0036_login_throttle.sql`
+and is **unapplied**; applying it (Phase 2.1 of the roadmap below) makes
+the throttle active. Client-IP headers remain unused as a throttle key
+until the entry-peer trust contract is enforced at the application
+boundary; this future enhancement is tracked in the roadmap.
+
 ### 4. Unified login is still in `shadow` mode — rollout incomplete
 
 The last dated Production records say `ALRIFAI_UNIFIED_AUTH_MODE=shadow`.
