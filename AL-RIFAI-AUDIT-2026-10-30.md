@@ -360,3 +360,14 @@ paths consumed in Phase 2. Each file reviewed independently; no bulk commit.
   completed with Owner approval.
 - No migration, deployment, restart, live sync, historical reprocessing,
   or business-data write without its own separate approval.
+
+### Phase 3.1 status — 2026-10-30
+- `ALRIFAI_UNIFIED_AUTH_MODE` flipped `shadow` → `on` in host config
+  `/etc/vps/apps/al-rifai/app.env` (outside repo; not committed; 600 root:root).
+- Config backup: `/etc/vps/apps/al-rifai/app.env.pre-3.1-20261030-224045`.
+- First flip was rolled back because of a WA-01 log line; that line
+  (`NATIVE_READER_UNAVAILABLE`) was confirmed pre-existing in `shadow` mode
+  and mode-independent (Phase 3.2, deferred). Re-flip approved and applied.
+- Verified: health ok; `/login`, `/signup` 200; protected API 401 without
+  credentials; no new non-WA-01 errors; Owner authenticated login test passed.
+- Rollback: set mode back to `shadow` in host config, `docker compose up -d`.

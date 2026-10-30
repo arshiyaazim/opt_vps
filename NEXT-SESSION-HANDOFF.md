@@ -13,7 +13,7 @@ applied, no deployment, no configuration change, no Production access.
   filters unchanged.
 - Verification: canonical suite 240 tests (238 pass, 2 skip, 0 fail);
   TypeScript, ESLint, `git diff --check` pass.
-- **0035 is applied** (employee deployed; shadow); **0034 is applied** (signup deployed; shadow); **0032 is applied** (vessel deployed; shadow); **0036 is applied** (throttle deployed; shadow) — each requires
+- **0035 is applied** (employee deployed; mode on); **0034 is applied** (signup deployed; mode on); **0032 is applied** (vessel deployed; mode on); **0036 is applied** (throttle deployed; mode on) — each requires
   separate Owner approval (see roadmap in `AL-RIFAI-AUDIT-2026-10-30.md`).
 - Remaining dirty worktree paths (uncommitted) are reserved for Phase 2–4
   review; see roadmap.
