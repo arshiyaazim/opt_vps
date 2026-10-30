@@ -119,6 +119,61 @@ Authoritative map of the deployed VPS foundation. Update this file when ownershi
 - Report and exact file inventory: `/opt/vps/apps/al-rifai/docs/PHASE1_REPORT.md` and `phase1-file-changes.json`.
 - Audited ZIP and `/opt/vps/import/al-rifai-v10/Al-Rifai-Website-Source` remain immutable and are not runtime inputs.
 
+#### AL-RIFA’I source-only submission update — 2026-10-30
+
+The current source adds authenticated Cash transaction submissions (candidate
+0031, review-only) and separate pending Employee requests (candidate 0035).
+Cash submissions never post. Admin decisions on Employee requests are
+append-only; approval does not activate an employee. A separate
+Super-Admin-confirmed action writes an immutable portal-directory record,
+without changing payment-derived `employee_master`, Cash postings or Vessel
+programs. These are source/test changes only, not a statement about deployed
+Production behavior. The current authoritative Production handoff records
+migration 0031 applied. Candidate 0035's schema objects are applied
+(2026-10-30); its ledger row is not recorded — see the Migration ledger note
+below. For the submission design see
+`/opt/vps/apps/al-rifai/docs/EMPLOYEE-TRANSACTION-SUBMISSIONS.md`.
+
+The 2026-10-30 Owner-approved source update now blocks Admin self-review,
+requires a rejection reason in both the immutable decision and its audit event,
+and shows portal activations in a separate source/status section on `/employees`.
+Mobile collisions with payment-derived identities are surfaced but never
+merged. Candidate migrations are not picked up by the normal
+`db/migrations/*.sql` discovery and require an approved, reviewed migration
+path. Candidate 0035 depends on migration 0017; in the current ledger context
+it is planned after 0031/0033 and does not require 0032/0034. Production runs
+`ALRIFAI_UNIFIED_AUTH_MODE=on` (Phase 3.1, applied 2026-10-30; host config
+`/etc/vps/apps/al-rifai/app.env`, not tracked in the repository). No Production
+migration or deployment is included in this work.
+
+Verification reproducible at commit `139f5df` (2026-10-30):
+
+- Typecheck: 0 errors (isolated `node:22.23.3-alpine` container).
+- Canonical test suite (`pnpm test`): TAP block 237/240 pass, 3 skip, 0 fail.
+  The non-TAP post-processing script `tests/source-register.mjs` requires real
+  Owner evidence and cannot run in the isolated environment; the suite exit
+  code is non-zero for that reason alone.
+- Production build verification: deferred to Phase 4.4 (post-Phase-4 image
+  build).
+- Full glob suite (53 files): 413 tests, 402 pass, 7 fail (all
+  DB/server/evidence-dependent, 0 subtest-level assertion failures), 4 skipped.
+
+The payment-derived Employee statement view uses 40-row client pagination
+across the filtered full result and resets to page one when its search/scope
+filters change. This is presentation-only; the separate portal Employee
+directory, Cash posting boundary and Vessel data path are unchanged.
+
+**Migration ledger note (reported 2026-10-30, not repaired)**
+
+`public.alrifai_schema_migrations` contains 32 rows with the highest recorded
+entry at `0033_unified_auth_sessions.sql`. Ledger rows for 0032, 0034, 0035,
+and 0036 are absent even though their schema objects exist and function in
+Production. Migration 0025's ledger row lives in
+`whatsapp_mirror.schema_migrations`. Functional state is "objects applied"; the
+ledger itself is incomplete. Repair is a separate task requiring Owner approval
+(AGENTS.md §10); this note exists so that future sessions do not read
+AGENTS.md's "migrations 0031–0036 applied" as a claim about ledger rows.
+
 ## Services
 
 ### WhatsApp
@@ -217,7 +272,7 @@ Verify the restored data before any cutover. Drop only the explicitly designated
 
 ## Current container identities and backups — 2026-10-29
 
-- **Application:** `al-rifai-app-1`, compose project `al-rifai`, service `app`, file `apps/al-rifai/compose.yaml`. Image `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2`. Healthy. Mode `shadow`.
+- **Application:** `al-rifai-app-1`, compose project `al-rifai`, service `app`, file `apps/al-rifai/compose.yaml`. Image `sha256:1d4602c3…` (local/al-rifai:20261030-phase2). Healthy. Mode `on`.
 - **PostgreSQL:** `vps-infra-postgres-1`, image `postgres:16-alpine`, healthy, database `alrifai`.
 - **WhatsApp WA-01:** `vps-whatsapp-wa-01-cap4-20261011`, image `ae009303de09`. Degraded: 1 of 9 approved chats fails with `NATIVE_READER_UNAVAILABLE` (see `NEXT-SESSION-HANDOFF.md`).
 - **WhatsApp WA-02:** `vps-whatsapp-wa-02-cap4-20261011`, image `local/vps-whatsapp:20261020-ingestion`. Identity-only by policy.
@@ -575,4 +630,3 @@ system.
   infrastructure source only; it never contains production runtime data,
   sessions, credentials or business rows. Restoring business data remains the
   separate PostgreSQL backup procedure described above.
-

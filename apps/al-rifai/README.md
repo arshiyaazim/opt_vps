@@ -28,11 +28,49 @@ New tested domain modules added in the same session:
 | `lib/order-draft.ts` | Admin order draft composition (no sending) |
 | `lib/vessel-reports.ts` | Read-only mother/lighter/escort/date aggregates + CSV |
 | `lib/cash-submission.ts` | PENDING_REVIEW submission validation (no posting) |
-| `db/migration-candidates/0031_*` | **Prepared, unapplied** Cash submissions + append-only review schema (rehearsed) |
+| `db/migration-candidates/0031_*` | Cash submissions + append-only review schema (rehearsed; current Production handoff records it applied) |
 | `lib/cash-approval.ts` | Reviewer policy: role-scoped reads, reviewer≠submitter, decision validation |
-| `db/migration-candidates/0032_*` | **Prepared, unapplied** Vessel SECURITY DEFINER command layer (add/edit/release/assign/void) |
+| `db/migration-candidates/0032_*` | Vessel SECURITY DEFINER command layer (add/edit/release/assign/void); schema objects applied 2026-10-30, ledger row not recorded — see Migration ledger note in `docs/VPS_MAP.md` |
 | `/cash/submissions` | Cash Portal submission + review queue UI (dependency-aware) |
-| `/vessel-register` | Vessel Register with command API (`/api/vessel-programs`): details, audit, source, add/edit/release/assign/void (gated by 0032) |
+| `/vessel-register` | Vessel Register with command API (`/api/vessel-programs`): details, audit, source, add/edit/release/assign/void (requires 0032; applied 2026-10-30) |
+
+### Employee and transaction submissions — source update 2026-10-30
+
+The platform drawers now use the existing authenticated Cash Portal API
+surface. Cash transaction submissions use the schema from migration 0031 and
+remain `PENDING_REVIEW`, with no posting side effect. Employee drawer requests
+use candidate 0035 (applied 2026-10-30) and remain `PENDING_APPROVAL` until an Admin makes
+one append-only approve/reject decision. Approval does not activate the
+employee. A separate Super-Admin-only action with explicit confirmation creates
+an immutable portal-directory entry; it does not modify payment-derived
+`employee_master`, Cash postings or Vessel data. Request creators cannot review
+their own submissions, and rejections require a reason recorded in both the
+decision record and audit event. Portal activations are displayed in a distinct
+source/status section on `/employees`; mobile collisions remain unmerged.
+Candidate 0035's schema objects are applied (2026-10-30); its ledger row is
+not recorded — see Migration ledger note in `docs/VPS_MAP.md`. Sensitive HR
+fields (NID, salary, emergency contact) are intentionally not collected
+without an approved protected storage workflow. See
+[`docs/EMPLOYEE-TRANSACTION-SUBMISSIONS.md`](docs/EMPLOYEE-TRANSACTION-SUBMISSIONS.md).
+
+### Verification — reproducible at commit 139f5df
+
+Verification reproducible at commit `139f5df` (2026-10-30):
+
+- Typecheck: 0 errors (isolated `node:22.23.3-alpine` container).
+- Canonical test suite (`pnpm test`): TAP block 237/240 pass, 3 skip, 0 fail.
+  The non-TAP post-processing script `tests/source-register.mjs` requires real
+  Owner evidence and cannot run in the isolated environment; the suite exit
+  code is non-zero for that reason alone.
+- Production build verification: deferred to Phase 4.4 (post-Phase-4 image
+  build).
+- Full glob suite (53 files): 413 tests, 402 pass, 7 fail (all
+  DB/server/evidence-dependent, 0 subtest-level assertion failures), 4 skipped.
+
+The payment-derived Employee statements now paginate the full filtered result
+in 40-row pages instead of stopping at the first 200 rows. Search and identity
+scope filters reset pagination; totals remain calculated over all matching
+rows. Portal Activated Employees continue to display in their own section.
 
 ---- One PostgreSQL database `alrifai`; one application container `al-rifai-app-1`.
 - WA-01 / Bridge-1 is the authorized source for Cash and Vessel messages; its
