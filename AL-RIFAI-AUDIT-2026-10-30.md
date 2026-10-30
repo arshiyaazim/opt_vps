@@ -178,8 +178,8 @@ must leave the system working if the next phase never starts.
 
 ### Phase 2 — Migration-backed features
 
-The migration candidates in this phase add database objects. Migration 0032
-creates command functions that can write to existing Vessel tables when
+The migration candidates in this phase add database objects. **Migration 0032 is applied (2026-10-30)**.
+Migration 0032 creates command functions that can write to existing Vessel tables when
 invoked; candidates 0034–0036 add tables and supporting views, functions, and
 triggers. The migration SQL does not drop or truncate existing objects or data.
 
@@ -204,7 +204,9 @@ Common gate for every migration in this phase:
 
 #### Phase 2.2 — Vessel command schema (+ vessel code commit)
 - Migration: `apps/al-rifai/db/migration-candidates/0032_vessel_program_commands.sql`
-  (unapplied in Production).
+  (applied 2026-10-30).
+
+  **Update:** 7 SECURITY DEFINER functions created. `ir_review_runtime` has EXECUTE.
 - Pre-verify SQL against a synthetic restored clone.
 - Apply → verify command functions and grants.
 - Commit pending vessel code:
