@@ -13,8 +13,9 @@
 ## 0. Current Production Position (verified 2026-10-27)
 
 > **Current production position — 2026-10-29 (authoritative; supersedes the banners below):**
-> app image `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2`
-> (source `67ec02b`), mode `shadow`, 3 Cash Portal users (Owner `Admin`, USER
+> app image `sha256:ef06c2ef68689d68e63879d9158a47caa575a159b355ce0bd5e9f7fd3ad651ad`
+> (tag `local/al-rifai:20261029-review-nav-fix`, source `9bc9f85`; verified 2026-10-30
+> via `docker inspect al-rifai-app-1`), mode `shadow`, 3 Cash Portal users (Owner `Admin`, USER
 > `officeassistant`, USER `officeazzistant2`), ledger 32 (migration 0031 applied, 0032 not
 > applied, 0033 applied), 0 current postings, freeze intact. Login rate limiter removed.
 > WA-01 degraded (1 of 9 chats failing; diagnosis recorded, bridge fix deferred by Owner).
