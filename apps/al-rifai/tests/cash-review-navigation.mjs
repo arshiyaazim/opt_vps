@@ -15,33 +15,74 @@ const cashPage = source('app/cash/page.tsx');
 const queuePage = source('app/cash/submissions/page.tsx');
 const route = source('app/api/cash/[...path]/route.ts');
 const portal = source('lib/cash-portal.ts');
+const dashboard = source('app/dashboard/view.tsx');
+const workspaceCss = source('app/workspace.css');
 const sourcesReviewView = source('app/sources-review/view.tsx');
 const sourcesReviewPage = source('app/sources-review/page.tsx');
 
-test('static: /sources-review is relabelled and no longer claims the Cash queue', () => {
-  assert.match(nav, /\{href:"\/sources-review",label:"Escort & WhatsApp Review"/);
-  assert.match(nav, /description:"Escort program and WhatsApp message review \(not Cash submissions\)"/);
-  // The relaunched screen keeps its own breadcrumb/metadata in step with the nav.
-  assert.match(sourcesReviewPage, /label="Escort & WhatsApp Review"/);
-  assert.match(sourcesReviewPage, /title:'Escort & WhatsApp Review/);
+test('static: dashboard is a landing page, not a sidebar item, and navigation has coherent groups', () => {
+  assert.doesNotMatch(nav, /href:"\/dashboard",label:"Dashboard"/);
+  assert.match(nav, /\{label:"Cash",items:/);
+  assert.match(nav, /\{label:"Vessel Operations",items:/);
+  assert.match(nav, /href:"\/cash",label:"Cash"/);
+  assert.match(nav, /href:"\/vessel",label:"Programs & Assignments"/);
+  assert.match(shell, /NAV_GROUPS\.map/);
+  assert.doesNotMatch(shell, /Consolidated tools|LegacyLinks/);
+  assert.match(shell, /href="\/dashboard">Dashboard<\/Link>/);
 });
 
-test('static: platform nav exposes Cash Submissions as an Admin-presented entry', () => {
+test('static: Cash Submissions is visible in the Cash group for each signed-in role', () => {
   const entries = nav.split('\n').filter((line) => line.includes('href:"/cash/'));
   assert.equal(entries.length, 1, 'exactly one Cash navigation entry');
   assert.match(entries[0], /href:"\/cash\/submissions"/);
   assert.match(entries[0], /label:"Cash Submissions"/);
-  assert.match(entries[0], /adminOnly:true/);
+  assert.doesNotMatch(entries[0], /adminOnly:true/);
   assert.doesNotMatch(entries[0], /restricted:true/);
 });
 
-test('static: Admin presentation does not reuse the restricted flag', () => {
+test('static: role and super-admin presentation guards remain distinct', () => {
   // `restricted` keys off superAdmin, which is undefined under the legacy
   // validation credential, so a restricted Cash entry would vanish in shadow mode.
   assert.match(shell, /\(!item\.restricted\|\|user\.superAdmin===true\)/);
   assert.match(shell, /\(!item\.adminOnly\|\|user\.admin===true\)/);
   // The Admin Panel entry keeps its original guard and its original test.
   assert.match(nav, /href:"\/admin"[^\n]*restricted:true/);
+});
+
+test('static: dashboard module cards link to eight existing workspace destinations', () => {
+  const paths = [...dashboard.matchAll(/\{href:'([^']+)',title:/g)].map((match) => match[1]);
+  assert.deepEqual(paths, [
+    '/cash',
+    '/vessel-register',
+    '/employees',
+    '/sources-review',
+    '/assistant',
+    '/transactions',
+    '/cash/submissions',
+    '/income-expenditure',
+  ]);
+  assert.equal(new Set(paths).size, 8, 'module destinations are unique');
+  for (const path of paths) {
+    assert.ok(nav.includes(`href:"${path}"`), `${path} is also reachable in platform navigation`);
+  }
+  assert.match(dashboard, /className="wx-module-card"/);
+  assert.match(dashboard, /title="Platform modules"/);
+});
+
+test('static: module cards use responsive equal-grid styling and visible keyboard focus', () => {
+  assert.match(workspaceCss, /\.wx-module-grid\s*\{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)[^}]*grid-auto-rows: minmax\(12rem, 1fr\)/s);
+  assert.match(workspaceCss, /@media \(max-width: 900px\)[\s\S]*?\.wx-module-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(workspaceCss, /@media \(max-width: 420px\)[\s\S]*?\.wx-module-grid \{ grid-template-columns: 1fr; \}/);
+  assert.match(workspaceCss, /\.wx-module-card:focus-visible\s*\{[^}]*outline: 2px solid var\(--wx-brand\)/s);
+});
+
+test('static: /sources-review is named Review Queue and remains separate from Cash submissions', () => {
+  assert.match(nav, /\{href:"\/sources-review",label:"Review Queue"/);
+  assert.match(nav, /description:"Vessel and WhatsApp source review; Cash submissions stay separate"/);
+  assert.match(sourcesReviewPage, /label="Review Queue"/);
+  assert.match(sourcesReviewPage, /title:'Review Queue/);
+  assert.match(sourcesReviewView, /\/api\/escort-register/);
+  assert.doesNotMatch(sourcesReviewView, /cash_submissions/);
 });
 
 test('static: the Cash sidebar link is renamed and stays available to every signed-in role', () => {
@@ -54,7 +95,11 @@ test('static: submission read returns the submitter username and purpose without
   assert.match(route, /u\.username AS submitted_by_username/);
   assert.match(route, /LEFT JOIN public\.cash_portal_users u ON u\.id=v\.submitted_by_user_ref/);
   assert.match(route, /WHERE \(\$1::boolean OR v\.submitted_by_user_ref=\$2\)/);
-  assert.match(route, /ORDER BY v\.created_at DESC LIMIT 200/);
+  assert.match(route, /ORDER BY v\.created_at DESC\s+LIMIT \$\{limit\} OFFSET \$\{offset\}/);
+  assert.match(route, /SELECT count\(\*\)::int AS count FROM public\.cash_submission_review_state v/);
+  assert.match(route, /rows:visible,decisions:decisions\.rows,total:total\.rows\[0\]\?\.count\?\?0,limit,offset/);
+  assert.match(queuePage, /submissions\?limit=\$\{SUBMISSION_PAGE_SIZE\}&offset=\$\{pageOffset\}/);
+  assert.match(queuePage, /Showing \{total\?offset\+1:0\}–\{Math\.min\(offset\+rows\.length,total\)\} of \{total\}/);
   // Role still comes from the stored session row, bound server-side.
   assert.match(route, /\[result\.user\.role==="ADMIN",result\.user\.id\]/);
 });
@@ -71,7 +116,7 @@ test('static: the submission-create branch is path-scoped so the decision handle
   // later branch is dead code. This guard is what keeps that branch reachable.
   assert.match(route, /if\(action==="submissions"&&!segments\[1\]&&request\.method==="POST"\)\{/);
   const create = route.indexOf('if(action==="submissions"&&!segments[1]&&request.method==="POST")');
-  const decide = route.indexOf('segments[2]==="decision"&&request.method==="POST"');
+  const decide = route.indexOf('if(action==="submissions"&&segments[1]&&segments[2]==="decision"&&request.method==="POST")');
   assert.ok(create >= 0, 'path-scoped create branch present');
   assert.ok(decide > 0, 'decision branch present');
   assert.ok(create < decide, 'create branch is declared before the decision branch it must not shadow');

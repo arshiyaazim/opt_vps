@@ -42,6 +42,7 @@ import {
   type UnifiedAuthMode,
 } from './unified-auth-policy';
 import {loadSessionIdentity, revokeSession, type UnifiedIdentity} from './unified-auth-db';
+import {checkLoginThrottle, recordLoginFailure, recordLoginSuccess} from '@/lib/login-throttle';
 
 export type UnifiedSession = {identity: UnifiedIdentity; token: string; csrf: string};
 
@@ -114,11 +115,15 @@ export async function loginWithCashCredential(
   const username = typeof input.username === 'string' ? input.username.trim().slice(0, 80) : '';
   const password = typeof input.password === 'string' ? input.password : '';
   if (!username || !password) throw new UnifiedAuthError('CREDENTIALS_REQUIRED', 400);
+  const throttle = await checkLoginThrottle(username);
+  if (throttle.waitMs > 0) throw new UnifiedAuthError('LOGIN_THROTTLED', 429);
   const row = await findUser(username);
   if (!row || !(await verifyPassword(password, row.password_hash))) {
+    await recordLoginFailure(username);
     throw new UnifiedAuthError('INVALID_CREDENTIALS', 401);
   }
   const session = await createSession(request, row);
+  await recordLoginSuccess(username);
   await audit(row.id, row.id, 'LOGIN', {surface: 'unified'});
   return {
     token: session.token,

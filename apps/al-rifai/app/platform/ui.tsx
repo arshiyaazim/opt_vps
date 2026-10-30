@@ -16,6 +16,7 @@ import {Tooltip,TooltipContent,TooltipProvider,TooltipTrigger} from '@/component
 export const bdt=new Intl.NumberFormat('en-BD',{style:'currency',currency:'BDT',maximumFractionDigits:2});
 export const fmtBDT=(amountCents:number)=>bdt.format(amountCents/100);
 export const fmtInt=new Intl.NumberFormat('en-BD');
+const EMPLOYEE_REQUEST_PAGE_SIZE=100;
 
 export function money(cents:number){return fmtBDT(cents);}
 
@@ -186,54 +187,103 @@ export function PageNotice({notice,sourceLabel,checkedAt}:{notice?:string;source
   );
 }
 
-/* ---------------- Drawers (UI shells; all writes disabled) ---------------- */
+/* ---------------- Authenticated, review-only submission drawers ---------------- */
 
-function DisabledSubmitReason({kind}:{kind:'transaction'|'employee'}){
-  return kind==='transaction'
-    ?'Saving is disabled: creating a manual cash instruction requires an authorized backend writer and validation. Requests would be recorded as PENDING_REVIEW only — no ledger posting.'
-    :'Saving is disabled: activating an employee master record requires an authorized approval workflow (PENDING_APPROVAL) and backend writer. NID and contact data are restricted records.';
+type SubmissionResponse={id:string;state:string;duplicate?:boolean;employeeActivated?:boolean;postingAuthorized?:boolean};
+type CashSubmissionRow={id:string;employee_name:string;employee_mobile:string|null;amount_minor:number;review_state:string;transaction_date:string};
+type EmployeeSubmissionRow={id:string;employeeName:string;employeeMobile:string;proposedAssignment:string;requestedJoiningDate:string|null;createdAt:string;state:string;decisionNote:string|null;decidedAt:string|null;decidedByUsername:string|null;activatedAt:string|null;activatedByUsername:string|null;submittedByUsername:string|null;canDecide:boolean};
+
+async function cashJson<T>(path:string,init:RequestInit={}):Promise<T>{
+  const headers=new Headers(init.headers);
+  headers.set('Accept','application/json');
+  const response=await fetch(path,{...init,headers,cache:'no-store'});
+  const body=await response.json().catch(()=>({})) as {error?:string;reasons?:string[];migration?:string};
+  if(!response.ok){
+    const reason=response.status===503
+      ?`${body.error??'Storage unavailable'}${body.migration?` (${body.migration})`:''}`
+      :[body.error??response.statusText,...(body.reasons??[])].join(' — ');
+    throw new Error(reason);
+  }
+  return body as T;
+}
+
+async function cashPost<T>(path:string,payload:unknown):Promise<T>{
+  const session=await cashJson<{csrf:string}>('/api/cash/me');
+  return cashJson<T>(path,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf},
+    body:JSON.stringify(payload),
+  });
 }
 
 export function AddTransactionDrawer(){
   const [open,setOpen]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  const [notice,setNotice]=useState('');
+  const [rows,setRows]=useState<CashSubmissionRow[]>([]);
+  const [form,setForm]=useState({employeeName:'',employeeMobile:'',payoutMobile:'',method:'bkash',amount:'',purpose:'',date:'',note:'',evidenceRef:''});
+  const refresh=async()=>{
+    const result=await cashJson<{rows:CashSubmissionRow[]}>('/api/cash/submissions');
+    setRows(result.rows??[]);
+  };
+  const changeOpen=async(next:boolean)=>{
+    setOpen(next);
+    if(next){
+      setError('');
+      try{await refresh();}catch(cause){setError(cause instanceof Error?cause.message:'Submissions could not be loaded.');}
+    }
+  };
+  const submit=async(event:React.FormEvent<HTMLFormElement>)=>{
+    event.preventDefault();setBusy(true);setError('');setNotice('');
+    try{
+      const saved=await cashPost<SubmissionResponse>('/api/cash/submissions',form);
+      setNotice(saved.duplicate
+        ?`This identical record is already pending review (${saved.id.slice(0,12)}…).`
+        :`Saved for review (${saved.id.slice(0,12)}…). It is not posted to Cash.`);
+      setForm({employeeName:'',employeeMobile:'',payoutMobile:'',method:'bkash',amount:'',purpose:'',date:'',note:'',evidenceRef:''});
+      try{await refresh();}catch(cause){setError(`Saved, but the list could not refresh: ${cause instanceof Error?cause.message:'refresh failed'}`);}
+    }catch(cause){setError(cause instanceof Error?cause.message:'Submission failed.');}
+    finally{setBusy(false);}
+  };
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={changeOpen}>
       <SheetTrigger asChild><Button size="sm">+ Add transaction</Button></SheetTrigger>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Add transaction (draft UI)</SheetTitle>
-          <SheetDescription>Submitted manual transactions enter PENDING_REVIEW and never post to the Cash Ledger automatically.</SheetDescription>
+          <SheetTitle>Submit a Cash record</SheetTitle>
+          <SheetDescription>This creates a review-only submission. It does not create or post a Cash ledger transaction.</SheetDescription>
         </SheetHeader>
-        <div className="grid gap-3 px-4 pb-4">
-          {(['Employee','Employee ID','Vessel','Amount (BDT)'] as const).map(f=>(
-            <div key={f} className="grid gap-1"><Label htmlFor={`tx-${f}`}>{f}</Label><Input id={`tx-${f}`} name={f} placeholder="Not connectable yet — backend writer pending"/></div>
-          ))}
+        <form className="grid gap-3 px-4 pb-4" onSubmit={submit}>
+          {error&&<p role="alert" className="rounded-md border border-destructive/40 p-2 text-sm text-destructive">{error}</p>}
+          {notice&&<p role="status" aria-live="polite" className="rounded-md border p-2 text-sm">{notice}</p>}
+          <div className="grid gap-1"><Label htmlFor="tx-name">Employee name</Label><Input id="tx-name" autoComplete="off" maxLength={150} required value={form.employeeName} onChange={e=>setForm({...form,employeeName:e.target.value})}/></div>
+          <div className="grid gap-1"><Label htmlFor="tx-employee-mobile">Employee ID / mobile</Label><Input id="tx-employee-mobile" type="tel" autoComplete="off" required value={form.employeeMobile} onChange={e=>setForm({...form,employeeMobile:e.target.value})}/><p className="text-xs text-muted-foreground">Employee identity is separate from the payout number.</p></div>
+          <div className="grid gap-1"><Label htmlFor="tx-payout-mobile">Payout mobile</Label><Input id="tx-payout-mobile" type="tel" autoComplete="off" required value={form.payoutMobile} onChange={e=>setForm({...form,payoutMobile:e.target.value})}/></div>
           <div className="grid gap-1">
             <Label htmlFor="tx-method">Payment method</Label>
-            <Select defaultValue="bkash"><SelectTrigger id="tx-method"><SelectValue/></SelectTrigger>
+            <Select value={form.method} onValueChange={method=>setForm({...form,method})}><SelectTrigger id="tx-method"><SelectValue/></SelectTrigger>
               <SelectContent>{['bkash','nagad','cash','rocket','bank'].map(m=><SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div className="grid gap-1">
-            <Label htmlFor="tx-source">Instruction source</Label>
-            <Select defaultValue="manual"><SelectTrigger id="tx-source"><SelectValue/></SelectTrigger>
-              <SelectContent><SelectItem value="manual">Manual entry</SelectItem><SelectItem value="whatsapp" disabled>WhatsApp (existing intake)</SelectItem></SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-1"><Label htmlFor="tx-date">Transaction date</Label><Input id="tx-date" type="date"/></div>
-          <div className="grid gap-1"><Label htmlFor="tx-evidence">Attach evidence</Label><Input id="tx-evidence" type="file" disabled aria-disabled/><p className="text-[11px] text-muted-foreground">Evidence storage backend pending.</p></div>
-          <div className="grid gap-1"><Label htmlFor="tx-notes">Notes</Label><Textarea id="tx-notes" rows={3} placeholder="Purpose, references, review context"/></div>
+          <div className="grid gap-1"><Label htmlFor="tx-amount">Amount (BDT)</Label><Input id="tx-amount" inputMode="decimal" required value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
+          <div className="grid gap-1"><Label htmlFor="tx-purpose">Purpose</Label><Input id="tx-purpose" maxLength={500} required value={form.purpose} onChange={e=>setForm({...form,purpose:e.target.value})}/></div>
+          <div className="grid gap-1"><Label htmlFor="tx-date">Transaction date</Label><Input id="tx-date" type="date" required value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></div>
+          <div className="grid gap-1"><Label htmlFor="tx-evidence">Evidence reference (optional)</Label><Input id="tx-evidence" maxLength={300} value={form.evidenceRef} onChange={e=>setForm({...form,evidenceRef:e.target.value})}/><p className="text-xs text-muted-foreground">File uploads are not enabled; do not attach sensitive files here.</p></div>
+          <div className="grid gap-1"><Label htmlFor="tx-notes">Review note (optional)</Label><Textarea id="tx-notes" rows={3} maxLength={500} value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/></div>
           <SheetFooter className="flex-row justify-end gap-2">
-            <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild><Button variant="secondary" disabled aria-disabled="true">Save Draft</Button></TooltipTrigger>
-                <TooltipContent><DisabledSubmitReason kind="transaction"/></TooltipContent>
-              </Tooltip>
-              <Tooltip><TooltipTrigger asChild><Button disabled aria-disabled="true">Submit for Review</Button></TooltipTrigger><TooltipContent><DisabledSubmitReason kind="transaction"/></TooltipContent></Tooltip>
-            </TooltipProvider>
+            <Button type="button" variant="outline" onClick={()=>setOpen(false)}>Close</Button>
+            <Button type="submit" disabled={busy}>{busy?'Submitting…':'Submit for review'}</Button>
           </SheetFooter>
-        </div>
+          <div className="border-t pt-3">
+            <h3 className="text-sm font-semibold">Recent submissions</h3>
+            {!rows.length&&<p className="mt-1 text-xs text-muted-foreground">No saved submissions in your authorized scope.</p>}
+            <ul className="mt-2 grid gap-2 text-xs">
+              {rows.slice(0,10).map(row=><li key={row.id} className="flex flex-wrap justify-between gap-2 border-b pb-2"><span>{row.transaction_date} · {row.employee_name} · {fmtBDT(Number(row.amount_minor))}</span><StatusPill status="PENDING_REVIEW" label={row.review_state}/></li>)}
+            </ul>
+            <Link href="/cash/submissions" className="mt-3 inline-block text-xs underline">Open Cash review queue</Link>
+          </div>
+        </form>
       </SheetContent>
     </Sheet>
   );
@@ -241,27 +291,125 @@ export function AddTransactionDrawer(){
 
 export function AddEmployeeDrawer(){
   const [open,setOpen]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  const [notice,setNotice]=useState('');
+  const [rows,setRows]=useState<EmployeeSubmissionRow[]>([]);
+  const [total,setTotal]=useState(0);
+  const [offset,setOffset]=useState(0);
+  const [canDecide,setCanDecide]=useState(false);
+  const [canActivate,setCanActivate]=useState(false);
+  const [busyRequest,setBusyRequest]=useState('');
+  const [form,setForm]=useState({employeeName:'',employeeMobile:'',proposedAssignment:'',requestedJoiningDate:'',note:''});
+  const refresh=async(pageOffset=offset)=>{
+    const result=await cashJson<{rows:EmployeeSubmissionRow[];total:number;canDecide:boolean;canActivate:boolean}>(
+      `/api/cash/employee-submissions?limit=${EMPLOYEE_REQUEST_PAGE_SIZE}&offset=${pageOffset}`,
+    );
+    setRows(result.rows??[]);
+    setTotal(result.total??0);
+    setCanDecide(result.canDecide===true);
+    setCanActivate(result.canActivate===true);
+  };
+  const goPage=async(pageOffset:number)=>{
+    setOffset(pageOffset);
+    try{await refresh(pageOffset);}catch(cause){setError(cause instanceof Error?cause.message:'Employee requests could not be loaded.');}
+  };
+  const changeOpen=async(next:boolean)=>{
+    setOpen(next);
+    if(next){
+      setError('');
+      try{await refresh();}catch(cause){setError(cause instanceof Error?cause.message:'Employee requests could not be loaded.');}
+    }
+  };
+  const submit=async(event:React.FormEvent<HTMLFormElement>)=>{
+    event.preventDefault();setBusy(true);setError('');setNotice('');
+    try{
+      const saved=await cashPost<SubmissionResponse>('/api/cash/employee-submissions',form);
+      setNotice(saved.duplicate
+        ?`This identical request is already pending Admin review (${saved.id.slice(0,12)}…).`
+        :`Saved for Admin review (${saved.id.slice(0,12)}…). No employee or Vessel program was activated.`);
+      setForm({employeeName:'',employeeMobile:'',proposedAssignment:'',requestedJoiningDate:'',note:''});
+      try{await refresh();}catch(cause){setError(`Saved, but the list could not refresh: ${cause instanceof Error?cause.message:'refresh failed'}`);}
+    }catch(cause){setError(cause instanceof Error?cause.message:'Employee request failed.');}
+    finally{setBusy(false);}
+  };
+  const decide=async(row:EmployeeSubmissionRow,decision:'APPROVED'|'REJECTED')=>{
+    const action=decision==='APPROVED'?'approve':'reject';
+    const note=decision==='REJECTED'?window.prompt(`Reason required to reject ${row.employeeName}'s request.`):'';
+    if(note===null)return;
+    if(decision==='REJECTED'&&!note.trim()){
+      setError('A rejection reason is required.');
+      return;
+    }
+    if(!window.confirm(`${action[0].toUpperCase()+action.slice(1)} ${row.employeeName}'s request? This does not activate the employee.`))return;
+    setBusyRequest(row.id);setError('');setNotice('');
+    try{
+      await cashPost(`/api/cash/employee-submissions/${row.id}/decision`,{decision,note});
+      setNotice(`Request ${decision.toLowerCase()}. No employee was activated.`);
+      await refresh();
+    }catch(cause){setError(cause instanceof Error?cause.message:'Employee decision failed.');}
+    finally{setBusyRequest('');}
+  };
+  const activate=async(row:EmployeeSubmissionRow)=>{
+    if(!window.confirm(`Activate ${row.employeeName} in the Employee directory? This is separate from approval and does not create Cash postings or Vessel programs.`))return;
+    setBusyRequest(row.id);setError('');setNotice('');
+    try{
+      await cashPost(`/api/cash/employee-submissions/${row.id}/activate`,{confirmation:'ACTIVATE_EMPLOYEE'});
+      setNotice(`${row.employeeName} was activated in the Employee directory.`);
+      await refresh();
+    }catch(cause){setError(cause instanceof Error?cause.message:'Employee activation failed.');}
+    finally{setBusyRequest('');}
+  };
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={changeOpen}>
       <SheetTrigger asChild><Button size="sm">+ Add employee</Button></SheetTrigger>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Add employee (draft UI)</SheetTitle>
-          <SheetDescription>New employee submissions would enter PENDING_APPROVAL; only an authorized Admin can activate.</SheetDescription>
+          <SheetTitle>Request an employee record</SheetTitle>
+          <SheetDescription>Requests remain PENDING_APPROVAL. Submission does not activate an employee or create a Vessel assignment.</SheetDescription>
         </SheetHeader>
-        <div className="grid gap-3 px-4 pb-4">
-          {(['Employee Name','Employee ID','Phone','NID','Vessel / Assignment','Joining Date','Salary','Emergency Contact'] as const).map(f=>(
-            <div key={f} className="grid gap-1"><Label htmlFor={`emp-${f}`}>{f}</Label><Input id={`emp-${f}`} name={f} placeholder="Backend writer pending"/></div>
-          ))}
-          <div className="grid gap-1"><Label htmlFor="emp-notes">Notes</Label><Textarea id="emp-notes" rows={3}/></div>
+        <form className="grid gap-3 px-4 pb-4" onSubmit={submit}>
+          {error&&<p role="alert" className="rounded-md border border-destructive/40 p-2 text-sm text-destructive">{error}</p>}
+          {notice&&<p role="status" aria-live="polite" className="rounded-md border p-2 text-sm">{notice}</p>}
+          <div className="grid gap-1"><Label htmlFor="emp-name">Employee name</Label><Input id="emp-name" autoComplete="off" maxLength={150} required value={form.employeeName} onChange={e=>setForm({...form,employeeName:e.target.value})}/></div>
+          <div className="grid gap-1"><Label htmlFor="emp-mobile">Employee ID / mobile</Label><Input id="emp-mobile" type="tel" autoComplete="off" required value={form.employeeMobile} onChange={e=>setForm({...form,employeeMobile:e.target.value})}/><p className="text-xs text-muted-foreground">The normalized employee mobile is the identity reference; names do not merge identities.</p></div>
+          <div className="grid gap-1"><Label htmlFor="emp-assignment">Requested assignment reference (optional)</Label><Input id="emp-assignment" maxLength={200} value={form.proposedAssignment} onChange={e=>setForm({...form,proposedAssignment:e.target.value})}/><p className="text-xs text-muted-foreground">Text only; this does not create or change a Vessel program.</p></div>
+          <div className="grid gap-1"><Label htmlFor="emp-joining-date">Requested joining date (optional)</Label><Input id="emp-joining-date" type="date" value={form.requestedJoiningDate} onChange={e=>setForm({...form,requestedJoiningDate:e.target.value})}/><p className="text-xs text-muted-foreground">A requested date is not verified employment history.</p></div>
+          <div className="grid gap-1"><Label htmlFor="emp-notes">Review note (optional)</Label><Textarea id="emp-notes" rows={3} maxLength={500} value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/></div>
+          <p className="rounded-md border p-2 text-xs text-muted-foreground">NID, salary and emergency-contact details are not collected because no protected HR storage workflow is available.</p>
           <SheetFooter className="flex-row justify-end gap-2">
-            <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
-            <TooltipProvider>
-              <Tooltip><TooltipTrigger asChild><Button variant="secondary" disabled>Save Draft</Button></TooltipTrigger><TooltipContent><DisabledSubmitReason kind="employee"/></TooltipContent></Tooltip>
-              <Tooltip><TooltipTrigger asChild><Button disabled>Submit for Approval</Button></TooltipTrigger><TooltipContent><DisabledSubmitReason kind="employee"/></TooltipContent></Tooltip>
-            </TooltipProvider>
+            <Button type="button" variant="outline" onClick={()=>setOpen(false)}>Close</Button>
+            <Button type="submit" disabled={busy}>{busy?'Submitting…':'Submit for approval'}</Button>
           </SheetFooter>
-        </div>
+          <div className="border-t pt-3">
+            <h3 className="text-sm font-semibold">Recent requests{rows.length&&rows[0].submittedByUsername?` · ${rows[0].submittedByUsername}`:''}</h3>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">Showing {total?offset+1:0}–{Math.min(offset+rows.length,total)} of {total}</span>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" disabled={busy||offset===0} onClick={()=>void goPage(Math.max(0,offset-EMPLOYEE_REQUEST_PAGE_SIZE))}>Previous</Button>
+                <Button type="button" size="sm" variant="outline" disabled={busy||offset+EMPLOYEE_REQUEST_PAGE_SIZE>=total} onClick={()=>void goPage(offset+EMPLOYEE_REQUEST_PAGE_SIZE)}>Next</Button>
+              </div>
+            </div>
+            {!rows.length&&<p className="mt-1 text-xs text-muted-foreground">No employee requests in your authorized scope.</p>}
+            <ul className="mt-2 grid gap-2 text-xs">
+              {rows.map(row=><li key={row.id} className="grid gap-2 border-b pb-2">
+                <div className="flex flex-wrap justify-between gap-2"><span>{row.employeeName} · {row.employeeMobile}</span><StatusPill status={row.state} label={row.state}/></div>
+                {(row.decidedByUsername||row.activatedByUsername)&&<p className="text-muted-foreground">
+                  {row.decidedByUsername&&`Decision by ${row.decidedByUsername}${row.decidedAt?` · ${row.decidedAt.slice(0,10)}`:''}`}
+                  {row.activatedByUsername&&` · Activated by ${row.activatedByUsername}${row.activatedAt?` · ${row.activatedAt.slice(0,10)}`:''}`}
+                </p>}
+                <div className="flex flex-wrap gap-2">
+                  {canDecide&&row.canDecide&&row.state==='PENDING_APPROVAL'&&<>
+                    <Button type="button" size="sm" variant="outline" disabled={busyRequest===row.id} onClick={()=>void decide(row,'APPROVED')}>Approve</Button>
+                    <Button type="button" size="sm" variant="outline" disabled={busyRequest===row.id} onClick={()=>void decide(row,'REJECTED')}>Reject</Button>
+                  </>}
+                  {canActivate&&row.state==='APPROVED'&&
+                    <Button type="button" size="sm" disabled={busyRequest===row.id} onClick={()=>void activate(row)}>Activate employee</Button>}
+                </div>
+              </li>)}
+            </ul>
+          </div>
+        </form>
       </SheetContent>
     </Sheet>
   );
@@ -281,4 +429,3 @@ export function ActionButtonDisabled({label,reason}: {label:string;reason:string
     </TooltipProvider>
   );
 }
-

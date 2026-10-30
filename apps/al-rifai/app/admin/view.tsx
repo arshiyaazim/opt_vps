@@ -47,6 +47,19 @@ type AuditRow = {
   created_at: string;
 };
 
+type SignupRequest = {
+  id: string;
+  displayName: string;
+  email: string;
+  requestedAt: string;
+  decision: 'APPROVED' | 'REJECTED' | null;
+  decisionNote: string | null;
+  decidedByUsername: string | null;
+  decidedAt: string | null;
+};
+
+const SIGNUP_REQUEST_PAGE_SIZE = 100;
+
 /** Assignable capabilities. `workspace.admin` is config-bound and never listed. */
 const GRANTABLE = ['cash.read', 'cash.submit', 'cash.review', 'vessel.read', 'vessel.command', 'audit.read'] as const;
 
@@ -59,6 +72,11 @@ const messages: Record<string, string> = {
   CAPABILITIES_INVALID: 'The permission list is not valid.',
   CAPABILITIES_MIGRATION_REQUIRED: 'Permission storage is not migrated yet. The prepared migration 0033 must be approved and applied first.',
   AUDIT_READ_MIGRATION_REQUIRED: 'Audit history reads need migration 0033 (read grant) to be applied.',
+  SIGNUP_SCHEMA_REQUIRED: 'Signup requests are unavailable until the prepared migration 0034 is approved and applied.',
+  SIGNUP_PERMISSION_REQUIRED: 'The application database role cannot access signup requests; this needs a reviewed permission change.',
+  SIGNUP_ALREADY_DECIDED: 'This request already has a decision.',
+  SIGNUP_REQUEST_NOT_FOUND: 'That signup request could not be found.',
+  SIGNUP_DECISION_INVALID: 'Choose a valid decision and try again.',
   USERNAME_TAKEN: 'That username is already in use.',
   USERNAME_EXISTS: 'That username is already in use.',
   USERNAME_INVALID: 'Username must be 3-80 characters: letters, digits, dot, dash or underscore.',
@@ -101,6 +119,10 @@ export default function AdminView() {
   const [session, setSession] = useState<SessionUser | null>(null);
   const [csrf, setCsrf] = useState('');
   const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [signupRequests, setSignupRequests] = useState<SignupRequest[]>([]);
+  const [signupTotal, setSignupTotal] = useState(0);
+  const [signupOffset, setSignupOffset] = useState(0);
+  const [signupState, setSignupState] = useState('');
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [auditState, setAuditState] = useState('');
   const [error, setError] = useState('');
@@ -109,7 +131,7 @@ export default function AdminView() {
   const [profile, setProfile] = useState({displayName: '', email: '', mobile: '', whatsappNumber: ''});
   const [rename, setRename] = useState({username: '', currentPassword: ''});
   const [selfPassword, setSelfPassword] = useState({currentPassword: '', newPassword: '', confirmPassword: ''});
-  const [created, setCreated] = useState({username: '', displayName: '', password: '', role: 'USER' as Role});
+  const [created, setCreated] = useState({username: '', displayName: '', email: '', password: '', role: 'USER' as Role});
   const [reset, setReset] = useState<{id: string; password: string} | null>(null);
 
   const load = useCallback(async () => {
@@ -127,6 +149,18 @@ export default function AdminView() {
       const list = await call<{users: ManagedUser[]}>('/api/cash/users');
       setUsers(list.users);
       try {
+        const requests = await call<{rows: SignupRequest[]; total: number}>(
+          `/api/cash/signup-requests?limit=${SIGNUP_REQUEST_PAGE_SIZE}&offset=${signupOffset}`,
+        );
+        setSignupRequests(requests.rows);
+        setSignupTotal(requests.total);
+        setSignupState('');
+      } catch (e) {
+        setSignupRequests([]);
+        setSignupTotal(0);
+        setSignupState(friendly(e));
+      }
+      try {
         const history = await call<{rows: AuditRow[]}>('/api/cash/audit?limit=100');
         setAudit(history.rows);
         setAuditState('');
@@ -137,7 +171,7 @@ export default function AdminView() {
     } catch (e) {
       setError(friendly(e));
     }
-  }, []);
+  }, [signupOffset]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -192,6 +226,76 @@ export default function AdminView() {
       />
       {error && <p role="alert" className="rounded border border-destructive/40 bg-destructive/10 p-2 text-sm text-destructive">{error}</p>}
       {notice && <p role="status" className="rounded border bg-muted p-2 text-sm">{notice}</p>}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Signup Requests</CardTitle>
+          <CardDescription>Requests do not create accounts. Approval records a decision; account creation remains a separate, explicit Admin action.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {signupState && <p role="status" className="mb-3 text-sm text-muted-foreground">{signupState}</p>}
+          {!signupState && (
+            <>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+              <span>Showing {signupTotal ? signupOffset + 1 : 0}–{Math.min(signupOffset + signupRequests.length, signupTotal)} of {signupTotal}</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={busy || signupOffset === 0} onClick={() => setSignupOffset(offset => Math.max(0, offset - SIGNUP_REQUEST_PAGE_SIZE))}>Previous</Button>
+                <Button size="sm" variant="outline" disabled={busy || signupOffset + SIGNUP_REQUEST_PAGE_SIZE >= signupTotal} onClick={() => setSignupOffset(offset => offset + SIGNUP_REQUEST_PAGE_SIZE)}>Next</Button>
+              </div>
+            </div>
+            <div className="wx-table-wrap stackable">
+              <table className="wx-table stackable">
+                <thead>
+                  <tr><th>Applicant</th><th>Email</th><th>Requested</th><th>Status</th><th>Decision</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  {signupRequests.map(request => (
+                    <tr key={request.id}>
+                      <td data-label="Applicant" className="strong">{request.displayName}</td>
+                      <td data-label="Email">{request.email}</td>
+                      <td data-label="Requested" className="muted">{when(request.requestedAt)}</td>
+                      <td data-label="Status">{request.decision ?? 'PENDING'}</td>
+                      <td data-label="Decision" className="muted">
+                        {request.decision ? `${request.decision.toLowerCase()} by ${request.decidedByUsername || 'Admin'} · ${when(request.decidedAt)}` : '—'}
+                      </td>
+                      <td data-label="Action">
+                        {request.decision === null ? (
+                          <div className="flex flex-wrap gap-1">
+                            <Button size="sm" disabled={busy} onClick={() => void mutate(
+                              `/api/cash/signup-requests/${request.id}/decision`,
+                              'POST',
+                              {decision: 'APPROVED', note: ''},
+                              `Signup request for ${request.displayName} approved. Create the account separately below.`,
+                            )}>Approve</Button>
+                            <Button size="sm" variant="outline" disabled={busy} onClick={() => void mutate(
+                              `/api/cash/signup-requests/${request.id}/decision`,
+                              'POST',
+                              {decision: 'REJECTED', note: ''},
+                              `Signup request for ${request.displayName} rejected.`,
+                            )}>Reject</Button>
+                          </div>
+                        ) : request.decision === 'APPROVED' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setCreated(value => ({...value, displayName: request.displayName, email: request.email, role: 'USER'}));
+                              setNotice(`Account setup is ready for ${request.displayName}; choose a username and temporary password.`);
+                              document.getElementById('create-account')?.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            }}
+                          >Prepare account</Button>
+                        ) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                  {!signupRequests.length && <tr><td colSpan={6} className="text-sm text-muted-foreground">No signup requests.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -305,7 +409,7 @@ export default function AdminView() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="create-account">
           <CardHeader>
             <CardTitle>Create account</CardTitle>
             <CardDescription>New accounts must change their password at first sign-in.</CardDescription>
@@ -316,7 +420,7 @@ export default function AdminView() {
               onSubmit={e => {
                 e.preventDefault();
                 void mutate('/api/cash/users', 'POST', created, `Account ${created.username} created.`).then(() =>
-                  setCreated({username: '', displayName: '', password: '', role: 'USER'}),
+                  setCreated({username: '', displayName: '', email: '', password: '', role: 'USER'}),
                 );
               }}
             >
@@ -327,6 +431,10 @@ export default function AdminView() {
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="newAccountName">Display name</Label>
                 <Input id="newAccountName" value={created.displayName} onChange={e => setCreated({...created, displayName: e.target.value})} required />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="newAccountEmail">Email (optional)</Label>
+                <Input id="newAccountEmail" type="email" value={created.email} onChange={e => setCreated({...created, email: e.target.value})} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="newAccountPassword">Temporary password (12+ characters)</Label>

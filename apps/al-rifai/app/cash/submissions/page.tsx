@@ -10,6 +10,7 @@ type ApiError={error?:string;reasons?:string[];migration?:string;available?:bool
 
 const money=(minor:number)=>new Intl.NumberFormat('en-BD',{style:'currency',currency:'BDT',maximumFractionDigits:2}).format(minor/100);
 const emptyForm={employeeName:'',employeeMobile:'',payoutMobile:'',method:'bkash',amount:'',purpose:'',date:'',note:'',evidenceRef:''};
+const SUBMISSION_PAGE_SIZE=100;
 
 export default function CashSubmissionsPage(){
  const [user,setUser]=useState<User|null>(null);
@@ -19,18 +20,20 @@ export default function CashSubmissionsPage(){
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
  const [rows,setRows]=useState<Submission[]>([]);
+ const [total,setTotal]=useState(0);
+ const [offset,setOffset]=useState(0);
  const [available,setAvailable]=useState(true);
  const [migration,setMigration]=useState('');
  const [form,setForm]=useState({...emptyForm});
  const [busy,setBusy]=useState(false);
  const [selected,setSelected]=useState<{submission:Submission;decisions:Decision[]}|null>(null);
 
- const loadSubmissions=useCallback(async()=>{
-  const response=await fetch('/api/cash/submissions',{headers:{Accept:'application/json'}});
-  const data=await response.json() as ApiError&{rows?:Submission[]};
-  if(response.status===503){setAvailable(false);setMigration(data.migration??'');setRows([]);return;}
-  if(!response.ok){setError(data.error??'Submissions could not be loaded.');return;}
-  setAvailable(true);setRows(data.rows??[]);
+ const loadSubmissions=useCallback(async(pageOffset:number)=>{
+  const response=await fetch(`/api/cash/submissions?limit=${SUBMISSION_PAGE_SIZE}&offset=${pageOffset}`,{headers:{Accept:'application/json'}});
+  const data=await response.json() as ApiError&{rows?:Submission[];total?:number};
+  if(response.status===503){setAvailable(false);setMigration(data.migration??'');setRows([]);setTotal(0);return false;}
+  if(!response.ok){setError(data.error??'Submissions could not be loaded.');return false;}
+  setAvailable(true);setRows(data.rows??[]);setTotal(data.total??0);return true;
  },[]);
 
  const loadSession=useCallback(async()=>{
@@ -38,7 +41,7 @@ export default function CashSubmissionsPage(){
   if(!response.ok){setUser(null);setBooted(true);return;}
   const data=await response.json() as {user:User;csrf:string};
   setUser(data.user);setCsrf(data.csrf);setBooted(true);
-  await loadSubmissions();
+  await loadSubmissions(0);
  },[loadSubmissions]);
 
  useEffect(()=>{
@@ -56,7 +59,7 @@ export default function CashSubmissionsPage(){
    const data=await response.json() as ApiError&{user?:User;csrf?:string};
    if(!response.ok)throw new Error(data.error??'Login failed');
    setUser(data.user??null);setCsrf(data.csrf??'');
-   await loadSubmissions();
+   await loadSubmissions(offset);
   }catch(cause){setError(cause instanceof Error?cause.message:'Login failed');}
   finally{setBusy(false);}
  };
@@ -70,17 +73,24 @@ export default function CashSubmissionsPage(){
    if(!response.ok)throw new Error([data.error??'Submission failed',...(data.reasons??[])].join(' — '));
    setNotice(data.duplicate?`Identical submission already pending (${data.id?.slice(0,12)}…).`:`Submitted for review (${data.id?.slice(0,12)}…). No posting occurred.`);
    setForm({...emptyForm});
-   await loadSubmissions();
+   await loadSubmissions(offset);
   }catch(cause){setError(cause instanceof Error?cause.message:'Submission failed');}
   finally{setBusy(false);}
  };
 
  const openDetail=async(submission:Submission)=>{
   setError('');
-  const response=await fetch(`/api/cash/submissions?id=${submission.id}`,{headers:{Accept:'application/json'}});
+  const response=await fetch(`/api/cash/submissions?id=${submission.id}&limit=${SUBMISSION_PAGE_SIZE}&offset=${offset}`,{headers:{Accept:'application/json'}});
   const data=await response.json() as ApiError&{decisions?:Decision[]};
   if(!response.ok){setError(data.error??'Detail unavailable');return;}
   setSelected({submission,decisions:data.decisions??[]});
+ };
+
+ const goPage=async(pageOffset:number)=>{
+  setBusy(true);setError('');
+  try{if(await loadSubmissions(pageOffset))setOffset(pageOffset);}
+  catch(cause){setError(cause instanceof Error?cause.message:'Submissions could not be loaded.');}
+  finally{setBusy(false);}
  };
 
  const decide=async(submission:Submission,decision:string)=>{
@@ -93,7 +103,7 @@ export default function CashSubmissionsPage(){
    if(response.status===503){setAvailable(false);setMigration(data.migration??'');throw new Error('Review storage is not applied yet (migration 0031).');}
    if(!response.ok)throw new Error(data.error??'Decision failed');
    setNotice(`Decision recorded: ${data.reviewState??decision}. No financial posting occurred.`);
-   await loadSubmissions();
+   await loadSubmissions(offset);
   }catch(cause){setError(cause instanceof Error?cause.message:'Decision failed');}
   finally{setBusy(false);}
  };
@@ -125,11 +135,12 @@ export default function CashSubmissionsPage(){
   </section>}
 
   {available&&<section className="cash-table-card">
-   <div className="cash-card-head"><div><h2>{user.role==='ADMIN'?'Review queue':'My submissions'}</h2><p>Latest decision per submission · append-only history retained.</p></div><button onClick={()=>void loadSubmissions()} disabled={busy}>Refresh</button></div>
+   <div className="cash-card-head"><div><h2>{user.role==='ADMIN'?'Review queue':'My submissions'}</h2><p>Latest decision per submission · append-only history retained.</p></div><button onClick={()=>void loadSubmissions(offset)} disabled={busy}>Refresh</button></div>
    <div className="cash-table-wrap"><table><thead><tr><th>Date</th><th>Submitter</th><th>Employee</th><th>Amount</th><th>Method</th><th>Purpose</th><th>State</th><th>Actions</th></tr></thead><tbody>
     {rows.map(row=><tr key={row.id}><td>{row.transaction_date}</td><td>{row.submitted_by_username??'—'}</td><td><strong>{row.employee_name}</strong><small>{row.employee_mobile??'—'}</small></td><td>{money(Number(row.amount_minor))}</td><td>{row.method}</td><td>{row.purpose}</td><td>{row.review_state}</td><td><span style={{display:'flex',gap:6,flexWrap:'wrap'}}><button onClick={()=>void openDetail(row)}>History</button>{user.role==='ADMIN'&&row.review_state==='PENDING_REVIEW'&&<><button onClick={()=>void decide(row,'APPROVED')} disabled={busy||row.submitted_by_user_ref===user.id}>Approve</button><button onClick={()=>void decide(row,'REJECTED')} disabled={busy||row.submitted_by_user_ref===user.id}>Reject</button><button onClick={()=>void decide(row,'CORRECTION_REQUESTED')} disabled={busy||row.submitted_by_user_ref===user.id}>Correction</button></>}</span></td></tr>)}
     {!rows.length&&<tr><td colSpan={8} className="cash-empty">No submissions in scope.</td></tr>}
    </tbody></table></div>
+    <div className="cash-card-head"><span className="cash-muted">Showing {total?offset+1:0}–{Math.min(offset+rows.length,total)} of {total}</span><div style={{display:'flex',gap:8}}><button onClick={()=>void goPage(Math.max(0,offset-SUBMISSION_PAGE_SIZE))} disabled={busy||offset===0}>Previous</button><button onClick={()=>void goPage(offset+SUBMISSION_PAGE_SIZE)} disabled={busy||offset+SUBMISSION_PAGE_SIZE>=total}>Next</button></div></div>
   </section>}
 
   {selected&&<section className="cash-card">

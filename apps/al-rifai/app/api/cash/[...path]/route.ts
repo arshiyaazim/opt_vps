@@ -1,8 +1,11 @@
 import {NextRequest} from "next/server";
 import {auth,audit,bodyOptional,bodyString,CashPortalError,clearCookie,createSession,cookieHeader,database,findUser,hashPassword,hashToken,json,noStoreHeaders,publicUser,refreshCsrf,requireOrigin,requireCashSuperAdmin,verifyPassword,userById,isCashSuperAdmin,revokeOtherSessions} from "@/lib/cash-portal";
+import {checkLoginThrottle, recordLoginFailure, recordLoginSuccess} from "@/lib/login-throttle";
 import {assertCanCreateUser,assertCanManageUser,assertCanResetPassword,CashUserPolicyError} from "@/lib/cash-user-policy";
 import {assertNotRemovingLastSuperAdmin,UnifiedAuthError,validateCapabilityRequest} from "@/lib/unified-auth-policy";
 import {validateSubmission} from "@/lib/cash-submission";
+import {validateEmployeeSubmission} from "@/lib/employee-submission";
+import {assertCanActivateEmployee,assertCanDecideEmployee,EmployeeSubmissionPolicyError,validateEmployeeDecision,validateEmployeeDecisionNote,type EmployeeDecision,type EmployeeRequestState} from "@/lib/employee-submission-policy";
 import {assertCanDecide,ApprovalError,SUBMISSION_SCHEMA_DEPENDENCY} from "@/lib/cash-approval";
 import {CASH_SCOPE_ACCOUNT,CASH_SCOPE_CHATS,cashScopedWhere} from "@/lib/cash-scope";
 
@@ -22,6 +25,31 @@ function cleanUsername(value:unknown){const username=bodyString(value,80);return
 function cleanId(value:unknown){return typeof value==="string"&&/^[a-f0-9]{64}$/.test(value)?value:undefined;}
 const schemaUnavailable=(error:unknown)=>!!error&&typeof error==="object"&&(error as {code?:string}).code==="42P01";
 const schemaReply=()=>reply({error:SUBMISSION_SCHEMA_DEPENDENCY,available:false,migration:"db/migration-candidates/0031_cash_submissions_and_reviews.sql"},503);
+const employeeSubmissionSchemaReply=(error:unknown)=>{
+ const code=error&&typeof error==="object"?(error as {code?:string}).code:undefined;
+ if(code==="42P01")return reply({error:"EMPLOYEE_SUBMISSION_SCHEMA_REQUIRED",available:false,migration:"db/migration-candidates/0035_employee_submission_requests.sql"},503);
+ if(code==="42501")return reply({error:"EMPLOYEE_SUBMISSION_PERMISSION_REQUIRED",available:false},503);
+ return null;
+};
+function employeePolicy(guard:()=>void){
+ try{guard();}catch(error){
+  if(error instanceof EmployeeSubmissionPolicyError)throw new CashPortalError(error.code,error.status);
+  throw error;
+ }
+}
+const employeeSubmissionMutationSchemaReply=(error:unknown,uniqueConflict="EMPLOYEE_ACTIVATION_CONFLICT")=>{
+ const code=error&&typeof error==="object"?(error as {code?:string}).code:undefined;
+ if(code==="42P01")return reply({error:"EMPLOYEE_SUBMISSION_SCHEMA_REQUIRED",available:false,migration:"db/migration-candidates/0035_employee_submission_requests.sql"},503);
+ if(code==="42501")return reply({error:"EMPLOYEE_SUBMISSION_PERMISSION_REQUIRED",available:false},503);
+ if(code==="23505")return reply({error:uniqueConflict},409);
+ return null;
+};
+const signupSchemaReply=(error:unknown)=>{
+ const code=error&&typeof error==="object"?(error as {code?:string}).code:undefined;
+ if(code==="42P01")return reply({error:"SIGNUP_SCHEMA_REQUIRED",available:false,migration:"db/migration-candidates/0034_signup_requests.sql"},503);
+ if(code==="42501")return reply({error:"SIGNUP_PERMISSION_REQUIRED",available:false},503);
+ return null;
+};
 const cashMobile=(value:string)=>value.startsWith("0")?"+880"+value.slice(1):value;
 function approvalReply(error:ApprovalError){throw new CashPortalError(error.code,403);}
 async function handle(request:NextRequest,segments:string[]){
@@ -30,13 +58,221 @@ async function handle(request:NextRequest,segments:string[]){
   requireOrigin(request);
   const body=await readBody(request),username=cleanUsername(body.username),password=typeof body.password==="string"?body.password:"";
   if(!username||!password)return reply({error:"CREDENTIALS_REQUIRED"},400);
-  const row=await findUser(username);if(!row||!(await verifyPassword(password,row.password_hash))){return reply({error:"INVALID_CREDENTIALS"},401);}
+  const throttle=await checkLoginThrottle(username);
+  if(throttle.waitMs>0)return reply({error:"LOGIN_THROTTLED"},429);
+  const row=await findUser(username);if(!row||!(await verifyPassword(password,row.password_hash))){await recordLoginFailure(username);return reply({error:"INVALID_CREDENTIALS"},401);}
   const session=await createSession(request,row);await audit(row.id,row.id,"LOGIN",{});
+  await recordLoginSuccess(username);
   return reply({user:session.user,csrf:session.csrf},200,{"Set-Cookie":cookieHeader(session.token)});
  }
  if(action==="me"&&request.method==="GET"){try{const result=await auth(request);return reply({user:result.user,csrf:await refreshCsrf(result.token)});}catch(e){return reply({error:e instanceof CashPortalError?e.code:"AUTHENTICATION_REQUIRED"},401);}}
  const result=await auth(request,request.method!=="GET");
  if(action==="logout"&&request.method==="POST"){await database().query("DELETE FROM public.cash_portal_sessions WHERE id=$1",[hashToken(result.token)]);await audit(result.user.id,result.user.id,"LOGOUT",{});return reply({ok:true},200,{"Set-Cookie":clearCookie()});}
+ if(action==="signup-requests"&&request.method==="GET"){
+  forced(result.user);requireCashSuperAdmin(result.user);
+  try{
+   const limit=Math.max(1,Math.min(200,Math.trunc(Number(request.nextUrl.searchParams.get("limit"))||100)));
+   const offset=Math.max(0,Math.min(1000000,Math.trunc(Number(request.nextUrl.searchParams.get("offset"))||0)));
+   const rows=await database().query<Row>(
+    `SELECT request_id AS id,display_name AS "displayName",email,
+            requested_at AS "requestedAt",decision,decision_note AS "decisionNote",
+            decided_by AS "decidedBy",decided_by_username AS "decidedByUsername",
+            decided_at AS "decidedAt"
+     FROM public.account_signup_request_state
+     ORDER BY requested_at DESC,request_id DESC
+     LIMIT ${limit} OFFSET ${offset}`,
+   );
+   const total=await database().query<{count:number}>(
+    "SELECT count(*)::int AS count FROM public.account_signup_request_state");
+   return reply({available:true,rows:rows.rows,total:total.rows[0]?.count??0,limit,offset,readOnly:true});
+  }catch(error){const unavailable=signupSchemaReply(error);if(unavailable)return unavailable;throw error;}
+ }
+ if(action==="signup-requests"&&segments[1]&&segments[2] === "decision" && request.method === "POST"){
+  forced(result.user);requireCashSuperAdmin(result.user);
+  const requestId=cleanId(segments[1]);if(!requestId)return reply({error:"SIGNUP_REQUEST_ID_INVALID"},400);
+  const body=await readBody(request);
+  const decision=body.decision==="APPROVED"||body.decision==="REJECTED"?body.decision:null;
+  const note=body.note===undefined?"":bodyString(body.note,500);
+  if(!decision||note===undefined)return reply({error:"SIGNUP_DECISION_INVALID"},400);
+  try{
+   const exists=await database().query<{id:string}>("SELECT id FROM public.account_signup_requests WHERE id=$1",[requestId]);
+   if(!exists.rows.length)return reply({error:"SIGNUP_REQUEST_NOT_FOUND"},404);
+   const inserted=await database().query<{id:string}>(
+    `INSERT INTO public.account_signup_request_decisions
+       (id,request_id,decision,actor_user_ref,note)
+     VALUES($1,$2,$3,$4,$5)
+     ON CONFLICT (request_id) DO NOTHING
+     RETURNING id`,
+    [hashToken(`signup-decision:${requestId}`),requestId,decision,result.user.id,note],
+   );
+   if(!inserted.rows.length)return reply({error:"SIGNUP_ALREADY_DECIDED"},409);
+   return reply({ok:true,id:inserted.rows[0].id,decision,accountCreated:false},201);
+  }catch(error){const unavailable=signupSchemaReply(error);if(unavailable)return unavailable;throw error;}
+ }
+ if(action==="employee-submissions"&&segments.length===1&&request.method==="POST"){
+  forced(result.user);
+  const validation=validateEmployeeSubmission(await readBody(request));
+  if(!validation.ok)return reply({error:"EMPLOYEE_SUBMISSION_INVALID",reasons:validation.reasons},400);
+  const payload=validation.payload,id=hashToken(`employee-submission:${result.user.id}:${payload.payloadHash}`);
+  const client=await database().connect();
+  try{
+   await client.query("BEGIN");
+   const inserted=await client.query<{id:string}>(
+    `INSERT INTO public.employee_submission_requests
+       (id,submitted_by_user_ref,submitted_by_role,employee_name,employee_mobile,
+        proposed_assignment,requested_joining_date,note,payload,payload_hash)
+     VALUES($1,$2,$3,$4,$5,$6,$7::date,$8,$9::jsonb,$10)
+     ON CONFLICT (submitted_by_user_ref,payload_hash) DO NOTHING
+     RETURNING id`,
+    [id,result.user.id,result.user.role,payload.employeeName,payload.employeeMobile,
+     payload.proposedAssignment,payload.requestedJoiningDate,payload.note,
+     JSON.stringify({employeeName:payload.employeeName,employeeMobile:payload.employeeMobile,
+       proposedAssignment:payload.proposedAssignment,requestedJoiningDate:payload.requestedJoiningDate,note:payload.note}),
+     payload.payloadHash],
+   );
+   const duplicate=!inserted.rows.length;
+   const requestId=duplicate
+    ?(await client.query<{id:string}>(
+      "SELECT id FROM public.employee_submission_requests WHERE submitted_by_user_ref=$1 AND payload_hash=$2",
+      [result.user.id,payload.payloadHash],
+     )).rows[0]?.id??id
+    :id;
+   if(!duplicate){
+    await client.query(
+     `INSERT INTO public.cash_portal_audit(id,actor_id,target_id,action,details)
+      VALUES($1,$2,$3,'EMPLOYEE_SUBMISSION_CREATED',$4::jsonb)`,
+     [hashToken(`employee-submission-audit:${requestId}`),result.user.id,requestId,JSON.stringify({payloadHash:payload.payloadHash})],
+    );
+   }
+   await client.query("COMMIT");
+   return reply({ok:true,id:requestId,state:"PENDING_APPROVAL",duplicate,employeeActivated:false},duplicate?200:201);
+  }catch(error){
+   await client.query("ROLLBACK");
+   const unavailable=employeeSubmissionSchemaReply(error);if(unavailable)return unavailable;throw error;
+  }finally{client.release();}
+ }
+ if(action==="employee-submissions"&&segments.length===1&&request.method==="GET"){
+  forced(result.user);
+  try{
+   const limit=Math.max(1,Math.min(200,Math.trunc(Number(request.nextUrl.searchParams.get("limit"))||100)));
+   const offset=Math.max(0,Math.min(1000000,Math.trunc(Number(request.nextUrl.searchParams.get("offset"))||0)));
+   const rows=await database().query<Row>(
+    `SELECT r.id,r.employee_name AS "employeeName",r.employee_mobile AS "employeeMobile",
+            r.proposed_assignment AS "proposedAssignment",
+            r.requested_joining_date AS "requestedJoiningDate",r.note,
+            r.created_at AS "createdAt",
+            CASE WHEN a.id IS NOT NULL THEN 'ACTIVE'
+                 WHEN d.decision IS NOT NULL THEN d.decision
+                 ELSE 'PENDING_APPROVAL' END AS state,
+            d.decision,d.note AS "decisionNote",d.created_at AS "decidedAt",
+            decision_user.username AS "decidedByUsername",
+            a.activated_at AS "activatedAt",activation_user.username AS "activatedByUsername",
+            r.submitted_by_user_ref AS "submittedByUserRef",
+            ($1::boolean AND r.submitted_by_user_ref<>$2) AS "canDecide",
+            u.username AS "submittedByUsername"
+     FROM public.employee_submission_requests r
+     LEFT JOIN public.cash_portal_users u ON u.id=r.submitted_by_user_ref
+     LEFT JOIN public.employee_submission_decisions d ON d.request_id=r.id
+     LEFT JOIN public.cash_portal_users decision_user ON decision_user.id=d.actor_user_ref
+     LEFT JOIN public.employee_directory_records a ON a.source_request_id=r.id
+     LEFT JOIN public.cash_portal_users activation_user ON activation_user.id=a.activated_by
+     WHERE ($1::boolean OR r.submitted_by_user_ref=$2)
+     ORDER BY r.created_at DESC,r.id DESC
+     LIMIT ${limit} OFFSET ${offset}`,
+    [result.user.role==="ADMIN",result.user.id],
+   );
+   const total=await database().query<{count:number}>(
+    `SELECT count(*)::int AS count FROM public.employee_submission_requests r
+     WHERE ($1::boolean OR r.submitted_by_user_ref=$2)`,
+    [result.user.role==="ADMIN",result.user.id],
+   );
+   return reply({
+    available:true,rows:rows.rows,total:total.rows[0]?.count??0,limit,offset,scope:result.user.role==="ADMIN"?"all":"self",
+    canDecide:result.user.role==="ADMIN",canActivate:isCashSuperAdmin(result.user),
+   });
+  }catch(error){const unavailable=employeeSubmissionSchemaReply(error);if(unavailable)return unavailable;throw error;}
+ }
+ if(action==="employee-submissions"&&segments[1]&&segments[2]==="decision"&&request.method==="POST"){
+  forced(result.user);requireAdmin(result.user);
+  const requestId=cleanId(segments[1]);if(!requestId)return reply({error:"EMPLOYEE_REQUEST_ID_INVALID"},400);
+  const body=await readBody(request),decision=validateEmployeeDecision(body.decision);
+  const rawNote=body.note===undefined?"":bodyString(body.note,500);
+  if(!decision||rawNote===undefined)return reply({error:"EMPLOYEE_DECISION_INVALID"},400);
+  const note=validateEmployeeDecisionNote(decision,rawNote);
+  if(note===null)return reply({error:decision==="REJECTED"?"EMPLOYEE_REJECTION_REASON_REQUIRED":"EMPLOYEE_DECISION_INVALID"},400);
+  const client=await database().connect();
+  try{
+   await client.query("BEGIN");
+   const requestRow=await client.query<{id:string;submitted_by_user_ref:string}>(
+    "SELECT id,submitted_by_user_ref FROM public.employee_submission_requests WHERE id=$1",[requestId],
+   );
+   if(!requestRow.rows.length){await client.query("ROLLBACK");return reply({error:"EMPLOYEE_REQUEST_NOT_FOUND"},404);}
+   const prior=await client.query<{decision:EmployeeDecision}>(
+    "SELECT decision FROM public.employee_submission_decisions WHERE request_id=$1",[requestId],
+   );
+   const priorState:EmployeeRequestState=prior.rows[0]?.decision??"PENDING_APPROVAL";
+   employeePolicy(()=>assertCanDecideEmployee(result.user.role,priorState,result.user.id,requestRow.rows[0].submitted_by_user_ref));
+   const decisionId=hashToken(`employee-submission-decision:${requestId}`);
+   await client.query(
+    `INSERT INTO public.employee_submission_decisions(id,request_id,decision,actor_user_ref,note)
+     VALUES($1,$2,$3,$4,$5)`,
+    [decisionId,requestId,decision,result.user.id,note],
+   );
+   await client.query(
+    `INSERT INTO public.cash_portal_audit(id,actor_id,target_id,action,details)
+     VALUES($1,$2,$3,'EMPLOYEE_SUBMISSION_DECIDED',$4::jsonb)`,
+    [hashToken(`employee-submission-decision-audit:${requestId}`),result.user.id,requestId,JSON.stringify({decision,note})],
+   );
+   await client.query("COMMIT");
+   return reply({ok:true,id:requestId,decision,employeeActivated:false},201);
+  }catch(error){
+   await client.query("ROLLBACK");
+   const unavailable=employeeSubmissionMutationSchemaReply(error,"EMPLOYEE_REQUEST_ALREADY_DECIDED");if(unavailable)return unavailable;throw error;
+  }finally{client.release();}
+ }
+ if(action==="employee-submissions"&&segments[1]&&segments[2]==="activate"&&request.method==="POST"){
+  forced(result.user);requireCashSuperAdmin(result.user);
+  const requestId=cleanId(segments[1]);if(!requestId)return reply({error:"EMPLOYEE_REQUEST_ID_INVALID"},400);
+  const body=await readBody(request);
+  const client=await database().connect();
+  try{
+   await client.query("BEGIN");
+   const requestRow=await client.query<{
+    id:string;employee_name:string;employee_mobile:string;proposed_assignment:string;requested_joining_date:string|null;
+   }>(
+    `SELECT id,employee_name,employee_mobile,proposed_assignment,requested_joining_date
+     FROM public.employee_submission_requests WHERE id=$1`,[requestId],
+   );
+   if(!requestRow.rows.length){await client.query("ROLLBACK");return reply({error:"EMPLOYEE_REQUEST_NOT_FOUND"},404);}
+   const decision=await client.query<{decision:string}>(
+    "SELECT decision FROM public.employee_submission_decisions WHERE request_id=$1",[requestId],
+   );
+   const activated=await client.query<{id:string}>(
+    "SELECT id FROM public.employee_directory_records WHERE source_request_id=$1",[requestId],
+   );
+   const currentState:EmployeeRequestState=activated.rows.length
+    ?"ACTIVE":decision.rows[0]?.decision==="APPROVED"?"APPROVED"
+     :decision.rows[0]?.decision==="REJECTED"?"REJECTED":"PENDING_APPROVAL";
+   employeePolicy(()=>assertCanActivateEmployee(isCashSuperAdmin(result.user),currentState,body.confirmation));
+   const row=requestRow.rows[0],employeeId=hashToken(`employee-directory:${requestId}`);
+   await client.query(
+    `INSERT INTO public.employee_directory_records
+       (id,source_request_id,employee_name,employee_mobile,proposed_assignment,requested_joining_date,activated_by)
+     VALUES($1,$2,$3,$4,$5,$6::date,$7)`,
+    [employeeId,requestId,row.employee_name,row.employee_mobile,row.proposed_assignment,row.requested_joining_date,result.user.id],
+   );
+   await client.query(
+    `INSERT INTO public.cash_portal_audit(id,actor_id,target_id,action,details)
+     VALUES($1,$2,$3,'EMPLOYEE_SUBMISSION_ACTIVATED',$4::jsonb)`,
+    [hashToken(`employee-submission-activation-audit:${requestId}`),result.user.id,requestId,JSON.stringify({employeeId})],
+   );
+   await client.query("COMMIT");
+   return reply({ok:true,id:requestId,employeeId,state:"ACTIVE",cashPostingCreated:false,vesselProgramCreated:false},201);
+  }catch(error){
+   await client.query("ROLLBACK");
+   const unavailable=employeeSubmissionMutationSchemaReply(error);if(unavailable)return unavailable;throw error;
+  }finally{client.release();}
+ }
  // ---- Cash submissions: submission is not approval and never posts. ----
  if(action==="submissions"&&!segments[1]&&request.method==="POST"){
   forced(result.user);
@@ -58,7 +294,9 @@ async function handle(request:NextRequest,segments:string[]){
  }
  if(action==="submissions"&&request.method==="GET"){
   forced(result.user);
-  const id=cleanId(request.nextUrl.searchParams.get("id"));
+  const q=request.nextUrl.searchParams;
+  const id=cleanId(q.get("id"));
+  const limit=Math.max(1,Math.min(200,Math.trunc(Number(q.get("limit"))||100))),offset=Math.max(0,Math.min(1000000,Math.trunc(Number(q.get("offset"))||0)));
   try{
    const rows=await database().query<Row>(
     `SELECT v.submission_id AS id,v.scope_account,v.submitted_by_user_ref,
@@ -69,13 +307,18 @@ async function handle(request:NextRequest,segments:string[]){
      FROM public.cash_submission_review_state v
      LEFT JOIN public.cash_portal_users u ON u.id=v.submitted_by_user_ref
      WHERE ($1::boolean OR v.submitted_by_user_ref=$2)
-     ORDER BY v.created_at DESC LIMIT 200`,
+     ORDER BY v.created_at DESC
+     LIMIT ${limit} OFFSET ${offset}`,
+    [result.user.role==="ADMIN",result.user.id]);
+   const total=await database().query<{count:number}>(
+    `SELECT count(*)::int AS count FROM public.cash_submission_review_state v
+     WHERE ($1::boolean OR v.submitted_by_user_ref=$2)`,
     [result.user.role==="ADMIN",result.user.id]);
    const visible=id?rows.rows.filter(row=>row.id===id):rows.rows;
    if(id&&!visible.length)return reply({error:"SUBMISSION_NOT_FOUND"},404);
    const decisions=id?await database().query<Row>(
     "SELECT id,decision,actor_user_ref,note,decided_at FROM public.cash_submission_reviews WHERE submission_id=$1 ORDER BY decided_at,id",[id]):{rows:[]};
-   return reply({available:true,rows:visible,decisions:decisions.rows,scope:"self"});
+   return reply({available:true,rows:visible,decisions:decisions.rows,total:total.rows[0]?.count??0,limit,offset,scope:"self"});
   }catch(error){if(schemaUnavailable(error))return schemaReply();throw error;}
  }
  if(action==="submissions"&&segments[1]&&segments[2]==="decision"&&request.method==="POST"){
