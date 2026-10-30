@@ -1,12 +1,14 @@
 // Vessel command input/policy regressions (no database).
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {parseCommand} from '../lib/vessel-commands.ts';
 import {
-  assertCanCommandVessel, canCommandVessel, commandActorFromEnv, mapCommandError,
+  assertCanCommandVessel, assertCanReadVessel, canReadVessel, canCommandVessel, commandActorFromEnv, mapCommandError,
   MIGRATION_DEPENDENCY, VesselCommandError,
 } from '../lib/vessel-command-policy.ts';
 
+const commandRoute = readFileSync(new URL('../app/api/vessel-programs/route.ts', import.meta.url), 'utf8');
 const base = {commandKey: 'cmd-key-0001'};
 const invalid = (input) => { try { parseCommand(input); return null; } catch (error) { return error; } };
 
@@ -41,6 +43,29 @@ test('only the Owner/admin validation identity may command', () => {
   assert.equal(canCommandVessel(null), false);
   assert.throws(() => assertCanCommandVessel(null), (error) => error instanceof VesselCommandError && error.code === 'AUTHENTICATION_REQUIRED');
   assert.throws(() => assertCanCommandVessel({userId: 'x'}), (error) => error instanceof VesselCommandError && error.code === 'VESSEL_COMMAND_FORBIDDEN');
+});
+
+test('Vessel detail reads require the verified vessel.read capability; command access stays separate', () => {
+  const reader = {userId: 'user-1', role: 'USER', capabilities: ['cash.read', 'vessel.read']};
+  assert.equal(canReadVessel(reader), true);
+  assert.equal(canReadVessel({userId: 'admin-1', role: 'ADMIN', capabilities: ['vessel.read']}), true);
+  assert.equal(canReadVessel({userId: 'user-2', role: 'USER', capabilities: ['cash.read']}), false);
+  assert.equal(canReadVessel({userId: 'user-3', role: 'USER', capabilities: []}), false);
+  assert.equal(canReadVessel({userId: 'local-validator'}), true);
+  assert.throws(() => assertCanReadVessel(null), (error) => error instanceof VesselCommandError && error.status === 401);
+  assert.throws(() => assertCanReadVessel({userId: 'user-2', role: 'USER', capabilities: []}),
+    (error) => error instanceof VesselCommandError && error.code === 'VESSEL_READ_FORBIDDEN' && error.status === 403);
+  assert.equal(canCommandVessel(reader), false, 'read permission does not grant Vessel commands');
+});
+
+test('Vessel API keeps capability-checked reads separate from Owner-only commands', () => {
+  const get = commandRoute.slice(commandRoute.indexOf('export async function GET'), commandRoute.indexOf('export async function POST'));
+  const post = commandRoute.slice(commandRoute.indexOf('export async function POST'));
+  assert.match(get, /assertCanReadVessel\(user\)/);
+  assert.doesNotMatch(get, /assertCanCommandVessel/);
+  assert.match(post, /assertCanCommandVessel\(user\)/);
+  assert.doesNotMatch(post, /assertCanReadVessel/);
+  assert.doesNotMatch(post, /INSERT INTO public\.cash_(?:postings|ledger)/i);
 });
 
 test('actor identity comes from server configuration only', () => {

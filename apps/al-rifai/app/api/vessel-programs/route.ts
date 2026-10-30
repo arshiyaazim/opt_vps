@@ -5,7 +5,7 @@ import {createPool} from '@/db/postgres.mjs';
 import {programIdFor} from '@/lib/vessel-match';
 import {parseCommand} from '@/lib/vessel-commands';
 import {
-  assertCanCommandVessel, commandActorFromEnv, mapCommandError, MIGRATION_DEPENDENCY, VesselCommandError,
+  assertCanCommandVessel, assertCanReadVessel, commandActorFromEnv, mapCommandError, MIGRATION_DEPENDENCY, VesselCommandError,
 } from '@/lib/vessel-command-policy';
 
 export const runtime = 'nodejs';
@@ -38,7 +38,7 @@ async function availability() {
 export async function GET(request: NextRequest) {
   const user = await getChatGPTUser();
   try {
-    assertCanCommandVessel(user);
+    assertCanReadVessel(user);
   } catch (error) {
     return errorReply(error);
   }

@@ -5,6 +5,7 @@ import type {ChatGPTUser} from '@/app/chatgpt-auth';
 
 export type CommandActor = {ref: string};
 export type VesselCommandUser = Pick<ChatGPTUser,'userId'>;
+export type VesselReadUser = Pick<ChatGPTUser,'userId'|'role'|'capabilities'>;
 
 export class VesselCommandError extends Error {
   readonly code: string;
@@ -15,6 +16,19 @@ export class VesselCommandError extends Error {
     this.code = code;
     this.status = status;
   }
+}
+
+/** General users and admins may read Vessel details only with the read capability. */
+export function canReadVessel(user: VesselReadUser | null | undefined): boolean {
+  if (!user) return false;
+  if (user.userId === 'local-validator') return true;
+  return (user.role === 'ADMIN' || user.role === 'USER')
+    && (user.capabilities ?? []).includes('vessel.read');
+}
+
+export function assertCanReadVessel(user: VesselReadUser | null | undefined): void {
+  if (!user) throw new VesselCommandError('AUTHENTICATION_REQUIRED', 401);
+  if (!canReadVessel(user)) throw new VesselCommandError('VESSEL_READ_FORBIDDEN', 403);
 }
 
 /** Application-level role gate. The validation identity is the Owner/admin. */
