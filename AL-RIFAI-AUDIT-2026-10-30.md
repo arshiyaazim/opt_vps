@@ -147,3 +147,196 @@ business data to fill test fixtures.
    workflow without historical replay.
 5. Add pagination to the capped queues and complete final-tree validation
    before any release.
+
+---
+
+## Execution Roadmap (Phases 2–5)
+
+**Appended 2026-10-30.** Phase 1 (login throttle + server-side pagination)
+is committed locally as `d74f91e`. No migration applied, no deployment, no
+configuration change. Each phase below requires separate Owner approval and
+must leave the system working if the next phase never starts.
+
+### Phase 2 — Migration-backed features
+
+The migration candidates in this phase add database objects. Migration 0032
+creates command functions that can write to existing Vessel tables when
+invoked; candidates 0034–0036 add tables and supporting views, functions, and
+triggers. The migration SQL does not drop or truncate existing objects or data.
+
+Common gate for every migration in this phase:
+1. Backup: `docker exec vps-infra-postgres-1 pg_dump -U <user> alrifai > /root/backup-<name>-$(date +%Y%m%d-%H%M).sql`
+2. Record the backup checksum (`sha256sum`) in `NEXT-SESSION-HANDOFF.md`.
+3. Confirm rollback path in one sentence (restore from the backup).
+4. Apply with `ON_ERROR_STOP=1` inside a transaction (pattern from 0033).
+5. Verify: `\dt`, `\d <table>`, `pg_roles`, `pg_proc` as applicable.
+6. Record applied date + checksum in `NEXT-SESSION-HANDOFF.md`.
+
+#### Phase 2.1 — Throttle table (unlocks live throttle)
+- Migration: `apps/al-rifai/db/migration-candidates/0036_login_throttle.sql`
+- Pre-verify (read-only): confirm the `ir_review_runtime` role exists and
+  `public.login_throttle_state` does not exist before requesting approval.
+- Apply → verify `\d public.login_throttle_state` and grants.
+- Test: 6+ wrong passwords → `429 LOGIN_THROTTLED`; correct password after
+  brief delay succeeds; Owner always reachable (30s cap enforced).
+- Commit: "ops: applied migration 0036 login_throttle".
+- Rollback: restore from backup. No application change to revert because
+  the throttle is fail-open.
+
+#### Phase 2.2 — Vessel command schema (+ vessel code commit)
+- Migration: `apps/al-rifai/db/migration-candidates/0032_vessel_program_commands.sql`
+  (unapplied in Production).
+- Pre-verify SQL against a synthetic restored clone.
+- Apply → verify command functions and grants.
+- Commit pending vessel code:
+  - `apps/al-rifai/lib/vessel-command-policy.ts`
+  - `apps/al-rifai/app/api/vessel-programs/route.ts`
+  - `apps/al-rifai/tests/vessel-commands.mjs`
+- Test: `/api/vessel-programs` command endpoint → 200 (was 503).
+- Commit: "feat(vessel): activate command API against migration 0032".
+- Rollback: revert commits + restore DB from backup.
+
+#### Phase 2.3 — Signup requests (+ signup code commit)
+- Migration: `apps/al-rifai/db/migration-candidates/0034_signup_requests.sql`
+- Pre-verify: `alrifai_foundation_append_only` function exists (verified);
+  `ir_review_runtime` role exists (verified).
+- Apply → verify `account_signup_requests`,
+  `account_signup_request_decisions`, view `account_signup_request_state`,
+  both triggers, and grants.
+- Commit pending signup code:
+  - `apps/al-rifai/app/signup/request-form.tsx`
+  - `apps/al-rifai/app/signup/page.tsx`
+  - `apps/al-rifai/app/api/auth/[...path]/route.ts` (signup handler)
+  - `apps/al-rifai/app/api/cash/[...path]/route.ts` (signup review handlers)
+  - `apps/al-rifai/tests/signup-requests.mjs`
+- Test: `POST /api/auth/signup` → 202 `PENDING_REVIEW` (was 503).
+- Commit: "feat(signup): activate signup request flow against migration 0034".
+- CRITICAL: public signup never creates a Cash Portal account; approval is
+  a separate decision record; account creation still requires the existing
+  explicit workflow.
+- Rollback: revert commits + restore DB from backup.
+
+#### Phase 2.4 — Employee submission requests (+ employee code commit)
+- Migration: `apps/al-rifai/db/migration-candidates/0035_employee_submission_requests.sql`
+- Pre-verify: `ir_review_runtime` role exists; schema explicitly avoids
+  `employee_master` (audit rule preserved).
+- Apply → verify `employee_submission_requests`,
+  `employee_submission_decisions`, `employee_directory_records`, function
+  `alrifai_employee_submission_immutable`, all triggers, grants.
+- Commit pending employee code:
+  - `apps/al-rifai/lib/employee-submission.ts`
+  - `apps/al-rifai/lib/employee-submission-policy.ts`
+  - `apps/al-rifai/lib/employee-directory-view.ts`
+  - `apps/al-rifai/app/employees/view.tsx`
+  - `apps/al-rifai/app/api/cash/[...path]/route.ts` (employee handlers)
+  - `apps/al-rifai/tests/employee-submission-lifecycle.mjs`
+  - `apps/al-rifai/tests/employee-directory-view.mjs`
+  - `apps/al-rifai/docs/EMPLOYEE-TRANSACTION-SUBMISSIONS.md`
+- Test: submit → admin approve → super-admin activate (full lifecycle).
+- Commit: "feat(employee): activate employee submission lifecycle against migration 0035".
+- CRITICAL: approval ≠ activation (separate record + DB trigger); silent
+  merge into `employee_master` impossible; Cash Freeze intact.
+- Rollback: revert commits + restore DB from backup.
+
+### Phase 3 — Configuration cutover
+
+#### Phase 3.1 — Unified auth shadow → on
+- Pre-requisite: Phase 2.1 complete (throttle table live).
+- Owner logs in via browser to confirm workspace access with the existing
+  legacy Basic credential (current state).
+- Owner explicitly approves the mode change.
+- Change `ALRIFAI_UNIFIED_AUTH_MODE=on` in `/etc/vps/apps/al-rifai/app.env`.
+- Restart app service only (documented compose command; separate approval).
+- Test: Owner login → `/dashboard` → Cash portal → logout.
+- CRITICAL: legacy Basic validator remains first in `proxy.ts`; instant
+  rollback by editing the env var and restarting.
+- Rollback: revert env var + restart.
+
+#### Phase 3.2 — WA-01 bridge fix (Owner direction only)
+- Owner directs diagnosis; each step separate approval.
+- Bridge-side safe error codes; consumer restart or container recreate.
+- Verify: 9/9 approved chats ingesting (bounded, read-only).
+- Do NOT: broaden chat scope, alter cursors, replay history, enable the
+  mirror worker (each requires its own approval).
+- Rollback: restore previous consumer image (`ae009303de09` as of
+  2026-10-30), documented in `NEXT-SESSION-HANDOFF.md`.
+
+### Phase 4 — Remaining dirty files review
+
+All uncommitted worktree changes at the time of Phase 1 commit, excluding
+paths consumed in Phase 2. Each file reviewed independently; no bulk commit.
+
+#### Phase 4.1 — Pre-existing UI changes
+- `apps/al-rifai/app/login/page.tsx`, `app/login/view.tsx`
+- `apps/al-rifai/app/dashboard/view.tsx`
+- `apps/al-rifai/app/page.tsx`
+- `apps/al-rifai/app/platform/app-shell.tsx`, `nav.ts`, `ui.tsx`
+- `apps/al-rifai/app/workspace.css`
+- `apps/al-rifai/app/sources-review/page.tsx`
+- Method: read diff → confirm no business or authorization change → focused
+  tests → commit each logical group separately.
+
+#### Phase 4.2 — Proxy header changes
+- `apps/al-rifai/proxy.ts` (+33 lines, header stripping/injection).
+- Security-relevant. Verify:
+  - `oai-authenticated-*` headers still stripped
+  - `x-middleware-subrequest` still stripped
+  - No untrusted header leaks into `request.headers`
+  - Cash Portal path passthrough correct
+- Run `tests/unified-auth-integration.mjs` and
+  `tests/login-rate-limit-removed.mjs` before committing.
+
+#### Phase 4.3 — Docs and test cleanup
+- `apps/al-rifai/README.md`
+- `docs/VPS_MAP.md`
+- `apps/al-rifai/docs/UNIFIED-AUTH-DESIGN.md`
+- `apps/al-rifai/tests/employee-program-qualification.mjs`
+- `apps/al-rifai/tests/public-site-and-currency.mjs`
+- `apps/al-rifai/tests/unified-auth-integration.mjs`
+- `apps/al-rifai/tests/vessel-commands.mjs` (if not consumed in Phase 2.2)
+- Review each; commit in one or two logical groups.
+
+### Phase 5 — Final validation & deploy
+
+#### Phase 5.1 — Full canonical suite on final committed tree
+- Isolated Node 22 container (host has no npm).
+- `ALRIFAI_EVIDENCE_DIR` set to synthetic fixture directory; no private
+  evidence read.
+- Run `package.json` script `scripts.test` in full.
+- Expected: 240+ tests, 0 fail.
+- Run `next build --webpack`, `npx tsc --noEmit`, ESLint on all changed
+  files, `git diff --check`.
+- All must pass on the FINAL committed HEAD.
+
+#### Phase 5.2 — Non-production integration test
+- Deploy the built artifact to a non-production environment (isolated
+  compose project).
+- Authenticated browser flow: Owner login → workspace → Cash portal →
+  submit → approve → activate → verify audit.
+- Exercise throttle: 6 wrong passwords → 429; correct → 200.
+- Verify WA-01 ingestion for approved chats (read-only).
+- Synthetic fixtures only; never private business data.
+
+#### Phase 5.3 — Production deploy (Owner approval, separate step)
+- Backup DB, compose file, and rollback image. Record checksums.
+- Build production image from final tree; tag with date and short SHA.
+- Deploy `docker compose up -d --no-deps app`.
+- Health check `/api/health` → 200.
+- Smoke test with Owner: login, workspace, one Cash review action.
+- Verify throttle active (0036 live); unified mode as approved.
+- Rollback image recorded and ready. If any check fails, roll back to
+  `local/al-rifai:20261029-review-nav-fix`
+  (`sha256:ef06c2ef…`).
+
+### Cross-phase invariants (must remain true at every step)
+
+- Cash Freeze intact; no automatic approval or posting.
+- Cash submissions remain review-only; separate from financial posting.
+- Employee approval ≠ activation; explicit Super Admin activation only.
+- Payment-derived `employee_master` is NEVER silently merged with portal
+  employees.
+- WA-02 remains identity-only.
+- Legacy Basic validator remains a working fallback until Phase 3.1 is
+  completed with Owner approval.
+- No migration, deployment, restart, live sync, historical reprocessing,
+  or business-data write without its own separate approval.

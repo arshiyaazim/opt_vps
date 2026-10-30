@@ -1,3 +1,23 @@
+## PHASE 1 COMPLETE — 2026-10-30 (committed `d74f91e`, **not yet pushed**)
+
+Phase 1 (login throttle + server-side pagination) committed locally as
+`d74f91e` on branch `main`, 7 commits ahead of `origin/main`. No migration
+applied, no deployment, no configuration change, no Production access.
+
+- Login throttle: `lib/login-throttle.ts` + `db/migration-candidates/0036_login_throttle.sql`.
+  Integrated in unified login (`lib/unified-auth.ts`) and Cash Portal login
+  (`app/api/cash/[...path]/route.ts`). Fail-open until 0036 is applied.
+- Pagination: `signup-requests`, `employee-submissions`, and Cash review
+  queue now support clamped `limit`/`offset` with scope-filtered totals;
+  UI has 100-row Previous/Next controls. Authorization and self-scope
+  filters unchanged.
+- Verification: canonical suite 240 tests (238 pass, 2 skip, 0 fail);
+  TypeScript, ESLint, `git diff --check` pass.
+- Migrations 0032, 0034, 0035, 0036 remain **unapplied** — each requires
+  separate Owner approval (see roadmap in `AL-RIFAI-AUDIT-2026-10-30.md`).
+- Remaining dirty worktree paths (uncommitted) are reserved for Phase 2–4
+  review; see roadmap.
+
 # Next-Session Handoff — Updated After Session 3
 
 ## EMPLOYEE LIST PAGINATION — 2026-10-30 09:28 CET
