@@ -1,0 +1,121 @@
+name: al-rifai
+services:
+  app:
+    image: sha256:ca27d77cb55e5b48a351a64ae7d2117f732f3926988348e1050e336440d351a4
+    command: ["node", "/app/start-private-app.mjs"]
+    init: true
+    restart: unless-stopped
+    user: "10001:10001"
+    group_add: [10002, 10003]
+    env_file:
+      - /etc/vps/apps/al-rifai/app.env
+    environment:
+      ALRIFAI_MESSAGE_MIRROR_ENABLED: "0"
+      ALRIFAI_MESSAGE_MIRROR_MODE: "EVIDENCE_ONLY"
+      ALRIFAI_MIRROR_WORKER_PASSWORD_FILE: "/run/secrets/mirror_worker_password"
+      ALRIFAI_LIVE_CASH_SYNC: "1"
+      ALRIFAI_LIVE_CASH_INTENT_CAPTURE: "APPROVED_REVIEW_ONLY"
+      ALRIFAI_CASH_OWNER_PERSON_REF: "contact-f21ef3f53013469cc523"
+      ALRIFAI_CASH_OWNER_BINDING_REF: "binding-contact-f21ef3f53013469cc523"
+      ALRIFAI_CASH_ORIGIN: "https://alrifai.iamazim.com"
+      ALRIFAI_VESSEL_PROCESSING_ENABLED: "1"
+      ALRIFAI_REVIEW_PASSWORD_FILE: "/etc/vps/apps/al-rifai/auth/pg-password"
+      ALRIFAI_NATIVE_MANIFEST_FILE: "/etc/vps/apps/al-rifai/native/manifest.json"
+      WHATSAPP_WA01_MCP_SOCKET: "/var/lib/vps/whatsapp/wa-01/control/mcp.sock"
+      WHATSAPP_WA01_READER_TOKEN_FILE: "/etc/vps/apps/al-rifai/auth/wa-01.token"
+      WHATSAPP_WA02_MCP_SOCKET: "/var/lib/vps/whatsapp/wa-02/control/mcp.sock"
+      WHATSAPP_WA02_READER_TOKEN_FILE: "/run/secrets/wa-02-reader"
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "0.0.0.0:443:3443"
+    volumes:
+      - type: bind
+        source: /var/lib/vps/al-rifai/evidence
+        target: /var/lib/vps/al-rifai/evidence
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/database_password
+        target: /run/secrets/database_password
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/mirror_worker_password
+        target: /run/secrets/mirror_worker_password
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /etc/vps/apps/al-rifai/validation_password
+        target: /run/secrets/validation_password
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/review-host.json
+        target: /etc/vps/apps/al-rifai/review-host.json
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/native/manifest.json
+        target: /etc/vps/apps/al-rifai/native/manifest.json
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/roster-scope.json
+        target: /etc/vps/apps/al-rifai/roster-scope.json
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/auth/pg-password
+        target: /etc/vps/apps/al-rifai/auth/pg-password
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/auth/wa-01.token
+        target: /etc/vps/apps/al-rifai/auth/wa-01.token
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/auth/call-wa-01.token
+        target: /etc/vps/apps/al-rifai/auth/call-wa-01.token
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/tls/private-entry.key
+        target: /etc/vps/apps/al-rifai/tls/private-entry.key
+        read_only: true
+      - type: bind
+        source: /etc/vps/apps/al-rifai/tls/private-entry.crt
+        target: /etc/vps/apps/al-rifai/tls/private-entry.crt
+        read_only: true
+      - type: bind
+        source: /var/lib/vps/whatsapp/wa-01/control
+        target: /var/lib/vps/whatsapp/wa-01/control
+        read_only: false
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/vps/whatsapp/wa-02/control
+        target: /var/lib/vps/whatsapp/wa-02/control
+        read_only: false
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /etc/vps/services/whatsapp/wa-02-reader.token
+        target: /run/secrets/wa-02-reader
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      - backend
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+networks:
+  backend:
+    external: true
+    name: vps-backend
