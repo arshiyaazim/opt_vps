@@ -12,29 +12,36 @@
 
 ## 0. Current Production Position (verified 2026-10-27)
 
-> **Current production position — 2026-10-31, Phase C SHADOW + D2 (authoritative; supersedes every banner below):**
-> app image `sha256:d2c2e675b0e0342605e302e3a7addcbb2b37acfdd03b950a46e099c610a8a287`
-> (tag `local/al-rifai:20261031-shadow-v2-fix1`, source `f784a5e`; verified via
-> `docker inspect al-rifai-app-1` and pinned in `compose.yaml` by commit `d500bbd`).
+> **Current production position — 2026-10-31, post-B1 (authoritative; supersedes every banner below):**
+> app image `sha256:8e4383a9544f567dbaaefb59af5e6167378c67817836b194c91c661df3448f25`
+> (tag `local/al-rifai:20261031-b1-columns`, source `6165f35`; verified via
+> `docker inspect al-rifai-app-1` and pinned in `compose.yaml` by commit `6d95083`).
 > Mode `on`. Ledger **41** rows (0037 roster schema, 0038 seed, 0039 compatibility
 > views, 0040 shadow state, 0041 CASH accountant). `escort_roster` = 10 active
 > persons, `escort_roster_channel` = 26 active channels, `escort_roster_epoch` = 2.
 > **Phase C SHADOW is LIVE** with `ALRIFAI_ROSTER_SOURCE=SHADOW`,
 > `ALRIFAI_ROSTER_SHADOW_START=2026-10-31T15:47:18Z`,
 > `ALRIFAI_ROSTER_SHADOW_DURATION_HOURS=36`; `roster_shadow_state` holds
-> `mode=SHADOW, diffs_found=0, auto_promote_blocked=false`, auto-promotion at
-> `2026-11-02T03:47:18Z`. Promotion signal is **`roster_shadow.mode == "DB"`**,
-> not `roster_mode`: `roster_mode` reports the configured env value and stays
-> `SHADOW` until the env var itself changes.
-> Rollback images retained: `sha256:d7a96b1e…` (first SHADOW build) and
-> `sha256:ca27d77c…` (pre-SHADOW production).
+> `mode=SHADOW, cycles_completed=3, diffs_found=0,
+> auto_promote_blocked=false`, auto-promotion at `2026-11-02T03:47:18Z`.
+> Promotion signal is **`roster_shadow.mode == "DB"`**, not `roster_mode`:
+> `roster_mode` reports the configured env value and stays `SHADOW` until the env
+> var itself changes.
+> Bridges **untouched**: WA-01 `sha256:28a646d2…`
+> (tag `local/vps-whatsapp:20261031-denied-record`), WA-02 `sha256:d36ca851…`
+> (tag `local/vps-whatsapp:20261020-ingestion`). PostgreSQL `vps-infra-postgres-1`
+> untouched.
+> Rollback images retained: `sha256:1911fdfd…` (tag `20261031-typeahead`, Item A),
+> `sha256:d2c2e675…` (tag `20261031-shadow-v2-fix1`), `sha256:d7a96b1e…` (tag
+> `20261031-shadow-v2`), `sha256:ca27d77c…` (tag `20261030-phase4`, pre-SHADOW),
+> and `local/al-rifai:rollback-app-phase2` (`sha256:1d4602c3…`).
 > Phase D2 (`scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`)
 > is code-complete and execution-verified; the regenerated profile is **not
 > deployed**, because it differs from the live file only in chat ordering.
 > WA-01 healthy (9/9 chats ingesting, 0 cursor errors). Cash Freeze intact: **no**
 > `CASH_SCOPE_*` change, no financial posting, no bridge restart.
-> Superseded below: the `ca27d77c…` app-image banner, the "ledger 36 rows" figure,
-> and the Phase 4.4 rollback note.
+> Superseded below: the `d2c2e675…` and `ca27d77c…` app-image banners, the
+> "ledger 36 rows" figure, and the Phase 4.4 rollback note.
 
 > **Current production position — 2026-10-31 (superseded by the block above):**
 > app image `sha256:ca27d77cb55e5b48a351a64ae7d2117f732f3926988348e1050e336440d351a4`
@@ -823,3 +830,71 @@ These rules are not negotiable. If an incident seems to require breaking one, st
     `public.roster_shadow_state`; migrations `0037`–`0041`; or the
     `ALRIFAI_ROSTER_*` values in `app.env`. A diff or a block must be reported,
     never remediated. Unfreezing requires an Owner ruling, not an inference.
+
+## 14. Work items and recent history (2026-10-31)
+
+### 14.1 Item tracking
+
+| Item | Scope | Status |
+|---|---|---|
+| **A** | `/transactions` typeahead search — unified employee search, 300 ms debounce, keyboard nav, ARIA, local `buildSuggestions` | **DEPLOYED** ✅ commit `8fb3327`, image `20261031-typeahead` |
+| **B1** | `/transactions` table — Method/Source abbreviation, per-employee Total column, CSV sync | **DEPLOYED** ✅ commit `6165f35`, pin `6d95083`, image `20261031-b1-columns` |
+| **B2** | Show All → `/transactions/employee/[phone]` page | PENDING |
+| **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages | PENDING |
+| **B4** | `/cash` page Total + Show All | PENDING |
+| **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
+| **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | PENDING — gated on SHADOW promotion confirmation |
+| **D2** | Bridge profile generator | CODE COMPLETE, not deployed (`scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`) |
+| **E** | Wire `/review` to the roster outbox, decommission legacy paths | PENDING — after D1 |
+| **AI/Ollama** | Assistant / model integration | DEFERRED |
+
+Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
+`evidence/`, the roster path or a bridge.
+
+### 14.2 Recent commits (newest first)
+
+```
+6d95083 deploy: pin app image to 20261031-b1-columns
+6165f35 transactions: abbreviate method/source, add total column (B1)
+51955a6 deploy: pin app image to 20261031-typeahead
+8fb3327 transactions: add typeahead search with employee suggestions (Item A)
+6b9df6f docs: update guardrails and project state (AGENTS.md audit)
+d500bbd deploy: pin app image to 20261031-shadow-v2-fix1
+656d25c Revert "build: use dockerfile without buildkit mount for local build"
+bcd77cb Revert "roster: add SHADOW mode with auto-promotion, health visibility, periodic logging"
+b0c8bfe roster: SHADOW v2 — persistent state, roster-backed comparison, fail-closed
+f784a5e roster: include all active roster roles in scope loader
+be8dae9 roster: use real display name for CASH accountant (0041 amend)
+a5aaf75 roster: add CASH accountant to roster for scope parity (0041)
+```
+
+### 14.3 B5 hold notes — vessel page data model
+
+Investigation on 2026-10-31 established that the vessel salary/conveyance
+feature has **no data foundation**. Any B5 UI work is blocked until the Owner
+decides where this data lives.
+
+- **`escort_order_register.status` never equals `'CONFIRMED'`.** Only `DRAFT`
+  (596 rows) and `REVIEW` (406 rows) exist. Confirmation is recorded by
+  `confirmation_message_id IS NOT NULL` (128 of 1,002 rows). **Never filter on
+  `status = 'CONFIRMED'`** — it returns zero rows forever.
+- **`calculateSourceDuty()` (`lib/duty-calculation.mjs`) returns `UNRESOLVED`
+  for every row by design.** There is no rates table, no wage/salary column
+  anywhere in the schema, and no attendance table. It requires verified
+  `rates[]` (`halfDayMinor`, dated, per `employeeMobile`), a verified `policy`
+  (`version`, `unit='HALF_DAY'`, `rounding='EXACT_MINOR'`) and verified
+  `attendance[]`, all passed as arguments.
+- **`program_assignments` is the multi-program-per-employee source**
+  (`(program_id, revision)`, `employee_mobile`, `duty_started_on`,
+  `released_on`, `predecessor_id`, `source_refs`). **`SELECT` is not granted to
+  `alrifai_app`** — any reader needs a `GRANT` or a view.
+- **No duty-type discriminator exists.** There is no security-duty / tally-duty /
+  lighter-escort distinction in the schema or in code; every duty is lighter
+  escort duty.
+- **Conveyance is not stored.** It is an argument to `calculateSourceDuty` and
+  yields `CONVEYANCE_NOT_ESTABLISHED` when absent. `programs.details` carries no
+  conveyance key. The only conveyance figures in the system are legacy Excel
+  `bills[].conveyance` / `serviceCharge` in `operations.json` evidence.
+- Two parallel vessel UIs exist (`app/vessel` → `app/vessel-dashboard.tsx`, and
+  `app/vessel-register` → `view.tsx`); B5 must decide which one it is extending
+  before writing code.
