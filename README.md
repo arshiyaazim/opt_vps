@@ -77,7 +77,37 @@ Account isolation and one native bridge writer per account protect session/trans
 
 Production WhatsApp restart policy remains manual (`no`); restarts, deployments, account activation and cutover require separate explicit approval. Failures retain evidence and review state rather than silently posting or retrying uncertain payments/sends. Existing mobile-only WhatsApp backup, accepted VPS-history-loss/re-pairing risk and deferred additional recovery remain owner decisions. AL-RIFA’I recovery tooling retains its execution locks; shared PostgreSQL recovery requires separately authorized verification and cutover. See the canonical guides for actual boundaries.
 
-## Current production state — 2026-10-29
+## Transactions Page (`/transactions`)
+
+The Accounts transaction ledger (`apps/al-rifai/app/transactions/view.tsx`) is a
+read-only view of source-linked Cash instructions in the Current scope. Amounts
+are Admin instruction amounts — never a confirmed payment or a posted entry.
+
+- **Typeahead Search** — one unified field. Typing filters the table across
+  record ID, employee name, employee ID, payout number, purpose and source ID,
+  and simultaneously suggests employees by name or mobile. Suggestions show
+  name + employee mobile only (never payout numbers, amounts or message text),
+  support ↑ ↓ Enter Esc, and use a 300 ms debounce.
+- **Method Abbreviation** — `bkash→B`, `nagad→N`, `cash→C`, `hotel→H`; any other
+  method shows its initial. Hover for the full value.
+- **Source Abbreviation** — `WhatsApp*`/`chat→WA`, `review→RV`, `excel→XL`, a
+  frontend submission shows the last three characters of the submitting
+  username; anything else shows its first two characters. Hover for the full
+  value.
+- **Total Amount Column** — per-employee aggregate across **all** transactions
+  for that employee ID, every date and method. It is computed from the full
+  dataset, so filtering the table never changes it.
+- **CSV Export** — includes every table column plus `Total`.
+- **Mobile Responsive** — below 900 px the table becomes a stacked card layout
+  driven by per-cell `data-label` attributes.
+
+## Current production state — 2026-10-29 (SUPERSEDED — historical only)
+
+> This block predates the 2026-10-31 Phase C/D2/B1 work. It is retained as
+> history and must not be read as current. Authoritative state lives in
+> [`AGENTS.md`](AGENTS.md) §0 and [`docs/NEXT-HANDOFF.md`](docs/NEXT-HANDOFF.md):
+> app image `sha256:8e4383a9…`, mode `on`, ledger 41, WA-01 healthy 9/9,
+> SHADOW live with zero diffs.
 
 - Application image: `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2` (source `67ec02b`).
 - Mode: `ALRIFAI_UNIFIED_AUTH_MODE=shadow`. Login rate limiter removed.
