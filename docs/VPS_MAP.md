@@ -669,3 +669,37 @@ Status: **prepared, not applied.** The ledger row is not written, no schema
 object exists in Production, and no environment variable is set. Applying 0040
 and enabling `ALRIFAI_ROSTER_SOURCE=SHADOW` both require explicit Owner
 authorization and the TAP-gated deploy procedure in AGENTS.md.
+
+**Migration 0041 — CASH accountant in the roster (prepared 2026-10-31, NOT applied)**
+
+`0041_roster_cash_accountant.sql` catalogues the CASH accountant direct chat in
+the roster so that roster-backed scope equals the legacy scope. Live ingestion
+routing comes from `loadConversationScopeWithShadow()`, so in `DB` mode every chat
+absent from the roster stops being read; the legacy scope carries
+`8801844836824@s.whatsapp.net` and its LID alias `19460614262828@lid`, which the
+roster did not. Without this row a cutover would silently drop CASH ingestion —
+the "healthy-looking outage" class of defect.
+
+Content: one `escort_roster` row (`cash-person-accountant-mamun-wa01`, role
+`ACCOUNTANT`, `domain_scope={CASH}`, `phone=+8801844836824`) and one
+`escort_roster_channel` row (`ch-accountant-direct-lid`, `DIRECT`, `domain=CASH`,
+`chat_jid=8801844836824@s.whatsapp.net`, `participant_jid=19460614262828@lid`).
+The LID is a `participant_jid`, not a `chat_jid`: `escort_roster_channel_check`
+requires a `DIRECT` chat JID to end in `@s.whatsapp.net`. One row yields both the
+canonical chat key and the LID alias in `loadRosterScope()`. The epoch is bumped
+once and one audit row (`CASH_SCOPE_PARITY_0041`) is written, both behind an
+`operation_key` guard, so a re-run is inert.
+
+No `CASH_SCOPE_*` constant, cash processing path, financial posting or message
+content is touched. The accountant chat is already present in the WA-01
+native-reader profile (9 chats), so no bridge change or restart is required.
+
+Verification (read-only, production data): with the 0041 rows added virtually,
+legacy and roster both produce 9 chat keys and 4 identity pairs, with zero
+differences. Rehearsed on a scratch PostgreSQL 16 instance restored from the
+production schema of the four roster tables: applies cleanly, second run is a
+no-op (`INSERT 0 0`), epoch advances 1→2 once, one audit row.
+
+Status: **prepared, not applied.** No ledger row, no production row, no
+environment change. Applying 0040 and 0041 together requires explicit Owner
+authorization and the TAP-gated deploy procedure in AGENTS.md.
