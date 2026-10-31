@@ -748,3 +748,13 @@ stderr. It does not claim rows; the writer arrives in Phase E.
 Status: **prepared, not deployed.** The renderer has not been executed against
 Production. It requires Owner authorization to run and thereafter to replace the
 live profile.
+
+**Current state pointer (2026-10-31)**
+
+Authoritative production position lives in `AGENTS.md` §0. In short: app image
+`sha256:d2c2e675…` (tag `20261031-shadow-v2-fix1`), ledger 41 rows (0037–0041
+applied), `escort_roster` 10 active persons / `escort_roster_channel` 26 active
+channels / epoch 2, Phase C SHADOW live with zero diffs and auto-promotion at
+`2026-11-02T03:47:18Z`. Rollback images `sha256:d7a96b1e…` and
+`sha256:ca27d77c…` are retained. No `CASH_SCOPE_*` change, no financial posting,
+no bridge restart.

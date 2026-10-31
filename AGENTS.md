@@ -12,7 +12,31 @@
 
 ## 0. Current Production Position (verified 2026-10-27)
 
-> **Current production position — 2026-10-31 (authoritative; supersedes the banners below):**
+> **Current production position — 2026-10-31, Phase C SHADOW + D2 (authoritative; supersedes every banner below):**
+> app image `sha256:d2c2e675b0e0342605e302e3a7addcbb2b37acfdd03b950a46e099c610a8a287`
+> (tag `local/al-rifai:20261031-shadow-v2-fix1`, source `f784a5e`; verified via
+> `docker inspect al-rifai-app-1` and pinned in `compose.yaml` by commit `d500bbd`).
+> Mode `on`. Ledger **41** rows (0037 roster schema, 0038 seed, 0039 compatibility
+> views, 0040 shadow state, 0041 CASH accountant). `escort_roster` = 10 active
+> persons, `escort_roster_channel` = 26 active channels, `escort_roster_epoch` = 2.
+> **Phase C SHADOW is LIVE** with `ALRIFAI_ROSTER_SOURCE=SHADOW`,
+> `ALRIFAI_ROSTER_SHADOW_START=2026-10-31T15:47:18Z`,
+> `ALRIFAI_ROSTER_SHADOW_DURATION_HOURS=36`; `roster_shadow_state` holds
+> `mode=SHADOW, diffs_found=0, auto_promote_blocked=false`, auto-promotion at
+> `2026-11-02T03:47:18Z`. Promotion signal is **`roster_shadow.mode == "DB"`**,
+> not `roster_mode`: `roster_mode` reports the configured env value and stays
+> `SHADOW` until the env var itself changes.
+> Rollback images retained: `sha256:d7a96b1e…` (first SHADOW build) and
+> `sha256:ca27d77c…` (pre-SHADOW production).
+> Phase D2 (`scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`)
+> is code-complete and execution-verified; the regenerated profile is **not
+> deployed**, because it differs from the live file only in chat ordering.
+> WA-01 healthy (9/9 chats ingesting, 0 cursor errors). Cash Freeze intact: **no**
+> `CASH_SCOPE_*` change, no financial posting, no bridge restart.
+> Superseded below: the `ca27d77c…` app-image banner, the "ledger 36 rows" figure,
+> and the Phase 4.4 rollback note.
+
+> **Current production position — 2026-10-31 (superseded by the block above):**
 > app image `sha256:ca27d77cb55e5b48a351a64ae7d2117f732f3926988348e1050e336440d351a4`
 > (tag `local/al-rifai:20261030-phase4`, source `a07c57f`; verified 2026-10-31
 > via `docker inspect al-rifai-app-1`), mode `on` (Phase 3.1, 2026-10-30), 3 Cash Portal users (Owner `Admin`, USER
@@ -426,9 +450,16 @@ Preserve approved work and report exact changed paths and validation evidence.
   ```bash
   cd /opt/vps
   git status --short
-  git add -A && git commit -m "<scope>: <change>"   # source change
+  git add <explicit paths>          # NEVER `git add -A`
+  git commit -m "<scope>: <change>"  # source change
   git push origin main
   ```
+- **Staging rule (established 2026-10-31):** never run `git add -A` or
+  `git add .`. Stage explicit paths only. A blanket add once swept 16 junk files
+  (`.bak`, `compose.yaml.bak`, and copies of Production evidence JSON) into a
+  commit whose message described unrelated work, and it had to be reverted.
+  Always read `git status --short` before committing and confirm every staged
+  path belongs to the change.
 - **Rules:** never commit `.env`/secrets or runtime data; never force-push;
   never rewrite published history; production deploy/restart still needs Owner
   approval and must record the deployed commit SHA and image digest.
@@ -750,3 +781,45 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 10. **No file-permission changes on `app.env` or any secrets file.**
 11. **No WhatsApp container restarts and no bridge changes without explicit approval.** Read-only diagnosis is allowed.
 12. **Record the deployed commit SHA and image digest** in every deployment note, and push source before deploying.
+13. **Never run `systemctl restart docker`.** The WhatsApp bridges run with
+    `RestartPolicy=no`, so a daemon restart stops them and nothing brings them
+    back. This caused a **2 h 34 m ingestion outage on 2026-10-31**. To restart
+    one container use `docker restart <container>`; to restart the app use
+    `docker compose -f compose.yaml up -d --no-deps app`. A host-level daemon
+    restart requires explicit Owner authorization and a maintenance window.
+14. **A failed build is a stop-and-ask event, never a workaround event.** If
+    BuildKit cannot resolve a build context, or a build step fails for an
+    environmental reason, stop and report. Do not restart the daemon, do not
+    rewrite the `Dockerfile` to sidestep it, do not create placeholder inputs,
+    and do not `mkdir` a missing mount. Three separate "fixes" of this kind on
+    2026-10-31 produced a broken `Dockerfile`, a junk commit, and destroyed
+    evidence files. The correct answer is `--build-context evidence=<path>
+    docker build …`.
+15. **No writes to `/var/lib/vps/al-rifai/evidence/` without explicit Owner
+    authorization.** Those files are checksum-pinned in
+    `apps/al-rifai/docs/evidence-checksums.json` and mounted read-only into the
+    app; overwriting one turns every evidence-backed route into a 500. A build
+    attempt on 2026-10-31 replaced five of them with `{}` placeholders. Read is
+    allowed; write, move, chmod or chown is not.
+16. **No edits to `/etc/vps/apps/al-rifai/app.env` without explicit Owner
+    authorization**, and never as a side effect of another task. When
+    authorized, change only the named keys, verify `600 root:root`, verify no
+    duplicate or orphan lines, and never restart the app as part of the edit.
+17. **Never `git add -A` or `git add .`.** Stage explicit paths only. Confirm
+    with `git status --short` that every staged path belongs to the change. See
+    §2.4.
+18. **Destructive or irreversible production actions need an explicit go-ahead
+    naming that action.** Deleting or overwriting rows or files, truncating,
+    dropping, rotating credentials, restarting a service, and re-cutting an
+    image all fall under this. Approval of a plan is not approval of an
+    unlisted destructive step inside it.
+19. **`/tmp` is not durable.** Artifacts written to `/tmp` (or `/tmp/opencode`)
+    vanish on reboot or disk cleanup. Anything that must survive belongs in
+    persistent storage with owner-approved location and mode 600.
+20. **The roster SHADOW observation window is frozen.** While
+    `ALRIFAI_ROSTER_SOURCE=SHADOW` (started `2026-10-31T15:47:18Z`, promotion
+    `2026-11-02T03:47:18Z`), do **not** touch: `lib/conversation-scope.ts`;
+    the scope-loading path in `scripts/message-ingestion-worker.ts`;
+    `public.roster_shadow_state`; migrations `0037`–`0041`; or the
+    `ALRIFAI_ROSTER_*` values in `app.env`. A diff or a block must be reported,
+    never remediated. Unfreezing requires an Owner ruling, not an inference.

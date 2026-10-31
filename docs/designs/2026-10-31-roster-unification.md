@@ -557,4 +557,56 @@ priorities shift.
 
 ---
 
-*End of proposal. Not committed. No code, migration, deploy or data change was made in producing it.*
+## 12. Implementation status — 2026-10-31
+
+Phases A and B are applied and verified in Production. Phase C SHADOW is live.
+D2 is code-complete and execution-verified but not deployed. D1 and E are
+pending.
+
+| Phase | Status | Evidence |
+|---|---|---|
+| A — roster schema | applied | migration `0037`, `escort_roster_apply()` |
+| B — backfill + views | applied | migrations `0038` (10 persons / 26 channels after 0041), `0039` (4 compatibility views); equivalence assertions 4a–4d passed |
+| C — SHADOW | **live** | migration `0040` (persistent state), app `d2c2e675…`; `diffs_found=0`, promotion at `2026-11-02T03:47:18Z` |
+| D1 — app cutover | pending | waits on SHADOW promotion |
+| D2 — bridge profile | code complete, not deployed | `scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`; regenerated profile differs from live only in chat ordering |
+| E — `/review` wiring | pending | waits on D1 |
+
+### Deviations from this design, and why
+
+1. **SHADOW compares roster TABLES, not the Phase B views.** §7 of this document
+   assumed the views would be the comparison target. They cannot be:
+   `v_whatsapp_identity_aliases` is a literal pass-through of the legacy table and
+   `v_conversation_scope` unions legacy rows back in via `legacy_extra`, so a
+   view-backed comparison reports zero differences by construction and would have
+   auto-promoted a no-op as a successful cutover. `loadRosterScope()` therefore
+   reads `escort_roster` + `escort_roster_channel` directly.
+2. **Promotion state is a database row, not process memory.** The first attempt
+   kept it in a module variable, which lost promotion on restart and was invisible
+   to `/api/health` because the worker and the web server are separate processes.
+   Migration `0040` fixes both.
+3. **The roster had to be extended with the CASH accountant (migration `0041`).**
+   Live ingestion routing comes from the scope loader, so a roster without
+   `8801844836824@s.whatsapp.net` and `19460614262828@lid` would have dropped CASH
+   ingestion on cutover. The roster already modelled `ACCOUNTANT` and `CASH`, so
+   this is cataloguing, not a `CASH_SCOPE_*` change.
+4. **`loadRosterScope()` must not filter by role.** The first implementation
+   selected `role='ESCORT_CLIENT'`, which silently skipped the `ACCOUNTANT` row and
+   reproduced the very difference `0041` was meant to remove. The roster *is* the
+   scope; `active` is the on/off switch. A role whitelist would break again when
+   `OWNER` rows appear.
+5. **Profile epoch is `max(roster epoch, current profile epoch)`** so the generated
+   profile never regresses its epoch counter.
+
+### Two process notes for D1/E
+
+- The static equivalence proof passed while the live implementation was still
+  wrong (point 4). Only the first real SHADOW cycle caught it. Any future
+  cutover must be observed against live traffic before it is trusted.
+- `escort_roster_epoch` and the bridge profile `epoch` are different counters and
+  were `2` and `4` respectively at cutover; do not assume they are interchangeable.
+
+---
+
+*Originally produced as a proposal; superseded in part by the implementation notes
+above. No deploy or data change is implied by this document.*
