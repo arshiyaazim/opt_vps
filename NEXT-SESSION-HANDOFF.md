@@ -39,7 +39,7 @@
 
 | # | Item | Scope | Approval phrase |
 |---|---|---|---|
-| 1 | WA-01 bridge: `NATIVE_READER_UNAVAILABLE` (1 of 9 chats) — **stall cleared 2026-10-31 by authorizing the participant (step 1)**. Steps 2 (denial must not stall a chat) and 3 (preserve bridge error codes) still open. | Phase 3.2 | Step 1 approved; steps 2–3 approved pending separate TAP-gated deploys |
+| 1 | WA-01 bridge: `NATIVE_READER_UNAVAILABLE` — **steps 1 and 2 DONE 2026-10-31** (participant authorized; head-of-line blocking fixed and deployed). Step 3 (app must preserve bridge error codes) still open. | Phase 3.2 | Step 3 approved pending a separate TAP-gated app deploy |
 | 2 | Frozen-evidence hash drift: `891fe6e7…` → `237cfe7f…` in `candidates/identity-review/evidence-baseline.json` for `lib/escort-intake-candidate.mjs` (file last changed in `06356b6` bulk import; not Phase 1-4 related) | Isolated fix | `approve hash update` |
 | 3 | ~~Migration ledger gap: `public.alrifai_schema_migrations` has 32 rows but highest entry is `0033_unified_auth_sessions.sql`. Rows for 0032/0034/0035/0036 missing even though schema objects exist and function. 0025 lives in `whatsapp_mirror.schema_migrations`.~~ **RESOLVED 2026-10-31 — 36 rows, see the item log below.** | Ledger-only repair (no schema change), AGENTS.md §10 | ~~TBD by Owner~~ Approved and done |
 | 4 | `apps/al-rifai/README.md:42` is 90 chars (convention ≤79) | Line-wrap nit | Any time |
@@ -68,6 +68,23 @@
 - Result at 09:13:59 local: cursor **1585 → 2014** (`through=0`), `last_error` NULL, 187 → **201** messages (+14: the previously denied event plus the 13 blocked behind it). All 14 got `archive/processed` and `vessel/processed` queue rows.
 - Safety: 0 `escort_order_register` rows created, 0 Cash postings created (newest posting still 2026-10-18, archive era), ledger still 36. Health ok. `chats_with_error` = 0 across all 9 chats; no `NATIVE_READER_UNAVAILABLE` line after 08:12:55 UTC.
 - Note: the structural defect is **not** fixed by this — a future unauthorized sender will stall the chat again until step 2 lands.
+
+**Item 2 step 2 — WA-01 head-of-line blocking fixed (Option B): DONE 2026-10-31.** TAP-gated bridge deploy.
+
+- Defect: a denied group participant raised `NATIVE_PARTICIPANT_SCOPE_DENIED` for the whole page. The app's cursor never advanced, so every later event in that chat stalled behind one unauthorized sender. This is what froze `120363428977781821@g.us` at sequence 1585 on 2026-10-28.
+- Design ruling (Owner, 2026-10-31): in a dynamic roster a denial is a **normal, expected** event, not a transient error. The fix is strictly structural — no retry, no backoff, no escalation. A denial is a terminal verdict for that one event.
+- Change (`whatsapp-mcp-server/native_reader.py`, `_record()`): a denied sender now sets `status=DENIED`, `reason=PARTICIPANT_NOT_AUTHORIZED`, `envelope=null` and returns the record instead of raising. The caller advances the cursor and continues with the rest of the page. The authorization decision itself is unchanged — the sender is still not admitted and no business row is created.
+- Wire contract unchanged: `list_native_messages` filters `status == "CONTENT" and envelope is not None` (line 732), so `DENIED` records are dropped exactly like `HELD`/`SUPPRESSED`. **No app code was touched.**
+- Tests: 4 denial tests rewritten to assert the `DENIED` record + cursor advance instead of an exception, plus 2 new tests — head-of-line (denied event followed by an authorized event in the same page) and terminal-verdict (a denial is never retried on replay). 5 LID-resolution denial tests updated the same way. 0 remaining `NATIVE_PARTICIPANT_SCOPE_DENIED` assertions in `tests/test_native_live_mirror.py`.
+- Left deliberately unchanged: `native_reader.py` `visibility()` (~line 547) and `native_profile.py:84` still raise. Neither is the active ingestion path (`visibility()` is not used by the app; the mirror worker is disabled).
+- Build gate (inside the image build, not a host shortcut): Go `gofmt`/`vet`/`test`/`build` OK, ruff `All checks passed!`, **pytest 271 passed**. Provenance: `/app/whatsapp-mcp-server/native_reader.py` in the image is byte-identical to commit `6e13a8e` (sha256 `bcd7e40e…`).
+- Image: `sha256:28a646d2bdad2042e6899a7a7cde50f6b30394b7e4035c4a90f50e069f6fbe9a`, tags `local/vps-whatsapp:20261031-denied-record` and `:denied-record-6e13a8e`. Rollback image `sha256:ae009303…` retained.
+- Deploy: `docker compose -p vps-whatsapp-cap4-wa01 -f services/whatsapp/compose.yaml up -d --no-deps whatsapp-wa-01`, 08:56:36Z → 08:56:38Z UTC, **~2 s downtime**. New container `d21d5469d8c7`, `restarts=0`. Session restored from the bind-mounted store — no re-pair.
+- Verify: log diff vs pre-deploy baseline shows only 3 benign startup lines (REST server, "Connected to WhatsApp") and **0 new error classes**. All 9 chats advanced `last_observed_at` 08:59:40 → 09:00:57 (a full cycle) with `last_error` NULL — positive proof every chat is being polled through the new bridge. Health `{"status":"ok"}`. Control dir `710`, socket `660`, profile `440` preserved; `app.env` still `600 root:root`.
+- Safety: 0 Cash postings created (newest still 2026-10-18), 0 `escort_order_register` rows, ledger still 36.
+- Pre-deploy dump `/tmp/alrifai-pre-bridgefix-20261031-0856.dump` (sha256 `bbefdedb…`). **Known limitation (no action):** `/tmp` dumps are not durable artifacts.
+- Note: cursor advances made during the deploy window are **not rewound**. A roster change that later authorizes the same sender lets new messages flow; the old denied event stays `DENIED` and is never retried.
+- Blocked observability: bridge child stderr is fully redacted (`consumer_broker.py:119`), so a `DENIED` verdict is not visible in bridge logs. Redaction was **not** weakened. Denial visibility therefore depends on step 3 (app preserving bridge error codes).
 
 ### Deployment procedure reminders
 

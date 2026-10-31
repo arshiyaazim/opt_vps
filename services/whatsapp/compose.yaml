@@ -2,7 +2,7 @@
 name: vps-whatsapp-privacy
 services:
   whatsapp-wa-01:
-    image: sha256:ae009303de09f564390d14a5ef1f7c30018040b52a73074f273a8dd67683bb33
+    image: sha256:28a646d2bdad2042e6899a7a7cde50f6b30394b7e4035c4a90f50e069f6fbe9a
     build:
       context: ./source
       dockerfile: Dockerfile
