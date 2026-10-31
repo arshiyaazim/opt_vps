@@ -23,7 +23,7 @@ INSERT INTO public.escort_roster
    username, active, version, evidence_ref, approved_by, created_at, updated_at)
 VALUES
   ('cash-person-accountant-mamun-wa01', 'wa-01', 'ACCOUNTANT', ARRAY['CASH']::text[],
-   'Cash Payment', 'accountant-mamun-wa01', '+8801844836824',
+   'MD ABDULLA AL MAMUN', 'accountant-mamun-wa01', '+8801844836824',
    NULL, true, 1, 'migration-0041', 'system', now(), now())
 ON CONFLICT (id) DO NOTHING;
 
