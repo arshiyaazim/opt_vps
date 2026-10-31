@@ -642,3 +642,30 @@ system.
   infrastructure source only; it never contains production runtime data,
   sessions, credentials or business rows. Restoring business data remains the
   separate PostgreSQL backup procedure described above.
+
+**Migration 0040 — roster SHADOW state (prepared 2026-10-31, NOT applied)**
+
+`0040_roster_shadow_state.sql` adds `public.roster_shadow_state`, a singleton
+table that persists Phase C roster-shadow comparison state. It replaces the
+in-memory `shadowState` object from the reverted Phase C attempt
+(`9121249` + `ee35404`, both still in history) which lost promotion on restart
+and was invisible to `/api/health` because the worker and the web server are
+separate processes.
+
+Shape: one row (`singleton` boolean primary key, `CHECK (singleton)`), `mode`
+constrained to `SHADOW` or `DB`, monotonic `cycles_completed` and `diffs_found`
+counters, `started_at` / `auto_promote_at` from the two `ALRIFAI_ROSTER_SHADOW_*`
+environment variables, sticky `auto_promote_blocked`, and `last_diff_detail`
+`jsonb`. Grants: `SELECT, INSERT, UPDATE` to `alrifai_app` (the worker seeds and
+writes; the read-only web pool reads); all privileges revoked from `PUBLIC`. The
+migration creates the table only — it seeds no row, because the singleton is
+seeded from environment variables on the first SHADOW cycle.
+
+Promotion is one-way. Resetting a shadow period requires an explicit
+`DELETE FROM public.roster_shadow_state` (then the next SHADOW cycle re-seeds
+from the environment) plus an Owner-authorized deploy.
+
+Status: **prepared, not applied.** The ledger row is not written, no schema
+object exists in Production, and no environment variable is set. Applying 0040
+and enabling `ALRIFAI_ROSTER_SOURCE=SHADOW` both require explicit Owner
+authorization and the TAP-gated deploy procedure in AGENTS.md.

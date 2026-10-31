@@ -5,7 +5,7 @@ import {createIngestionDbPool} from "./ingestion-db.ts";
 import {McpStdioClient} from "./message-ingestion.ts";
 import {CASH_SCOPE_CHATS} from "../lib/cash-scope.ts";
 import {OWNER_ESCORT_CLIENTS} from "../lib/escort-register.mjs";
-import {loadConversationScope,loadConversationScopeWithShadow,type ConversationScope} from "../lib/conversation-scope.ts";
+import {loadConversationScopeWithShadow,type ConversationScope} from "../lib/conversation-scope.ts";
 import {NativeLiveReader,advanceNativeCursor,ensureNativeCursor,recordNativeError} from "../lib/native-live-reader.ts";
 import {ingestNativePage} from "../lib/native-ingest.ts";
 import type {ArchivePool,CompatibilityMessage} from "../lib/whatsapp-archive.ts";
@@ -326,12 +326,9 @@ async function main():Promise<void>{
   let delay=1000;
   try{
     const dbClient = {query:(sql:string,values?:unknown[])=>pool.query(sql,values) as Promise<{rows:Array<Record<string,unknown>>}>};
-    const staticScope:ConversationScope|undefined = process.env.ALRIFAI_ROSTER_SOURCE?.toUpperCase() === 'SHADOW' ? await loadConversationScope(dbClient) : undefined;
-    const scope:ConversationScope = process.env.ALRIFAI_ROSTER_SOURCE?.toUpperCase() === 'SHADOW' 
-      ? await loadConversationScopeWithShadow(dbClient, staticScope)
-      : process.env.ALRIFAI_ROSTER_SOURCE?.toUpperCase() === 'DB'
-        ? await loadConversationScope(dbClient)
-        : await loadConversationScope(dbClient);
+    // ALRIFAI_ROSTER_SOURCE selects the source inside the loader: STATIC (default),
+    // DB, or SHADOW (compare both, route with legacy, promote after a clean period).
+    const scope:ConversationScope = await loadConversationScopeWithShadow(dbClient);
     const chatJids=scope.ingestionChats();
     if(!chatJids.length)throw new Error("APPROVED_SCOPE_EMPTY");
     console.error(`Approved scope loaded: ${chatJids.length} chat addresses across ${scope.conversations.length} conversations.`);
