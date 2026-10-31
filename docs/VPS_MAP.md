@@ -703,3 +703,48 @@ no-op (`INSERT 0 0`), epoch advances 1→2 once, one audit row.
 Status: **prepared, not applied.** No ledger row, no production row, no
 environment change. Applying 0040 and 0041 together requires explicit Owner
 authorization and the TAP-gated deploy procedure in AGENTS.md.
+
+**D2 — bridge profile generator and drift detector (prepared 2026-10-31, NOT deployed)**
+
+`scripts/generate-bridge-profile.ts` renders the WA-01 bridge
+`native-reader-profile.json` from the roster instead of manual editing.
+`scripts/check-profile-drift.ts` compares a rendered profile against the live one.
+Both are read-only: the renderer writes JSON to stdout only, and the drift
+detector never writes either file.
+
+Derivation: `chats` is every active channel `chat_jid`, plus any
+`participant_jid` on a DIRECT row as its own alias entry; order is groups first
+(sorted by JID) then each direct with its aliases immediately after. `participants`
+for GROUP is the member set sorted ascending; for DIRECT it is `[chat_jid]`
+except role `ACCOUNTANT`, which is `[owner PN]` (bare form of
+`binding.pairedJid`); the same role rule applies to alias entries. `epoch` is
+`max(roster epoch, current profile epoch)` so it never regresses. `binding` is
+copied verbatim from the live profile and cross-checked against
+`native/manifest.json`; a disagreement is a hard error. Exactly one consumer must
+exist in the live profile.
+
+The renderer re-implements every constraint `native_profile.py` enforces
+(1..200 chats, JID pattern, participants keys ⊆ chats, unique members, every
+@g.us chat has members, epoch ≥ 1, ≤ 32,000 bytes) and exits 2 rather than emit a
+profile the bridge would reject.
+
+Drift exit codes: 0 no functional drift, 1 functional drift (chats,
+participants or binding), 2 error. `bridge_restart_required` is true only when
+the chat set changes, because `native_profile.py:60` revokes a running reader
+when the on-disk `chats` array differs from its startup snapshot. Member-only and
+epoch changes do not revoke.
+
+Execution: the host has Node 12 and PostgreSQL is not published to the host, so
+the renderer runs inside a throwaway `node:22` container on `vps-backend` with
+the app, bridge control directory and manifest mounted read-only. The exact
+invocation is in the script header. Deploy (`cp`, `chown root:whatsapp-wa-01`,
+`chmod 440`) is a separate root-owned host step, followed by an Owner-authorized
+bridge restart when `bridge_restart_required` is true.
+
+Outbox: D2 v1 reads `escort_roster_outbox` for `kind='PROFILE_REGENERATE' AND
+completed_at IS NULL AND claimed_at IS NULL` and reports the pending count on
+stderr. It does not claim rows; the writer arrives in Phase E.
+
+Status: **prepared, not deployed.** The renderer has not been executed against
+Production. It requires Owner authorization to run and thereafter to replace the
+live profile.
