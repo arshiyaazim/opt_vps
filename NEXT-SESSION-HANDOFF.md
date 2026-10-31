@@ -6,7 +6,7 @@
 - Source commit: `a07c57f` (deployed via pin commit `bfe81f1`)
 - Mode: `ALRIFAI_UNIFIED_AUTH_MODE=on` (Phase 3.1 applied 2026-10-30)
 - Health: `{"status":"ok"}`
-- Database migrations: 0031–0036 schema objects applied (ledger gap, see deferred items)
+- Database migrations: 0031–0036 applied; ledger reconciled to 36 rows 2026-10-31
 - HEAD on origin/main: `399e2b4` (or current, after this sign-off commit)
 
 **Rollback chain (both images present on host):**
@@ -41,8 +41,22 @@
 |---|---|---|---|
 | 1 | WA-01 bridge: `NATIVE_READER_UNAVAILABLE` (1 of 9 chats) | Phase 3.2 | TBD by Owner |
 | 2 | Frozen-evidence hash drift: `891fe6e7…` → `237cfe7f…` in `candidates/identity-review/evidence-baseline.json` for `lib/escort-intake-candidate.mjs` (file last changed in `06356b6` bulk import; not Phase 1-4 related) | Isolated fix | `approve hash update` |
-| 3 | Migration ledger gap: `public.alrifai_schema_migrations` has 32 rows but highest entry is `0033_unified_auth_sessions.sql`. Rows for 0032/0034/0035/0036 missing even though schema objects exist and function. 0025 lives in `whatsapp_mirror.schema_migrations`. | Ledger-only repair (no schema change), AGENTS.md §10 | TBD by Owner |
+| 3 | ~~Migration ledger gap: `public.alrifai_schema_migrations` has 32 rows but highest entry is `0033_unified_auth_sessions.sql`. Rows for 0032/0034/0035/0036 missing even though schema objects exist and function. 0025 lives in `whatsapp_mirror.schema_migrations`.~~ **RESOLVED 2026-10-31 — 36 rows, see the item log below.** | Ledger-only repair (no schema change), AGENTS.md §10 | ~~TBD by Owner~~ Approved and done |
 | 4 | `apps/al-rifai/README.md:42` is 90 chars (convention ≤79) | Line-wrap nit | Any time |
+
+### Deferred-item log — 2026-10-31 (Owner-authorized, sequential)
+
+**Item 1 — Migration ledger gap: RESOLVED** (commit `chore(db): reconcile migration ledger rows for 0032/0034/0035/0036`).
+
+- Authorization: Owner explicitly approved all four deferred items on 2026-10-31; item 1 scoped to ledger reconciliation only, no schema change.
+- Inserted 4 rows into `public.alrifai_schema_migrations` (0032, 0034, 0035, 0036). Ledger 32 → **36 rows**.
+- `sha256` values are the SHA-256 of the on-disk candidate file bytes, matching the `scripts/database.mjs` applier convention: 0032 `25ee4614…`, 0034 `0395bfe8…`, 0035 `32cf532e…`, 0036 `0bb22904…`.
+- Pre-insert evidence: all expected schema objects confirmed present in Production — 7 functions for 0032 (`alrifai_vessel_actor_verified`, `_idempotent_event`, `_program_add/update/release/assign/void`), `account_signup_requests` + `account_signup_request_decisions` + `account_signup_request_state` for 0034, `employee_submission_requests` + `employee_submission_decisions` + `employee_directory_records` for 0035, `login_throttle_state` for 0036.
+- `applied_at` = reconciliation time **2026-10-31 07:55:01 UTC**, not the 2026-10-30 apply time. The ledger records only the insertion time and the original apply times were never captured; the Owner chose the honest reconciliation timestamp over a synthetic backdate.
+- Pre-write backup: `/tmp/alrifai-pre-ledger-20261031-0852.dump` (sha256 `a67b80f8c6f0f65d02ef23c60ebf6288f882da079df4c8c1e42a856fd4f01759`, mode 600, `pg_restore -l` OK: 600 TOC entries / 69 table-data sections). The `/tmp` durability caveat (guardrail #5) applies; no copy or move was made, per Owner instruction.
+- Dry run: `BEGIN` → 0 pre-existing ids among the four → 4 rows `RETURNING` → `ROLLBACK` → count back to 32.
+- Applied as a single `INSERT ... ON CONFLICT (id) DO NOTHING` in one transaction. Re-run inserted **0 rows** (idempotent). Ledger table has **0 triggers**, so the insert could not cascade into any other object.
+- No schema object, business row, Cash posting or Archive record was changed. Post-change health `{"status":"ok"}`; the only error-class log line is the known `NATIVE_READER_UNAVAILABLE` baseline (deferred item 1).
 
 ### Deployment procedure reminders
 

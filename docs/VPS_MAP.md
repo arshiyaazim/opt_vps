@@ -163,16 +163,28 @@ across the filtered full result and resets to page one when its search/scope
 filters change. This is presentation-only; the separate portal Employee
 directory, Cash posting boundary and Vessel data path are unchanged.
 
-**Migration ledger note (reported 2026-10-30, not repaired)**
+**Migration ledger note (gap reported 2026-10-30; reconciled 2026-10-31)**
 
-`public.alrifai_schema_migrations` contains 32 rows with the highest recorded
-entry at `0033_unified_auth_sessions.sql`. Ledger rows for 0032, 0034, 0035,
-and 0036 are absent even though their schema objects exist and function in
-Production. Migration 0025's ledger row lives in
-`whatsapp_mirror.schema_migrations`. Functional state is "objects applied"; the
-ledger itself is incomplete. Repair is a separate task requiring Owner approval
-(AGENTS.md §10); this note exists so that future sessions do not read
-AGENTS.md's "migrations 0031–0036 applied" as a claim about ledger rows.
+`public.alrifai_schema_migrations` held 32 rows with the highest recorded entry
+at `0033_unified_auth_sessions.sql`; ledger rows for 0032, 0034, 0035 and 0036
+were absent even though their schema objects existed and functioned in
+Production. On 2026-10-31 the Owner authorized a ledger-only reconciliation
+(AGENTS.md §10) and the four missing rows were inserted, bringing the ledger to
+36 rows. No schema object, business row, posting or Archive record was changed;
+the reconciliation was a single `INSERT` on the ledger table, which carries no
+triggers.
+
+Recorded `sha256` values are the SHA-256 of the on-disk candidate file bytes,
+matching the applier convention in `scripts/database.mjs`. Verified: 0032
+`25ee4614…`, 0034 `0395bfe8…`, 0035 `32cf532e…`, 0036 `0bb22904…`.
+
+`applied_at` for these four rows is the reconciliation timestamp
+(2026-10-31 07:55 UTC), not the original apply time (2026-10-30), because the
+ledger stores only the recording time and the exact apply times are not
+recorded anywhere. Migration 0025's ledger row still lives in
+`whatsapp_mirror.schema_migrations`; that is unchanged and intentional.
+Pre-change backup: `/tmp/alrifai-pre-ledger-20261031-0852.dump`
+(sha256 `a67b80f8…`, archive listing verified).
 
 ## Services
 
