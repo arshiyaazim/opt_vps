@@ -228,6 +228,13 @@ export async function loadConversationScope(db: Queryable): Promise<Conversation
  * because those views are themselves derived from the legacy tables. Comparing
  * legacy against a legacy-derived view would always report zero differences.
  *
+ * No role filter is applied: the roster IS the scope. Any active person is in
+ * ingestion scope regardless of role (ESCORT_CLIENT, ACCOUNTANT, OWNER). The
+ * active flag is the on/off switch, so removing someone from scope means
+ * deactivating them — never narrowing this query. A role whitelist here would
+ * reintroduce the hardcoded-logic defect this unification exists to remove, and
+ * would silently drop ACCOUNTANT/OWNER rows.
+ *
  * Identity set is restricted to people who own a DIRECT channel, which is the same
  * population the legacy identity table describes (people with a direct conversation).
  */
@@ -236,7 +243,7 @@ export async function loadRosterScope(db: Queryable): Promise<ConversationScope>
     db.query(
       `SELECT id, display_name, phone
        FROM public.escort_roster
-       WHERE account_id='wa-01' AND role='ESCORT_CLIENT' AND active=true
+       WHERE account_id='wa-01' AND active=true
        ORDER BY id`,
     ),
     db.query(
