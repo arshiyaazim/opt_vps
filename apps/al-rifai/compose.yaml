@@ -1,7 +1,7 @@
 name: al-rifai
 services:
   app:
-    image: sha256:1911fdfd1387b36fc4fd42730520a59861b7733aeb5cc9f144e7fc1071aa418f
+    image: sha256:8e4383a9544f567dbaaefb59af5e6167378c67817836b194c91c661df3448f25
     command: ["node", "/app/start-private-app.mjs"]
     init: true
     restart: unless-stopped
