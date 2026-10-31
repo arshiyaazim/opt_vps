@@ -60,6 +60,36 @@ export type ConversationScope = {
   identityForBare(bare: string): CanonicalIdentity | null;
 };
 
+export type RosterShadowState = {
+  mode: 'STATIC' | 'SHADOW' | 'DB';
+  startedAt: string | null;
+  autoPromoteAt: string | null;
+  durationHours: number;
+  cyclesCompleted: number;
+  diffsFound: number;
+  autoPromoteBlocked: boolean;
+  lastCheckAt: string | null;
+  lastDiff: string | null;
+};
+
+const shadowState: RosterShadowState = {
+  mode: (process.env.ALRIFAI_ROSTER_SOURCE || 'STATIC').toUpperCase() as 'STATIC' | 'SHADOW' | 'DB',
+  startedAt: process.env.ALRIFAI_ROSTER_SHADOW_START || null,
+  autoPromoteAt: null,
+  durationHours: Number(process.env.ALRIFAI_ROSTER_SHADOW_DURATION_HOURS || 36),
+  cyclesCompleted: 0,
+  diffsFound: 0,
+  autoPromoteBlocked: false,
+  lastCheckAt: null,
+  lastDiff: null,
+};
+
+if (shadowState.startedAt && shadowState.mode === 'SHADOW') {
+  const start = new Date(shadowState.startedAt);
+  const promote = new Date(start.getTime() + shadowState.durationHours * 60 * 60 * 1000);
+  shadowState.autoPromoteAt = promote.toISOString();
+}
+
 function asStrings(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string');
   if (typeof value === 'string' && value.startsWith('{')) {
@@ -67,6 +97,10 @@ function asStrings(value: unknown): string[] {
     return inner ? inner.split(',').map((v) => v.replace(/^"|"$/g, '')) : [];
   }
   return [];
+}
+
+export function getRosterShadowState(): RosterShadowState {
+  return {...shadowState};
 }
 
 export function buildConversationScope(
@@ -155,6 +189,59 @@ export async function loadConversationScope(db: Queryable): Promise<Conversation
 }
 
 let cached: { at: number; scope: ConversationScope; source: Queryable } | undefined;
+
+export async function loadConversationScopeWithShadow(db: Queryable, staticScope?: ConversationScope): Promise<ConversationScope> {
+  shadowState.cyclesCompleted++;
+  shadowState.lastCheckAt = new Date().toISOString();
+  
+  const dbScope = await loadConversationScope(db);
+  
+  if (shadowState.mode === 'SHADOW') {
+    if (staticScope) {
+      const staticChats = new Set(staticScope.ingestionChats().sort());
+      const dbChats = new Set(dbScope.ingestionChats().sort());
+      const missingInStatic = [...dbChats].filter(c => !staticChats.has(c));
+      const extraInStatic = [...staticChats].filter(c => !dbChats.has(c));
+      
+      if (missingInStatic.length > 0 || extraInStatic.length > 0) {
+        shadowState.diffsFound++;
+        shadowState.lastDiff = `cycle=${shadowState.cyclesCompleted} static_count=${staticChats.size} db_count=${dbChats.size} missing_in_static=${JSON.stringify(missingInStatic)} extra_in_static=${JSON.stringify(extraInStatic)}`;
+        console.log(`ROSTER_SHADOW_DIFF ${shadowState.lastDiff}`);
+        if (shadowState.diffsFound > 0) {
+          shadowState.autoPromoteBlocked = true;
+        }
+      } else {
+        // periodic log every 10 minutes (approx every ~10 cycles, adjust based on frequency)
+        if (shadowState.cyclesCompleted % 10 === 0) {
+          const nextCheck = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+          console.log(`ROSTER_SHADOW_OK cycles=${shadowState.cyclesCompleted} diffs=${shadowState.diffsFound} next_check=${nextCheck}`);
+        }
+      }
+    }
+    
+    // Check auto-promotion
+    if (shadowState.autoPromoteAt && shadowState.diffsFound === 0 && !shadowState.autoPromoteBlocked) {
+      const now = new Date();
+      const promoteAt = new Date(shadowState.autoPromoteAt);
+      if (now > promoteAt) {
+        shadowState.mode = 'DB';
+        console.log(`ROSTER_AUTO_PROMOTED after ${shadowState.durationHours} hours, 0 diffs`);
+      }
+    } else if (shadowState.autoPromoteAt && shadowState.diffsFound > 0) {
+      if (!shadowState.autoPromoteBlocked) {
+        shadowState.autoPromoteBlocked = true;
+      }
+      console.log(`ROSTER_AUTO_PROMOTE_BLOCKED: ${shadowState.diffsFound} diffs found`);
+    }
+    
+    // In SHADOW mode, still route using static for safety - return static if provided
+    return staticScope || dbScope;
+  } else if (shadowState.mode === 'DB') {
+    return dbScope;
+  }
+  
+  return staticScope || dbScope;
+}
 
 /** Cached scope read. The cache is bound to the pool that produced it. */
 export async function currentConversationScope(db: Queryable): Promise<ConversationScope> {
