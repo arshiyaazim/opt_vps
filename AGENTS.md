@@ -641,33 +641,49 @@ ls -l /var/lib/vps/whatsapp/wa-02/control
 
 ---
 
-## 8. Docker Inventory (observed 2026-10-21; re-verified 2026-10-27)
+## 8. Docker Inventory (re-verified 2026-10-31)
 
-**14 containers running** on the VPS (re-verified 2026-10-27): 4 Compose-managed
-and 10 GitHub MCP tooling containers. Container names below remain the
-2026-10-21 observation and were not individually re-verified; the count is
-current. The inventory is an observation, not a permanent count.
+**4 containers running** on the VPS: all four are Compose-managed. An earlier
+2026-10-21/27 observation recorded 14 (these four plus ten GitHub MCP tooling
+containers); **the ten tooling containers are no longer present** — not running
+and not stopped — as verified on 2026-10-31. The inventory is an observation,
+not a permanent count: re-run `docker ps` before relying on it.
 
 ### Managed by Compose (4)
-| Container | Project | Compose file |
-|---|---|---|
-| `al-rifai-app-1` | `al-rifai` | `apps/al-rifai/compose.yaml` |
-| `vps-infra-postgres-1` | `vps-infra` | `infra/compose.yaml` |
-| `vps-whatsapp-wa-01-cap4-20261011` | `vps-whatsapp-cap4-wa01` (runtime label) | `services/whatsapp/compose.yaml` (declared name: `vps-whatsapp-privacy`) |
-| `vps-whatsapp-wa-02-cap4-20261011` | `vps-whatsapp-cap4-wa01` (runtime label) | same |
+
+| Container | Image | Project | Compose file |
+|---|---|---|---|
+| `al-rifai-app-1` | `sha256:8e4383a9…` (app) | `al-rifai` | `apps/al-rifai/compose.yaml` |
+| `vps-infra-postgres-1` | `postgres:16-alpine` | `vps-infra` | `infra/compose.yaml` |
+| `vps-whatsapp-wa-01-cap4-20261011` | `sha256:28a646d2…` (tag `local/vps-whatsapp:20261031-denied-record`) | `vps-whatsapp-cap4-wa01` (runtime label) | `services/whatsapp/compose.yaml` (declared name: `vps-whatsapp-privacy`) |
+| `vps-whatsapp-wa-02-cap4-20261011` | `sha256:d36ca851…` (tag `local/vps-whatsapp:20261020-ingestion`) | `vps-whatsapp-cap4-wa01` (runtime label) | same |
 
 > The WhatsApp Compose file declares `name: vps-whatsapp-privacy`, but containers run under project `vps-whatsapp-cap4-wa01` due to a `-p` override at deploy time. This is intentional; do not reconcile without Owner review.
 
-### Unmanaged tooling containers (10)
-Ten containers running `ghcr.io/github/github-mcp-server:0.29.0` were observed:
-`awesome_mccarthy`, `unruffled_kepler`, `stoic_wilbur`, `dazzling_shockley`,
-`strange_banach`, `loving_payne`, `wizardly_einstein`, `elegant_jang`,
-`elated_ellis`, and `youthful_nightingale`. Host process inspection observed
-owner `root`, process name `github-mcp-serv`, and parent process
-`containerd-shim` for each. Raw process arguments were not collected. No
-container was stopped, removed, or changed during that inspection.
+### Not services — do not start (17 exited containers)
 
-**Do not remove these containers without Owner authorization**, even though they are unmanaged.
+`docker ps -a` additionally shows 17 **exited** containers with auto-generated
+names (`affectionate_cannon`, `amazing_lamport`, `bold_newton`,
+`confident_curie`, `cranky_elion`, `dreamy_sammet`, `elastic_hamilton`,
+`elastic_liskov`, `focused_gagarin`, `focused_keldysh`, `gifted_hopper`,
+`intelligent_franklin`, `jolly_bartik`, `naughty_hugle`, `sad_thompson`,
+`zealous_ride`, `zealous_spence`), all `Exited (1)` or `Exited (2)` on
+2026-10-31 against dangling intermediate image IDs.
+
+These are leftovers from abandoned local image-build attempts, not services.
+**Do not start them and do not treat them as part of the platform.** They cannot
+be removed without Owner authorization (rule §13.18); the platform needs none of
+them.
+
+### Formerly observed, now absent
+
+Ten `ghcr.io/github/github-mcp-server:0.29.0` containers
+(`awesome_mccarthy`, `unruffled_kepler`, `stoic_wilbur`, `dazzling_shockley`,
+`strange_banach`, `loving_payne`, `wizardly_einstein`, `elegant_jang`,
+`elated_ellis`, `youthful_nightingale`) were running on 2026-10-21 and
+re-verified on 2026-10-27. On 2026-10-31 **none of them exists**, running or
+stopped. Recorded here so their disappearance is not mistaken for a regression
+by a later reader, and so nobody re-creates them from this document.
 
 ---
 
