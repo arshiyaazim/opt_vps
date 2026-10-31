@@ -340,7 +340,8 @@ def test_group_authorized_participant_message_is_accepted(monkeypatch, tmp_path)
     assert page["records"][0]["envelope"]["direction"] == "INCOMING"
 
 
-def test_group_unauthorized_participant_is_rejected(monkeypatch, tmp_path):
+def test_group_unauthorized_participant_is_denied_and_cursor_advances(monkeypatch, tmp_path):
+    """A denial is a terminal per-event verdict, never a page-level error."""
     path, boundary = group_boundary(monkeypatch, tmp_path)
     stranger = "15559998888@s.whatsapp.net"
     with sqlite3.connect(path) as db:
@@ -356,11 +357,19 @@ def test_group_unauthorized_participant_is_rejected(monkeypatch, tmp_path):
             participant=stranger,
         )
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    raw = native_reader._reader.page(GROUP, boundary["nextCursor"], 10)
+    denied = [record for record in raw["records"] if record["sequence"] == "2"]
+    assert denied[0]["status"] == "DENIED"
+    assert denied[0]["reason"] == "PARTICIPANT_NOT_AUTHORIZED"
+    assert denied[0]["envelope"] is None
+
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
+    assert page["complete"] is True
 
 
-def test_group_paired_sender_with_foreign_participant_is_rejected(monkeypatch, tmp_path):
+def test_group_paired_sender_with_foreign_participant_is_denied(monkeypatch, tmp_path):
     path, boundary = group_boundary(monkeypatch, tmp_path)
     with sqlite3.connect(path) as db:
         add_event(
@@ -375,11 +384,13 @@ def test_group_paired_sender_with_foreign_participant_is_rejected(monkeypatch, t
             participant=PARTICIPANT,
         )
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
 
 
-def test_group_paired_identity_incoming_direction_is_rejected(monkeypatch, tmp_path):
+def test_group_paired_identity_incoming_direction_is_denied(monkeypatch, tmp_path):
     path, boundary = group_boundary(monkeypatch, tmp_path)
     with sqlite3.connect(path) as db:
         add_event(
@@ -394,8 +405,10 @@ def test_group_paired_identity_incoming_direction_is_rejected(monkeypatch, tmp_p
             participant=PAIRED_LID,
         )
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
 
 
 def test_group_replayed_cursor_returns_no_duplicate_records(monkeypatch, tmp_path):
@@ -423,8 +436,8 @@ def test_group_replayed_cursor_returns_no_duplicate_records(monkeypatch, tmp_pat
     assert advanced["complete"] is True
 
 
-def test_group_cursor_is_unchanged_by_participant_failure(monkeypatch, tmp_path):
-    """A denied event raises deterministically; the caller keeps its cursor."""
+def test_group_denial_does_not_stall_later_authorized_events(monkeypatch, tmp_path):
+    """Head-of-line: a denied event must never block the events behind it."""
     path, boundary = group_boundary(monkeypatch, tmp_path)
     stranger = "15559997777@s.whatsapp.net"
     with sqlite3.connect(path) as db:
@@ -439,30 +452,11 @@ def test_group_cursor_is_unchanged_by_participant_failure(monkeypatch, tmp_path)
             direction="incoming",
             participant=stranger,
         )
-
-    for _ in range(2):
-        with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-            main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
-
-    # The retained cursor is still the same activation cursor: it is not advanced,
-    # rewritten or invalidated by the failure.
-
-    # Simulate the operator-side allowlist repair, not an event mutation.
-    reader = native_reader._reader
-    reader.authorize = lambda: NativePrincipal(
-        "mirror-reader",
-        2,
-        ACCOUNT,
-        frozenset({CHAT, GROUP}),
-        True,
-        ((GROUP, frozenset({PARTICIPANT, stranger})),),
-    )
-    with sqlite3.connect(path) as db:
         add_event(
             db,
             3,
-            "after-repair",
-            "next authorized message",
+            "after-denial",
+            "authorized message",
             "2026-10-27T05:39:00Z",
             chat=GROUP,
             sender=PARTICIPANT,
@@ -470,11 +464,38 @@ def test_group_cursor_is_unchanged_by_participant_failure(monkeypatch, tmp_path)
             participant=PARTICIPANT,
         )
 
-    repaired = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
 
-    assert repaired["previousCursor"] == boundary["nextCursor"]
-    assert [record["sequence"] for record in repaired["records"]] == ["2", "3"]
-    assert repaired["complete"] is True
+    assert [record["sequence"] for record in page["records"]] == ["3"]
+    assert page["nextCursor"].split(":")[3] == "3"
+    assert page["complete"] is True
+
+
+def test_group_denial_is_terminal_and_never_retried(monkeypatch, tmp_path):
+    path, boundary = group_boundary(monkeypatch, tmp_path)
+    stranger = "15559996666@s.whatsapp.net"
+    with sqlite3.connect(path) as db:
+        add_event(
+            db,
+            2,
+            "terminal-denial",
+            "denied once",
+            "2026-10-27T05:41:00Z",
+            chat=GROUP,
+            sender=stranger,
+            direction="incoming",
+            participant=stranger,
+        )
+
+    first = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    replay = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    advanced = main.list_native_messages(GROUP, cursor=first["nextCursor"], limit=10)
+
+    assert first["records"] == []
+    assert replay["records"] == []
+    assert replay["nextCursor"] == first["nextCursor"]
+    assert advanced["records"] == []
+    assert advanced["nextCursor"] == first["nextCursor"]
 
 
 def test_direct_chat_sender_scope_is_unaffected_by_group_participants(monkeypatch, tmp_path):
@@ -541,8 +562,10 @@ def test_group_lid_participant_without_bridge_resolution_is_rejected(monkeypatch
             participant=CLIENT_LID,
         )
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
 
 
 def test_group_lid_resolved_to_unlisted_pn_is_rejected(monkeypatch, tmp_path):
@@ -561,8 +584,10 @@ def test_group_lid_resolved_to_unlisted_pn_is_rejected(monkeypatch, tmp_path):
         )
         add_resolution(db, "resolved-stranger", "15559990000@s.whatsapp.net")
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
 
 
 def test_group_unresolved_identity_state_is_rejected(monkeypatch, tmp_path):
@@ -581,8 +606,10 @@ def test_group_unresolved_identity_state_is_rejected(monkeypatch, tmp_path):
         )
         add_resolution(db, "unresolved-state", CLIENT_PN, state="UNRESOLVED")
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
 
 
 def test_group_resolution_does_not_admit_outgoing_spoof(monkeypatch, tmp_path):
@@ -602,8 +629,10 @@ def test_group_resolution_does_not_admit_outgoing_spoof(monkeypatch, tmp_path):
         )
         add_resolution(db, "outgoing-lid", CLIENT_PN)
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"
 
 
 def test_group_resolution_requires_matching_participant(monkeypatch, tmp_path):
@@ -622,5 +651,7 @@ def test_group_resolution_requires_matching_participant(monkeypatch, tmp_path):
         )
         add_resolution(db, "mismatched-participant", CLIENT_PN)
 
-    with pytest.raises(NativeReadError, match="NATIVE_PARTICIPANT_SCOPE_DENIED"):
-        main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+    page = main.list_native_messages(GROUP, cursor=boundary["nextCursor"], limit=10)
+
+    assert page["records"] == []
+    assert page["nextCursor"].split(":")[3] == "2"

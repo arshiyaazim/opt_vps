@@ -381,7 +381,13 @@ class DisposableNativeReader:
                 self._value(event.get("direction")),
                 allowed,
             ):
-                raise NativeReadError("NATIVE_PARTICIPANT_SCOPE_DENIED")
+                # A denial is a terminal verdict for this one event, not a
+                # transient error. Record it as a skippable non-content record
+                # so the caller advances the cursor and later events in the
+                # chat keep flowing. Raising here would stall every later
+                # event behind a single unauthorized sender.
+                record["status"], record["reason"] = "DENIED", "PARTICIPANT_NOT_AUTHORIZED"
+                return record
         content_allowed = principal.content and not metadata_only
         record["quote"] = (
             self._quote(db, row["payload_hash"], h.get("relations", {}).get("quote")) if content_allowed else None
