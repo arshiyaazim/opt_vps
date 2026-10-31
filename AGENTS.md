@@ -641,13 +641,15 @@ ls -l /var/lib/vps/whatsapp/wa-02/control
 
 ---
 
-## 8. Docker Inventory (re-verified 2026-10-31)
+## 8. Docker Inventory (re-verified 2026-10-31, post-cleanup)
 
-**4 containers running** on the VPS: all four are Compose-managed. An earlier
-2026-10-21/27 observation recorded 14 (these four plus ten GitHub MCP tooling
-containers); **the ten tooling containers are no longer present** — not running
-and not stopped — as verified on 2026-10-31. The inventory is an observation,
-not a permanent count: re-run `docker ps` before relying on it.
+**4 containers running** on the VPS, all Compose-managed, and **no stopped
+containers** — `docker ps -a` returns exactly these four. An earlier 2026-10-21/27
+observation recorded 14 (these four plus ten GitHub MCP tooling containers); the
+ten tooling containers are gone. A set of 17 exited containers left by abandoned
+image-build attempts was removed on 2026-10-31 with Owner authorization, after
+being listed by ID. The inventory is an observation, not a permanent count:
+re-run `docker ps -a` before relying on it.
 
 ### Managed by Compose (4)
 
@@ -660,20 +662,11 @@ not a permanent count: re-run `docker ps` before relying on it.
 
 > The WhatsApp Compose file declares `name: vps-whatsapp-privacy`, but containers run under project `vps-whatsapp-cap4-wa01` due to a `-p` override at deploy time. This is intentional; do not reconcile without Owner review.
 
-### Not services — do not start (17 exited containers)
-
-`docker ps -a` additionally shows 17 **exited** containers with auto-generated
-names (`affectionate_cannon`, `amazing_lamport`, `bold_newton`,
-`confident_curie`, `cranky_elion`, `dreamy_sammet`, `elastic_hamilton`,
-`elastic_liskov`, `focused_gagarin`, `focused_keldysh`, `gifted_hopper`,
-`intelligent_franklin`, `jolly_bartik`, `naughty_hugle`, `sad_thompson`,
-`zealous_ride`, `zealous_spence`), all `Exited (1)` or `Exited (2)` on
-2026-10-31 against dangling intermediate image IDs.
-
-These are leftovers from abandoned local image-build attempts, not services.
-**Do not start them and do not treat them as part of the platform.** They cannot
-be removed without Owner authorization (rule §13.18); the platform needs none of
-them.
+> **A stopped container with an auto-generated name is build debris, not a
+> service.** Failed `docker build` attempts leave them behind. List them with
+> `docker ps -a --filter status=exited` and remove them by explicit ID only after
+> Owner authorization (§13.18). Never `docker system prune -a` — it would take the
+> retained rollback images with it.
 
 ### Formerly observed, now absent
 
