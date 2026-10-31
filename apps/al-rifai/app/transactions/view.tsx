@@ -22,6 +22,39 @@ const SOURCES=[
 const SUGGESTION_DEBOUNCE_MS=300;
 const SUGGESTION_LIMIT=10;
 
+// Single-character payment method. Unknown methods fall back to their initial so a
+// new method surfaces as a letter rather than disappearing.
+const METHOD_ABBREVIATIONS:Record<string,string>={bkash:'B',nagad:'N',nagod:'N',cash:'C',hotel:'H'};
+
+function methodAbbreviation(method:string):string{
+  const key=(method??'').trim().toLowerCase();
+  if(!key)return '—';
+  return METHOD_ABBREVIATIONS[key]??key[0].toUpperCase();
+}
+
+// Two-to-three character provenance marker. The Current view currently produces a
+// single hardcoded value ('WhatsApp live'), so the review/excel/username branches
+// are forward-compatibility: they activate when the data path carries them.
+const SOURCE_ABBREVIATIONS:Record<string,string>={
+  'whatsapp live':'WA',
+  'whatsapp archive':'WA',
+  chat:'WA',
+  review:'RV',
+  excel:'XL',
+  'excel cashbook':'XL',
+};
+
+function sourceAbbreviation(source:string):string{
+  const raw=(source??'').trim();
+  if(!raw)return '—';
+  const known=SOURCE_ABBREVIATIONS[raw.toLowerCase()];
+  if(known)return known;
+  // A future frontend submission carries the submitting user, e.g. "submission:admin".
+  const username=raw.includes(':')?raw.slice(raw.indexOf(':')+1).trim():raw;
+  if(username.length>=3&&/^[A-Za-z0-9._@-]+$/.test(username))return username.slice(-3);
+  return raw.slice(0,2).toUpperCase();
+}
+
 export type EmployeeSuggestion={phone:string;name:string;display:string};
 
 // BEGIN buildSuggestions — extracted verbatim by scripts/verify-transaction-suggestions.mjs
@@ -96,6 +129,17 @@ export default function TransactionsView(){
 
   const statusOptions=useMemo(()=>[...new Set(rows.map(r=>r.status).filter(Boolean))],[rows]);
 
+  // Per-employee lifetime total across the FULL dataset, not the filtered view.
+  // Computed once from the raw rows so filtering never changes the column.
+  const totalByPhone=useMemo(()=>{
+    const totals=new Map<string,number>();
+    for(const row of rows){
+      const key=row.employeePhone||'';
+      totals.set(key,(totals.get(key)??0)+row.amountCents);
+    }
+    return totals;
+  },[rows]);
+
   const suggestions=useMemo(
     ()=>selectedPhone?[]:buildSuggestions(rows,debounced,SUGGESTION_LIMIT),
     [rows,debounced,selectedPhone],
@@ -141,8 +185,8 @@ export default function TransactionsView(){
   };
 
   const exportCsv=()=>{
-    const contents=csv(['ID','Date','Time','Employee','Employee ID','Payout','Method','Amount','Source','Status','Purpose','Issues'],
-      filtered.map(r=>[r.id,r.date,r.time,r.name,r.employeePhone,r.payoutPhone,r.method,(r.amountCents/100).toFixed(2),r.source,r.status??'',r.purpose,r.issues?.join('; ')??'']));
+    const contents=csv(['ID','Date','Time','Employee','Employee ID','Payout','Method','Amount','Total','Source','Status','Purpose','Issues'],
+      filtered.map(r=>[r.id,r.date,r.time,r.name,r.employeePhone,r.payoutPhone,r.method,(r.amountCents/100).toFixed(2),((totalByPhone.get(r.employeePhone||'')??0)/100).toFixed(2),r.source,r.status??'',r.purpose,r.issues?.join('; ')??'']));
     saveCsv(contents,'al-rifai-transactions.csv');
   };
 
@@ -252,7 +296,7 @@ export default function TransactionsView(){
           <TableShell label="Cash instruction ledger">
             <table className="wx-table stackable">
               <thead>
-                <tr><th>Date</th><th>Employee</th><th>Method</th><th className="num">Amount</th><th>Source</th><th>Status</th><th><span className="sr-only">Open</span></th></tr>
+                <tr><th>Date</th><th>Employee</th><th style={{width:'40px'}}>Method</th><th className="num">Amount</th><th className="num">Total</th><th style={{width:'50px'}}>Source</th><th>Status</th><th><span className="sr-only">Open</span></th></tr>
               </thead>
               <tbody>
                 {filtered.slice(0,200).map(r=>(
@@ -262,9 +306,10 @@ export default function TransactionsView(){
                       <span className="strong">{r.name||'(name pending)'}</span>
                       <span className="muted" style={{display:'block'}}>{r.employeePhone||'No employee ID'} · payout {r.payoutPhone||'not provided'}</span>
                     </td>
-                    <td data-label="Method" style={{textTransform:'capitalize'}}>{r.method||'—'}</td>
+                    <td data-label="Method" style={{width:'40px'}} title={r.method||undefined}><span className="strong">{methodAbbreviation(r.method)}</span></td>
                     <td data-label="Amount" className="num strong">{fmtBDT(r.amountCents)}</td>
-                    <td data-label="Source"><span className="muted">{r.source}</span></td>
+                    <td data-label="Total" className="num" title="All instructions for this employee, every date and method">{fmtBDT(totalByPhone.get(r.employeePhone||'')??0)}</td>
+                    <td data-label="Source" style={{width:'50px'}} title={r.source||undefined}><span className="muted">{sourceAbbreviation(r.source)}</span></td>
                     <td data-label="Status">
                       {r.issues?.length?<StatusPill status="REVIEW" label="Review"/>:<StatusPill status={r.identityVerified===true?'CONFIRMED':'UNVERIFIED'} label={r.identityVerified===true?'Identity verified':'Unverified'}/>}
                     </td>
