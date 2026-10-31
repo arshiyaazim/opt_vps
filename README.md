@@ -101,22 +101,6 @@ are Admin instruction amounts — never a confirmed payment or a posted entry.
 - **Mobile Responsive** — below 900 px the table becomes a stacked card layout
   driven by per-cell `data-label` attributes.
 
-## Current production state — 2026-10-29 (SUPERSEDED — historical only)
-
-> This block predates the 2026-10-31 Phase C/D2/B1 work. It is retained as
-> history and must not be read as current. Authoritative state lives in
-> [`AGENTS.md`](AGENTS.md) §0 and [`docs/NEXT-HANDOFF.md`](docs/NEXT-HANDOFF.md):
-> app image `sha256:8e4383a9…`, mode `on`, ledger 41, WA-01 healthy 9/9,
-> SHADOW live with zero diffs.
-
-- Application image: `sha256:cace72aab3bbeff80abd4eafda76b55ea0de439c0dbda4b9e0f493bbcda36ed2` (source `67ec02b`).
-- Mode: `ALRIFAI_UNIFIED_AUTH_MODE=shadow`. Login rate limiter removed.
-- Users: 3 Cash Portal accounts (1 ADMIN Owner, 2 USER).
-- Migrations: 0031 applied (cash submissions), 0032 not applied, 0033 applied. Ledger baseline 32.
-- Freeze: 0 current postings.
-- WhatsApp WA-01: degraded (1 of 9 approved chats failing; diagnosis recorded; fix deferred by the Owner).
-- Details and open items: [`NEXT-SESSION-HANDOFF.md`](NEXT-SESSION-HANDOFF.md) → "CURRENT STATE — 2026-10-29". Audit and decision record: [`apps/al-rifai/docs/AUDIT-20261028-CASH-LOGIN.md`](apps/al-rifai/docs/AUDIT-20261028-CASH-LOGIN.md).
-
 ## Current Qualification Status
 
 ### Unified Super Admin authentication — 28 October 2026 (stages 1–3 complete)
