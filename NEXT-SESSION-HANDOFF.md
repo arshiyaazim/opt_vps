@@ -39,7 +39,7 @@
 
 | # | Item | Scope | Approval phrase |
 |---|---|---|---|
-| 1 | WA-01 bridge: `NATIVE_READER_UNAVAILABLE` (1 of 9 chats) | Phase 3.2 | TBD by Owner |
+| 1 | WA-01 bridge: `NATIVE_READER_UNAVAILABLE` (1 of 9 chats) — **stall cleared 2026-10-31 by authorizing the participant (step 1)**. Steps 2 (denial must not stall a chat) and 3 (preserve bridge error codes) still open. | Phase 3.2 | Step 1 approved; steps 2–3 approved pending separate TAP-gated deploys |
 | 2 | Frozen-evidence hash drift: `891fe6e7…` → `237cfe7f…` in `candidates/identity-review/evidence-baseline.json` for `lib/escort-intake-candidate.mjs` (file last changed in `06356b6` bulk import; not Phase 1-4 related) | Isolated fix | `approve hash update` |
 | 3 | ~~Migration ledger gap: `public.alrifai_schema_migrations` has 32 rows but highest entry is `0033_unified_auth_sessions.sql`. Rows for 0032/0034/0035/0036 missing even though schema objects exist and function. 0025 lives in `whatsapp_mirror.schema_migrations`.~~ **RESOLVED 2026-10-31 — 36 rows, see the item log below.** | Ledger-only repair (no schema change), AGENTS.md §10 | ~~TBD by Owner~~ Approved and done |
 | 4 | `apps/al-rifai/README.md:42` is 90 chars (convention ≤79) | Line-wrap nit | Any time |
@@ -57,6 +57,17 @@
 - Dry run: `BEGIN` → 0 pre-existing ids among the four → 4 rows `RETURNING` → `ROLLBACK` → count back to 32.
 - Applied as a single `INSERT ... ON CONFLICT (id) DO NOTHING` in one transaction. Re-run inserted **0 rows** (idempotent). Ledger table has **0 triggers**, so the insert could not cascade into any other object.
 - No schema object, business row, Cash posting or Archive record was changed. Post-change health `{"status":"ok"}`; the only error-class log line is the known `NATIVE_READER_UNAVAILABLE` baseline (deferred item 1).
+
+**Item 2 step 1 — WA-01 participant authorization (Option A): DONE 2026-10-31.** No deploy, no restart, no code change.
+
+- Root cause (diagnosed first): group `120363428977781821@g.us` event sequence 1624 (2026-10-28 07:15 UTC) came from LID `207082183753869@lid`, resolved to `8801880414177@s.whatsapp.net`, which was not in the group's 6-participant allowlist. The bridge correctly raised `NATIVE_PARTICIPANT_SCOPE_DENIED`; the app collapsed it to `NATIVE_READER_UNAVAILABLE` (`scripts/message-ingestion.ts:123` discards the bridge code) and the cursor froze at 1585, blocking 13 later admissible events behind it (head-of-line blocking).
+- Owner confirmed the sender is a legitimate participant and authorized Option A.
+- DB (superuser, since neither app role may INSERT on the authorization table): 1 row in `escort_client_contacts` (`escort-client-wa01-8801880414177`, display name "Owner approved 2026-10-31", `+8801880414177`, source `OWNER_APPROVED_GROUP_20261031`) and 1 row in `escort_client_group_authorizations` (same ref). Group now has 7 authorized participants.
+- Control file: `native-reader-profile.json` participants entry extended by exactly one JID; formatting, mode `440`, owner `root:whatsapp-wa-01` and the `epoch`/`chats` binding unchanged. The bridge re-reads the profile per principal check, so no restart was needed.
+- Backups: `/tmp/alrifai-pre-optionA-20261031-0912.dump` (sha256 `e84da7ed…`, `pg_restore -l` OK, 600 TOC / 69 table-data) and a persistent profile copy at `/var/lib/vps/al-rifai/backups/native-reader-profile-pre-optionA-20261031-0912.json` (sha256 `26d5d997…`, mode 600).
+- Result at 09:13:59 local: cursor **1585 → 2014** (`through=0`), `last_error` NULL, 187 → **201** messages (+14: the previously denied event plus the 13 blocked behind it). All 14 got `archive/processed` and `vessel/processed` queue rows.
+- Safety: 0 `escort_order_register` rows created, 0 Cash postings created (newest posting still 2026-10-18, archive era), ledger still 36. Health ok. `chats_with_error` = 0 across all 9 chats; no `NATIVE_READER_UNAVAILABLE` line after 08:12:55 UTC.
+- Note: the structural defect is **not** fixed by this — a future unauthorized sender will stall the chat again until step 2 lands.
 
 ### Deployment procedure reminders
 

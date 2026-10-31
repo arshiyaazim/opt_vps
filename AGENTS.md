@@ -18,7 +18,7 @@
 > via `docker inspect al-rifai-app-1`), mode `on` (Phase 3.1, 2026-10-30), 3 Cash Portal users (Owner `Admin`, USER
 > `officeassistant`, USER `officeazzistant2`), ledger 36 rows (0031-0036 schema objects applied and all ledger rows recorded — 0032/0034/0035/0036 reconciled 2026-10-31; see the Migration ledger note in `docs/VPS_MAP.md`), 0 current postings, freeze intact. Legacy IP-bucket login rate limiter removed; new username-keyed throttle in `apps/al-rifai/lib/login-throttle.ts` (migration 0036 applied 2026-10-30, throttle deployed).
 > Phase 4.4 deploy 2026-10-31 (compose pin commit `bfe81f1`); rollback image `sha256:1d4602c3…` (tag `local/al-rifai:20261030-phase2`).
-> WA-01 degraded (1 of 9 chats failing; diagnosis recorded, bridge fix deferred by Owner).
+> WA-01 healthy (9/9 approved chats ingesting, 0 cursor errors). The 2026-10-28 stall was cleared 2026-10-31 by Owner authorizing participant `8801880414177` (deferred item 1, step 1). The structural head-of-line-blocking defect (a denial must never stall a chat) is still open as step 2.
 > Full state, open items and deferred triggers: `NEXT-SESSION-HANDOFF.md` → "PHASE 4.4 DEPLOYED — 2026-10-31" and "CURRENT STATE — 2026-10-29".
 
 > **UI visibility repair — 2026-10-27:** commit `a157f58` exposes the workspace

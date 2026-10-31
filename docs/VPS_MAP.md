@@ -286,7 +286,7 @@ Verify the restored data before any cutover. Drop only the explicitly designated
 
 - **Application:** `al-rifai-app-1`, compose project `al-rifai`, service `app`, file `apps/al-rifai/compose.yaml`. Image `sha256:1d4602c3…` (local/al-rifai:20261030-phase2). Healthy. Mode `on`.
 - **PostgreSQL:** `vps-infra-postgres-1`, image `postgres:16-alpine`, healthy, database `alrifai`.
-- **WhatsApp WA-01:** `vps-whatsapp-wa-01-cap4-20261011`, image `ae009303de09`. Degraded: 1 of 9 approved chats fails with `NATIVE_READER_UNAVAILABLE` (see `NEXT-SESSION-HANDOFF.md`).
+- **WhatsApp WA-01:** `vps-whatsapp-wa-01-cap4-20261011`, image `ae009303de09`. Healthy: 9/9 approved chats ingesting. The 2026-10-28 `NATIVE_READER_UNAVAILABLE` stall was caused by one unauthorized group sender and was cleared 2026-10-31 by Owner authorizing that participant; the structural head-of-line-blocking defect remains open (see `NEXT-SESSION-HANDOFF.md`).
 - **WhatsApp WA-02:** `vps-whatsapp-wa-02-cap4-20261011`, image `local/vps-whatsapp:20261020-ingestion`. Identity-only by policy.
 - **Backup location in use:** `/var/lib/vps/al-rifai/backups/`. It holds the current pre-change dumps (about 1.3 GB). This differs from the staging path named in the Backups section below, `/var/backups/vps/postgres`. Owner decision needed on the canonical location and the off-host copy.
 - **Backup convention:**
