@@ -3,7 +3,7 @@ import {getRosterShadowState} from "@/lib/conversation-scope";
 export const dynamic="force-dynamic";
 export async function GET(){try{await database().first("SELECT 1 AS ready");
   const roster = getRosterShadowState();
-  const res: any = {status:"ok"};
+  const res: Record<string, unknown> = {status:"ok"};
   if (roster.mode !== 'STATIC') {
     res.roster_mode = roster.mode === 'DB' && roster.startedAt ? 'DB (auto-promoted)' : roster.mode;
     if (roster.mode === 'SHADOW') {
