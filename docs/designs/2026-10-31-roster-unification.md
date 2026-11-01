@@ -608,5 +608,113 @@ pending.
 
 ---
 
+## 13. Post-Audit Findings — 2026-11-01
+
+An audit of the live SHADOW observation window (read-only, plus one
+Owner-authorized code fix) found four things worth recording. Two were defects,
+one is a deferred roster gap, and one is a statement about how much evidence the
+window actually contains.
+
+### 13.1 The recheck mechanism was startup-only (defect — fixed)
+
+`loadConversationScopeWithShadow` was called **once**, before `while(true)`. The
+SHADOW comparison and the auto-promotion predicate therefore ran only at process
+start. Consequences:
+
+- `cycles_completed` counted **process starts**, not observation cycles. Four
+  "cycles" in 27 hours was not a sampled window; it was four restarts.
+- `auto_promote_at` could pass with the predicate **never evaluated**. The
+  promotion would simply not happen until the next restart, with no log line
+  saying why — the exact failure mode this design's "observe before cutover"
+  rule exists to prevent.
+
+**Fix** (`6b457a6`): the scope load moved inside the loop behind a wall-clock
+`SHADOW_RECHECK_MS = 10 * 60 * 1000` throttle, logging
+`ROSTER_SHADOW_RECHECK cycles=N diffs=D`. A wall clock was chosen over a cycle
+counter because the cycle interval varies with traffic and with
+`MAX_PAGES_PER_CHAT_PER_CYCLE`; a counter would drift.
+
+The recheck is wrapped in **two** try/catch layers, deliberately: the outer one
+keeps the current scope on any failure (a roster or state defect must never stop
+ingestion), and the inner one guards only the diagnostic `SELECT` so a failed
+state read cannot discard a scope that already refreshed successfully. A missing
+`APPROVED_SCOPE_EMPTY` result is treated as a failure, not as a new empty scope —
+fail closed, per §7 of this document.
+
+Verified live: two consecutive cycles 10 min apart (`18:41:04Z`, `18:51:09Z`),
+`cycles_completed` 5 → 6 → 7, `diffs_found=0`, `auto_promote_at` unchanged.
+Promotion now fires on its own tick and needs no restart.
+
+Two log lines per tick (`ROSTER_SHADOW_OK` from the loader, `ROSTER_SHADOW_RECHECK`
+from the worker) are expected and intentional.
+
+### 13.2 `canonicalPersonRef` diverged and nothing compared it (defect — fixed)
+
+`loadRosterScope` emitted the roster **row id** as the person reference
+(`escort-person-hridoy-wa01`) while the legacy scope emits
+`canonical_person_ref` (`escort-hridoy-wa01`). `compareScopes` compared chat
+sets, domain, conversation type and PN→LID pairs — but **not** the person
+reference, so a real divergence in the field that attributes business rows to a
+person still reported `diffs_found = 0`.
+
+This is the more instructive of the two defects: the observation window was
+reporting equivalence it had never tested. Point 4 of §12 ("only the first real
+SHADOW cycle caught it") is the same lesson, twice.
+
+**Fix** (`6b457a6`): the loader selects `COALESCE(canonical_person_ref, id) AS
+person_ref` and uses it for both the conversation and the identity key;
+`compareScopes` gains a `person_ref_mismatch` bucket included in `total`. The
+COALESCE fallback is required: six of the ten roster persons are group-only and
+never existed in the legacy identity table, so they have no
+`canonical_person_ref`. They own no DIRECT channel, so they never enter the
+comparison — verified against live rows before deploy.
+
+Residual gap, accepted and deferred: `identity_mismatch` still compares only
+PN→LID pairs, not the identity-level `personRef`. Both now derive from the same
+source so they agree, but a divergence there would only surface in the
+conversation-level bucket. Not promotion-blocking.
+
+### 13.3 Two people are reachable by LID only, and neither is in the roster (deferred to D1)
+
+| Person | LID | Traffic | In roster |
+|---|---|---|---|
+| Rezaul Karim | `155508031901923` | 12 events (6 in / 6 out), 2026-10-18/19 | **no** |
+| TCIS W/A | `243103839576097` | none | **no** |
+
+`escort_roster_channel` carries only PN channels for these two. **There is no
+live message loss**: the bridge normalizes LID traffic to the paired PN before
+the app sees it, so Rezaul's events were ingested under his PN chat exactly once
+(no duplication either — the mirror key is `(wa_account, chat_jid, message_id)`).
+Two other people sometimes seen by LID, Hridoy and Mamun, do already have LID
+channels and match the roster.
+
+**Decision (Owner, 2026-11-01): defer to Phase D1.** Adding the two LID
+channels now would make the roster scope diverge from the legacy scope while it
+is still the reference, registering a non-zero diff and blocking or muddying
+auto-promotion. The risk is latent, not live.
+
+D1 must also **not** backfill: `ensureNativeCursor` → `reader.activate()` starts
+at the current stream boundary, so re-pulling history would duplicate rows that
+are already present under the PN, not recover missing ones.
+
+### 13.4 The audit window itself is thin evidence
+
+Of the nine authorized chat addresses, only a minority carried traffic in the
+24 hour audit window; five were unexercised. A clean comparison over addresses
+with no traffic proves the scope *loads* identically, not that routing behaves
+identically under real messages. Before D1, re-read §12's process note: the
+static proof passed once while the implementation was wrong.
+
+### 13.5 Net effect on the promotion decision
+
+Unchanged in direction, stronger in basis. The window is now sampled every 10
+minutes on a real timer instead of once per restart, and the comparison surface
+now includes the attribution key. `diffs_found=0` still holds, `auto_promote_at`
+is still `2026-11-02T03:47:18Z`, and the window was not restarted. D1 should be
+sequenced after the promotion signal (`roster_shadow.mode == "DB"`) is observed,
+and should carry the two LID channels plus the identity-level comparison bucket.
+
+---
+
 *Originally produced as a proposal; superseded in part by the implementation notes
 above. No deploy or data change is implied by this document.*

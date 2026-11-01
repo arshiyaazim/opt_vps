@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| App image | `sha256:61ccaf56e4ba5d38484ba54348ca38e90ca12925925246ee0022101806103a80` (tag `20261101-b3-typeahead`, source `c98e57e`, compose pin `8bc7017`) |
+| App image | `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3` (tag `20261101-shadow-recheck`, source `6b457a6`, compose pin `836e8b1`) |
 | App mode | `on` |
-| SHADOW | `mode=SHADOW`, `cycles_completed=4`, `diffs_found=0`, `auto_promote_blocked=false` (3 cycles at first check, 4 after the deploy cycle) |
+| SHADOW | `mode=SHADOW`, `cycles_completed=7`, `diffs_found=0`, `auto_promote_blocked=false` (advances every 10 min on a real timer — see Promotion Schedule) |
 | SHADOW started | `2026-10-31T15:47:18Z` |
 | Auto-promote at | `2026-11-02T03:47:18Z` |
 | Ledger | **41** rows (`0037`–`0041`) |
@@ -24,7 +24,8 @@
 
 **Rollback images available**
 
-- `sha256:8e4383a9…` — tag `20261031-b1-columns` (immediate rollback, pre-B3)
+- `sha256:61ccaf56…` — tag `20261101-b3-typeahead` (immediate rollback, pre-recheck-fix)
+- `sha256:8e4383a9…` — tag `20261031-b1-columns`
 - `sha256:1911fdfd…` — tag `20261031-typeahead` (Item A)
 - `sha256:d2c2e675…` — tag `20261031-shadow-v2-fix1`
 - `sha256:d7a96b1e…` — tag `20261031-shadow-v2`
@@ -91,6 +92,40 @@
   (`/cash/archive` pages server-side; `/cash/submissions` is self-scoped), so a
   typeahead there needs a read-only lookup endpoint and is out of B3 scope.
 
+- **Phase C SHADOW recheck + canonical personRef fix — deployed 2026-11-01**
+  Two defects found by an audit of the SHADOW observation window, fixed in one
+  commit (`6b457a6`, image `20261101-shadow-recheck`, pin `836e8b1`).
+
+  1. **The comparison ran only at worker start.** `loadConversationScopeWithShadow`
+     was called once before `while(true)`, so `cycles_completed` counted process
+     starts, not observation cycles, and `auto_promote_at` could pass without
+     ever being evaluated. The worker now re-loads the scope on a wall-clock
+     `SHADOW_RECHECK_MS = 10 * 60 * 1000` throttle inside the loop, logging
+     `ROSTER_SHADOW_RECHECK cycles=N diffs=D`. A recheck failure is caught and
+     keeps the current scope (two independent try/catch layers: the outer keeps
+     the scope, the inner only guards the diagnostic state read), so a roster or
+     state defect can never stop ingestion.
+  2. **The roster emitted the wrong person reference.** `loadRosterScope` used the
+     roster row id (`escort-person-hridoy-wa01`) where the legacy scope uses
+     `canonical_person_ref` (`escort-hridoy-wa01`), and no comparison bucket
+     covered that field — so a real attribution divergence still reported zero
+     differences. The loader now selects `COALESCE(canonical_person_ref, id)`
+     for both the conversation and identity keys, and `compareScopes` gained a
+     `person_ref_mismatch` bucket included in `total`.
+
+  Validation: `tsc --noEmit` clean; canonical TAP block 252 tests / 0 fail /
+  3 skip; full glob matches the same 6 file-level failures as pristine `HEAD`
+  (proven by re-running them against a clean `HEAD` tree — historical
+  hash-pin drift on `lib/escort-intake-candidate.mjs` plus DB/HTTP-dependent
+  files, unrelated to this change); `Lint: 0 errors, 0 warnings` on the
+  build-context tree.
+  Post-deploy: health `ok`, `mode=SHADOW`, **two consecutive real recheck
+  cycles 10 min apart** (`18:41:04Z`, `18:51:09Z`), `cycles_completed` 5 → 6 → 7,
+  `diffs_found=0` throughout, `auto_promote_at` unchanged. Pre-deploy backup
+  `pre-shadow-recheck-20261101-1827.dump` (sha256 `c9e42086…`, 75 table-data
+  sections, mode 600). Bridges, PostgreSQL, `app.env` and the roster tables
+  untouched.
+
 - **Phase C SHADOW v2 deployed and healthy** — roster-backed comparison reading
   the roster tables (not the Phase B views), state persisted in
   `public.roster_shadow_state`, health reporting configured and effective mode
@@ -112,15 +147,54 @@
 
 - Started: `2026-10-31T15:47:18Z`
 - Auto-promote at: `2026-11-02T03:47:18Z` (~09:47 Asia/Dhaka, 2 Nov)
+- **Recheck cadence: every 10 minutes, on a wall clock timer inside the worker
+  loop** (since `6b457a6`, 2026-11-01). Each tick re-loads the approved scope,
+  runs the SHADOW comparison, and evaluates the auto-promotion predicate, so
+  `cycles_completed` advances on real observation cycles rather than process
+  starts. Confirmed live: `18:41:04Z` and `18:51:09Z`, 10 min apart,
+  `cycles_completed` 5 → 6 → 7 with `diffs_found=0`.
+- **Auto-promotion therefore fires automatically** at the due time on the first
+  tick after it, with **no restart, deploy, or manual step required**. Do not
+  restart the container to force a check — restarting is unnecessary and
+  `cycles_completed` now advances on its own. Two log lines per tick are
+  expected: `ROSTER_SHADOW_OK` (loader) and `ROSTER_SHADOW_RECHECK` (worker).
 - **Signal:** `roster_shadow.mode` in `/api/health` flips to `"DB"`.
   `roster_mode` stays `"SHADOW"` because it reports the configured env value;
   it only becomes `"DB"` when `ALRIFAI_ROSTER_SOURCE` is changed in Phase D1.
 - Once promoted the process will not revert on its own. Reverting requires a
   deploy and an explicit `DELETE FROM roster_shadow_state` to restart the period.
+- **Observation window is intact.** The 36 h period, `diffs_found=0` and
+  `auto_promote_at` were not reset by the 2026-11-01 fix; only the sampling rate
+  changed.
 - **SHADOW code path is FROZEN.** Do not touch `lib/conversation-scope.ts`, the
   scope-loading path in `scripts/message-ingestion-worker.ts`, migrations
   `0037`–`0041`, `public.roster_shadow_state`, or the `ALRIFAI_ROSTER_*` values
-  in `app.env`. A diff or block is reported, never remediated.
+  in `app.env`. A diff or block is reported, never remediated. The single
+  exception on record is the Owner-authorized 2026-11-01 fix above; the freeze
+  resumed on completion.
+
+### Known roster gap — LIDs not yet in the roster (deferred to D1)
+
+Two people talk to WA-01 from their **LID** rather than their phone number:
+
+| Person | LID | In roster? |
+|---|---|---|
+| Rezaul Karim | `155508031901923` | **no** |
+| TCIS W/A | `243103839576097` | **no** |
+
+- **No message loss today.** The bridge normalizes LID traffic to the paired PN
+  before the app sees it, so Rezaul's 12 LID-origin events (6 in / 6 out,
+  2026-10-18/19) were ingested under his PN chat once each — no loss, no
+  duplication. TCIS has no traffic at all.
+- **Not added now, deliberately.** Adding the two LID channels before promotion
+  would make the roster scope diverge from the legacy scope and register a
+  non-zero diff, which would block or muddy auto-promotion. The risk is latent,
+  not live.
+- **Phase D1 adds them**, after promotion, when the roster becomes the only
+  scope. A backfill must not be attempted: the mirror key is
+  `(wa_account, chat_jid, message_id)` and `ensureNativeCursor` starts at the
+  current stream boundary, so replaying history would create duplicates rather
+  than recover anything.
 
 ## Pending Work (Priority Order)
 

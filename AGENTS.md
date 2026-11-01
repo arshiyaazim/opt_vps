@@ -10,9 +10,41 @@
 
 ---
 
-## 0. Current Production Position (verified 2026-10-27)
+## 0. Current Production Position (verified 2026-11-01)
 
-> **Current production position — 2026-11-01, post-B3 (authoritative; supersedes every banner below):**
+> **Current production position — 2026-11-01, post-shadow-recheck (authoritative; supersedes every banner below):**
+> app image `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3`
+> (tag `local/al-rifai:20261101-shadow-recheck`, source `6b457a6`; verified via
+> `docker inspect al-rifai-app-1` and pinned in `apps/al-rifai/compose.yaml` by
+> commit `836e8b1`). Mode `on`. Ledger **41** rows (unchanged — no migration).
+> **Phase C SHADOW recheck + canonical personRef fix deployed** (Owner-authorized
+> against the frozen roster path, 2026-11-01): the comparison and the
+> auto-promotion check now run every 10 minutes inside the worker loop instead of
+> once per process start, and the roster emits `COALESCE(canonical_person_ref, id)`
+> so attribution keys match the legacy scope; `compareScopes` gained a
+> `person_ref_mismatch` bucket. Verified: **two real recheck cycles 10 min apart**
+> (`18:41:04Z`, `18:51:09Z`), `cycles_completed` 5 → 7, `diffs_found=0`
+> throughout, `auto_promote_blocked=false`, auto-promotion still due
+> `2026-11-02T03:47:18Z` and now fires **automatically** on its own tick — no
+> restart or manual step. Pre-deploy backup
+> `/var/lib/vps/al-rifai/backups/pre-shadow-recheck-20261101-1827.dump`
+> (sha256 `c9e42086…`, 75 table-data sections, mode 600). Immediate rollback
+> image `sha256:61ccaf56…` (tag `20261101-b3-typeahead`); also retained
+> `sha256:8e4383a9…` (tag `20261031-b1-columns`), `sha256:1911fdfd…` (tag
+> `20261031-typeahead`) and the older rollbacks listed below.
+> Bridges **untouched**: WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…`
+> (`RestartCount=0`, same start times); PostgreSQL `vps-infra-postgres-1`
+> untouched. Cash Freeze intact: **0** current postings (1,586 archive-epoch
+> postings only), no financial posting, no bridge restart. Ingestion 9/9 cursors
+> fresh with 0 errors. `app.env` still `600 root:root`.
+> Deferred to **Phase D1**: add Rezaul LID `155508031901923` and TCIS LID
+> `243103839576097` to the roster — absent today, but the bridge normalizes LID
+> traffic to the paired PN, so there is **no live message loss** (see §14.1).
+> Open: B2, B4, B5 (blocked — see §14.3), Phase D1 (after promotion), Phase E.
+> Deferred under B3: typeahead on `/cash/archive` and `/cash/submissions`
+> requires a new read-only employee lookup API endpoint.
+
+> **Superseded banner — 2026-11-01, post-B3 (superseded by the block above):**
 > app image `sha256:61ccaf56e4ba5d38484ba54348ca38e90ca12925925246ee0022101806103a80`
 > (tag `local/al-rifai:20261101-b3-typeahead`, source `c98e57e`; verified via
 > `docker inspect al-rifai-app-1` and pinned in `apps/al-rifai/compose.yaml` by
@@ -862,6 +894,18 @@ These rules are not negotiable. If an incident seems to require breaking one, st
     `public.roster_shadow_state`; migrations `0037`–`0041`; or the
     `ALRIFAI_ROSTER_*` values in `app.env`. A diff or a block must be reported,
     never remediated. Unfreezing requires an Owner ruling, not an inference.
+    **Recorded exception:** on 2026-11-01 the Owner authorized one bounded
+    change to the two frozen source files — a wall-clock 10 minute recheck of
+    the scope load (and therefore of the SHADOW comparison and the
+    auto-promotion predicate) inside the worker loop in
+    `scripts/message-ingestion-worker.ts`, and `COALESCE(canonical_person_ref, id)`
+    as the roster person reference plus a `person_ref_mismatch` comparison
+    bucket in `lib/conversation-scope.ts`. Committed as `6b457a6`, deployed as
+    image `20261101-shadow-recheck` (pin `836e8b1`). The scope logic, the
+    observation window, `diffs_found=0`, `auto_promote_at` and every roster
+    table and env value were left unchanged; the freeze resumed on completion.
+    That exception is not a precedent — no further edit to these paths is
+    authorized without a new, equally explicit Owner ruling.
 
 ## 14. Work items and recent history (2026-10-31)
 
@@ -871,6 +915,8 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 |---|---|---|
 | **A** | `/transactions` typeahead search — unified employee search, 300 ms debounce, keyboard nav, ARIA, local `buildSuggestions` | **DEPLOYED** ✅ commit `8fb3327`, image `20261031-typeahead` |
 | **B1** | `/transactions` table — Method/Source abbreviation, per-employee Total column, CSV sync | **DEPLOYED** ✅ commit `6165f35`, pin `6d95083`, image `20261031-b1-columns` |
+| **SHADOW-FIX** | Phase C SHADOW: recheck + auto-promotion every 10 min inside the worker loop; roster emits `COALESCE(canonical_person_ref, id)`; new `person_ref_mismatch` comparison bucket (Owner-authorized on the frozen path) | **DEPLOYED** ✅ commit `6b457a6`, pin `836e8b1`, image `20261101-shadow-recheck` (`sha256:381fd22f…`) |
+| **D1-LID** | Add Rezaul LID `155508031901923` and TCIS LID `243103839576097` to `escort_roster_channel` | **DEFERRED to D1** — adding them in SHADOW would register a roster-vs-legacy diff; no live loss today (bridge normalizes to PN) |
 | **B2** | Show All → `/transactions/employee/[phone]` page | PENDING |
 | **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **DEPLOYED** ✅ commit `c98e57e`, pin `8bc7017`, image `20261101-b3-typeahead` (`sha256:61ccaf56…`) |
 | **B4** | `/cash` page Total + Show All | PENDING |
@@ -886,6 +932,8 @@ Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
 ### 14.2 Recent commits (newest first)
 
 ```
+836e8b1 deploy: pin app image to 20261101-shadow-recheck
+6b457a6 fix: shadow recheck every 10m and use canonical personRef
 8bc7017 deploy: pin app image to 20261101-b3-typeahead
 c98e57e ui: employee typeahead on Add Transaction drawer and Cash search (B3)
 6d95083 deploy: pin app image to 20261031-b1-columns
