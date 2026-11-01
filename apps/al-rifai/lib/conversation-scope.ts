@@ -79,6 +79,8 @@ export type ShadowComparisonDetail = {
   extra_in_static: string[];
   domain_mismatch: Array<{chat: string; static: string | null; roster: string | null}>;
   type_mismatch: Array<{chat: string; static: string | null; roster: string | null}>;
+  /** Same chat, different canonical person reference (business attribution key). */
+  person_ref_mismatch: Array<{chat: string; static: string | null; roster: string | null}>;
   identity_mismatch: Array<{pn: string; static: string | null; roster: string | null}>;
 };
 
@@ -241,7 +243,7 @@ export async function loadConversationScope(db: Queryable): Promise<Conversation
 export async function loadRosterScope(db: Queryable): Promise<ConversationScope> {
   const [personRows, channelRows] = await Promise.all([
     db.query(
-      `SELECT id, display_name, phone
+      `SELECT id, COALESCE(canonical_person_ref, id) AS person_ref, display_name, phone
        FROM public.escort_roster
        WHERE account_id='wa-01' AND active=true
        ORDER BY id`,
@@ -254,7 +256,10 @@ export async function loadRosterScope(db: Queryable): Promise<ConversationScope>
     ),
   ]);
 
-  type PersonRow = { id: string; display_name: string; phone: string | null };
+  // `person_ref` is the legacy-compatible identity key: the roster keeps the
+  // platform-of-record value in canonical_person_ref and falls back to the row id
+  // for group-only participants that never existed in the legacy identity table.
+  type PersonRow = { id: string; person_ref: string; display_name: string; phone: string | null };
   type ChannelRow = { roster_id: string; chat_jid: string; participant_jid: string | null; channel_role: string; domain: string };
 
   const persons = personRows.rows as unknown as PersonRow[];
@@ -293,7 +298,7 @@ export async function loadRosterScope(db: Queryable): Promise<ConversationScope>
       domain: entry.domain,
       conversationType: 'DIRECT',
       displayName: entry.person.display_name,
-      canonicalPersonRef: entry.person.id,
+      canonicalPersonRef: entry.person.person_ref,
       aliases: [...(lidByPerson.get(entry.person.id) ?? [])].sort(),
     });
   }
@@ -325,7 +330,7 @@ export async function loadRosterScope(db: Queryable): Promise<ConversationScope>
     if (!pn) continue;
     const lids = [...(lidByPerson.get(entry.person.id) ?? [])].sort();
     identities.push({
-      personRef: entry.person.id,
+      personRef: entry.person.person_ref,
       pnBare: pn,
       lidBare: lids.length ? bareIdentifier(lids[0]) : null,
       savedName: entry.person.display_name,
@@ -380,6 +385,7 @@ export function compareScopes(staticScope: ConversationScope, dbScope: Conversat
   const dbIndex = chatIndex(dbScope);
   const domain_mismatch: ShadowComparisonDetail['domain_mismatch'] = [];
   const type_mismatch: ShadowComparisonDetail['type_mismatch'] = [];
+  const person_ref_mismatch: ShadowComparisonDetail['person_ref_mismatch'] = [];
 
   for (const key of [...staticKeys].filter((k) => dbKeys.has(k)).sort()) {
     const s = staticIndex.get(key);
@@ -388,6 +394,12 @@ export function compareScopes(staticScope: ConversationScope, dbScope: Conversat
     if (s.domain !== d.domain) domain_mismatch.push({ chat: key, static: s.domain, roster: d.domain });
     if (s.conversationType !== d.conversationType) {
       type_mismatch.push({ chat: key, static: s.conversationType, roster: d.conversationType });
+    }
+    // Compared explicitly: the roster used to emit its row id here while the
+    // legacy scope emitted canonical_person_ref, and no bucket covered it, so a
+    // real attribution divergence still reported zero differences.
+    if (s.canonicalPersonRef !== d.canonicalPersonRef) {
+      person_ref_mismatch.push({ chat: key, static: s.canonicalPersonRef, roster: d.canonicalPersonRef });
     }
   }
 
@@ -408,13 +420,14 @@ export function compareScopes(staticScope: ConversationScope, dbScope: Conversat
     extra_in_static.length +
     domain_mismatch.length +
     type_mismatch.length +
+    person_ref_mismatch.length +
     identity_mismatch.length;
 
   return {
     total,
     staticCount: staticKeys.size,
     dbCount: dbKeys.size,
-    detail: { missing_in_static, extra_in_static, domain_mismatch, type_mismatch, identity_mismatch },
+    detail: { missing_in_static, extra_in_static, domain_mismatch, type_mismatch, person_ref_mismatch, identity_mismatch },
   };
 }
 

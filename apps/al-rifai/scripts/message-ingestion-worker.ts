@@ -14,6 +14,11 @@ type JsonObject=Record<string,unknown>;
 type Account="wa-01"|"wa-02";
 
 const MAX_PAGES_PER_CHAT_PER_CYCLE=5;
+// Re-load the approved scope (and therefore run the SHADOW comparison and the
+// auto-promotion check) on a wall-clock interval inside the worker loop, so
+// cycles_completed counts real observation cycles rather than process starts.
+// A recheck failure must never take down ingestion: the current scope is kept.
+const SHADOW_RECHECK_MS=10*60*1000;
 // Conversation scope is Owner-approved data in public.conversation_scope.
 // No chat identifier is compiled into this worker: an empty scope fails closed.
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -328,12 +333,41 @@ async function main():Promise<void>{
     const dbClient = {query:(sql:string,values?:unknown[])=>pool.query(sql,values) as Promise<{rows:Array<Record<string,unknown>>}>};
     // ALRIFAI_ROSTER_SOURCE selects the source inside the loader: STATIC (default),
     // DB, or SHADOW (compare both, route with legacy, promote after a clean period).
-    const scope:ConversationScope = await loadConversationScopeWithShadow(dbClient);
-    const chatJids=scope.ingestionChats();
+    let scope:ConversationScope = await loadConversationScopeWithShadow(dbClient);
+    let chatJids=scope.ingestionChats();
     if(!chatJids.length)throw new Error("APPROVED_SCOPE_EMPTY");
     console.error(`Approved scope loaded: ${chatJids.length} chat addresses across ${scope.conversations.length} conversations.`);
     await ensureHistoricalProcessing(pool);
+    let lastShadowCheck=Date.now();
     while(true){
+      if(Date.now()-lastShadowCheck>=SHADOW_RECHECK_MS){
+        lastShadowCheck=Date.now();
+        try{
+          const next=await loadConversationScopeWithShadow(dbClient);
+          const nextChatJids=next.ingestionChats();
+          if(!nextChatJids.length)throw new Error("APPROVED_SCOPE_EMPTY");
+          scope=next;
+          chatJids=nextChatJids;
+          let cycles="?";
+          let diffs="?";
+          try{
+            const state=await dbClient.query("SELECT cycles_completed,diffs_found FROM public.roster_shadow_state WHERE singleton=TRUE");
+            const row=state.rows[0];
+            if(row){
+              cycles=String(row.cycles_completed);
+              diffs=String(row.diffs_found);
+            }
+          }catch(error){
+            // Diagnostic only: the scope refresh already succeeded.
+            console.error(`ROSTER_SHADOW_RECHECK_STATE_UNAVAILABLE ${safeError(error)}`);
+          }
+          console.error(`ROSTER_SHADOW_RECHECK cycles=${cycles} diffs=${diffs}`);
+        }catch(error){
+          // Keep serving the current scope. A roster or state defect must never
+          // stop an ingestion cycle that the existing scope can still serve.
+          console.error(`ROSTER_SHADOW_RECHECK_ERROR ${safeError(error)}`);
+        }
+      }
       let failed=false;
       try{failed=(await runAccount("wa-01",pool,scope,chatJids))||failed;}
       catch(error){
