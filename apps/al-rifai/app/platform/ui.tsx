@@ -8,6 +8,8 @@ import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
 import {Textarea} from '@/components/ui/textarea';
+import {EmployeeTypeahead} from '@/app/platform/employee-typeahead';
+import type {SuggestionSource} from '@/lib/employee-suggest';
 import {
   Sheet,SheetContent,SheetDescription,SheetFooter,SheetHeader,SheetTitle,SheetTrigger,
 } from '@/components/ui/sheet';
@@ -216,7 +218,7 @@ async function cashPost<T>(path:string,payload:unknown):Promise<T>{
   });
 }
 
-export function AddTransactionDrawer(){
+export function AddTransactionDrawer({employees=[]}:{employees?:readonly SuggestionSource[]}){
   const [open,setOpen]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
@@ -257,7 +259,21 @@ export function AddTransactionDrawer(){
         <form className="grid gap-3 px-4 pb-4" onSubmit={submit}>
           {error&&<p role="alert" className="rounded-md border border-destructive/40 p-2 text-sm text-destructive">{error}</p>}
           {notice&&<p role="status" aria-live="polite" className="rounded-md border p-2 text-sm">{notice}</p>}
-          <div className="grid gap-1"><Label htmlFor="tx-name">Employee name</Label><Input id="tx-name" autoComplete="off" maxLength={150} required value={form.employeeName} onChange={e=>setForm({...form,employeeName:e.target.value})}/></div>
+          <div className="grid gap-1">
+            <Label htmlFor="tx-name">Employee name</Label>
+            <EmployeeTypeahead
+              id="tx-name"
+              value={form.employeeName}
+              candidates={employees}
+              onValueChange={value=>setForm({...form,employeeName:value})}
+              onSelect={suggestion=>setForm({...form,employeeName:suggestion.name,employeeMobile:suggestion.phone})}
+              listLabel="Known employees"
+              placeholder="Type a name or mobile to reuse a known employee"
+              maxLength={150}
+              required
+            />
+            <p className="text-xs text-muted-foreground">Picking a suggestion fills the employee ID only. The payout number is never taken from a suggestion.</p>
+          </div>
           <div className="grid gap-1"><Label htmlFor="tx-employee-mobile">Employee ID / mobile</Label><Input id="tx-employee-mobile" type="tel" autoComplete="off" required value={form.employeeMobile} onChange={e=>setForm({...form,employeeMobile:e.target.value})}/><p className="text-xs text-muted-foreground">Employee identity is separate from the payout number.</p></div>
           <div className="grid gap-1"><Label htmlFor="tx-payout-mobile">Payout mobile</Label><Input id="tx-payout-mobile" type="tel" autoComplete="off" required value={form.payoutMobile} onChange={e=>setForm({...form,payoutMobile:e.target.value})}/></div>
           <div className="grid gap-1">

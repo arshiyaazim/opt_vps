@@ -849,7 +849,7 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 | **A** | `/transactions` typeahead search — unified employee search, 300 ms debounce, keyboard nav, ARIA, local `buildSuggestions` | **DEPLOYED** ✅ commit `8fb3327`, image `20261031-typeahead` |
 | **B1** | `/transactions` table — Method/Source abbreviation, per-employee Total column, CSV sync | **DEPLOYED** ✅ commit `6165f35`, pin `6d95083`, image `20261031-b1-columns` |
 | **B2** | Show All → `/transactions/employee/[phone]` page | PENDING |
-| **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages | PENDING |
+| **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **IMPLEMENTED — NOT DEPLOYED** (source only; see `docs/NEXT-HANDOFF.md`) |
 | **B4** | `/cash` page Total + Show All | PENDING |
 | **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
 | **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | PENDING — gated on SHADOW promotion confirmation |

@@ -52,6 +52,30 @@
   File: `app/transactions/view.tsx`. Commit `6165f35`, pin `6d95083`, deployed
   as `20261031-b1-columns`.
 
+- **Item B3 — Employee typeahead on the Add Transaction drawer and `/cash`**
+  (source only, **NOT deployed**). The Item A suggestion logic moved to a single
+  shared module and a single ARIA combobox component, so all three pickers now
+  share one implementation:
+  - `lib/employee-suggest.ts` — `buildSuggestions`, `normalizeSearchText`,
+    300 ms debounce constant, cap 10; identity-only surface (name + employee ID).
+  - `app/platform/employee-typeahead.tsx` — combobox/listbox wiring, keyboard
+    navigation, debounce, `suppressSuggestions` guard.
+  - `app/transactions/view.tsx` — table search now uses the shared component
+    (behaviour unchanged); the drawer receives the loaded rows as candidates.
+  - `app/platform/ui.tsx` — `AddTransactionDrawer({employees})`; picking a
+    suggestion fills employee name **and employee ID only**, never the payout
+    number (business rule preserved and stated in the form).
+  - `app/cash/page.tsx` — the Cash search field is the shared combobox;
+    candidates come from the loaded, authorized result page only, and a pick
+    filters on the employee ID.
+  - `tests/employee-suggest.mjs` — 12 tests (ranking, dedupe, caps, ordering,
+    identity-surface rejection, single-implementation guards), added to the
+    canonical `test` command.
+  Validation: `tsc --noEmit` clean; canonical TAP block 252 tests / 0 fail /
+  3 skip; full glob matches the known expected 7 file-level failures only.
+  Not browser-verified; no deploy, no migration, no `app.env`, no evidence, no
+  bridge change, no frozen SHADOW path touched.
+
 - **Phase C SHADOW v2 deployed and healthy** — roster-backed comparison reading
   the roster tables (not the Phase B views), state persisted in
   `public.roster_shadow_state`, health reporting configured and effective mode
@@ -90,7 +114,8 @@
 2. **Phase D1** — app cutover: set `ALRIFAI_ROSTER_SOURCE=DB` in `app.env`,
    deploy, verify 9/9 chats, then retire the static list.
 3. **Item B2** — Show All → `/transactions/employee/[phone]` page.
-4. **Item B3** — Typeahead on the Add Transaction sidebar and `/cash` pages.
+4. **Item B3** — Typeahead on the Add Transaction sidebar and `/cash` pages —
+   **IMPLEMENTED (source only, not deployed)**. See "Completed This Session".
 5. **Item B4** — `/cash` page Total + Show All.
 6. **Item B5** — Vessel page. **BLOCKED**: no salary/rate, attendance or
    conveyance data exists. Needs an Owner data-model decision. See
