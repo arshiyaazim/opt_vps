@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| App image | `sha256:8e4383a9544f567dbaaefb59af5e6167378c67817836b194c91c661df3448f25` (tag `20261031-b1-columns`, source `6165f35`, compose pin `6d95083`) |
+| App image | `sha256:61ccaf56e4ba5d38484ba54348ca38e90ca12925925246ee0022101806103a80` (tag `20261101-b3-typeahead`, source `c98e57e`, compose pin `8bc7017`) |
 | App mode | `on` |
-| SHADOW | `mode=SHADOW`, `cycles_completed=3`, `diffs_found=0`, `auto_promote_blocked=false` |
+| SHADOW | `mode=SHADOW`, `cycles_completed=4`, `diffs_found=0`, `auto_promote_blocked=false` (3 cycles at first check, 4 after the deploy cycle) |
 | SHADOW started | `2026-10-31T15:47:18Z` |
 | Auto-promote at | `2026-11-02T03:47:18Z` |
 | Ledger | **41** rows (`0037`–`0041`) |
@@ -24,6 +24,7 @@
 
 **Rollback images available**
 
+- `sha256:8e4383a9…` — tag `20261031-b1-columns` (immediate rollback, pre-B3)
 - `sha256:1911fdfd…` — tag `20261031-typeahead` (Item A)
 - `sha256:d2c2e675…` — tag `20261031-shadow-v2-fix1`
 - `sha256:d7a96b1e…` — tag `20261031-shadow-v2`
@@ -53,7 +54,8 @@
   as `20261031-b1-columns`.
 
 - **Item B3 — Employee typeahead on the Add Transaction drawer and `/cash`**
-  (source only, **NOT deployed**). The Item A suggestion logic moved to a single
+  (**DEPLOYED 2026-11-01** — image `sha256:61ccaf56…`, tag `20261101-b3-typeahead`,
+  source `c98e57e`, pin `8bc7017`). The Item A suggestion logic moved to a single
   shared module and a single ARIA combobox component, so all three pickers now
   share one implementation:
   - `lib/employee-suggest.ts` — `buildSuggestions`, `normalizeSearchText`,
@@ -73,8 +75,21 @@
     canonical `test` command.
   Validation: `tsc --noEmit` clean; canonical TAP block 252 tests / 0 fail /
   3 skip; full glob matches the known expected 7 file-level failures only.
-  Not browser-verified; no deploy, no migration, no `app.env`, no evidence, no
-  bridge change, no frozen SHADOW path touched.
+  In-image gates at build: message-mirror test, `typecheck`, `Lint: 0 errors,
+  0 warnings`, built output contains the B3 strings in server and client chunks.
+  Post-deploy: health `ok`, SHADOW unchanged (`mode=SHADOW`, 0 diffs, not
+  blocked), 9/9 cursors observed 25 s after restart with 0 errors, DB counts
+  identical (ledger 41, instructions 3,552, postings 1,586, users 3), WA-01 /
+  WA-02 / PostgreSQL untouched (same image IDs, `RestartCount=0`, same start
+  times), `app.env` still `600 root:root`, no new error signatures vs the
+  24 h log baseline.
+  Not browser-verified. No migration, `app.env`, evidence, or bridge change.
+
+  **Deferred sub-task (Owner decision 2026-11-01):** typeahead on
+  `/cash/archive` and `/cash/submissions` requires new employee lookup API
+  endpoint — deferred. Neither page currently loads an employee candidate set
+  (`/cash/archive` pages server-side; `/cash/submissions` is self-scoped), so a
+  typeahead there needs a read-only lookup endpoint and is out of B3 scope.
 
 - **Phase C SHADOW v2 deployed and healthy** — roster-backed comparison reading
   the roster tables (not the Phase B views), state persisted in
@@ -115,7 +130,9 @@
    deploy, verify 9/9 chats, then retire the static list.
 3. **Item B2** — Show All → `/transactions/employee/[phone]` page.
 4. **Item B3** — Typeahead on the Add Transaction sidebar and `/cash` pages —
-   **IMPLEMENTED (source only, not deployed)**. See "Completed This Session".
+   **DEPLOYED 2026-11-01** (image `sha256:61ccaf56…`, source `c98e57e`, pin
+   `8bc7017`). Deferred sub-task: `/cash/archive` and `/cash/submissions`
+   typeahead requires a new employee lookup API endpoint — deferred.
 5. **Item B4** — `/cash` page Total + Show All.
 6. **Item B5** — Vessel page. **BLOCKED**: no salary/rate, attendance or
    conveyance data exists. Needs an Owner data-model decision. See

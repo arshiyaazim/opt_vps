@@ -12,7 +12,30 @@
 
 ## 0. Current Production Position (verified 2026-10-27)
 
-> **Current production position — 2026-10-31, post-B1 (authoritative; supersedes every banner below):**
+> **Current production position — 2026-11-01, post-B3 (authoritative; supersedes every banner below):**
+> app image `sha256:61ccaf56e4ba5d38484ba54348ca38e90ca12925925246ee0022101806103a80`
+> (tag `local/al-rifai:20261101-b3-typeahead`, source `c98e57e`; verified via
+> `docker inspect al-rifai-app-1` and pinned in `apps/al-rifai/compose.yaml` by
+> commit `8bc7017`). Mode `on`. Ledger **41** rows (unchanged — no migration).
+> Item B3 (employee typeahead on the Add Transaction drawer and `/cash` search)
+> deployed and healthy. Pre-deploy backup
+> `/var/lib/vps/al-rifai/backups/pre-b3-typeahead-20261101-0825.dump`
+> (sha256 `7c585057…`, 75 table-data sections, mode 600). Immediate rollback
+> image `sha256:8e4383a9…` (tag `20261031-b1-columns`); also retained
+> `sha256:1911fdfd…` (tag `20261031-typeahead`) and the older rollbacks listed below.
+> **Phase C SHADOW unchanged and NOT promoted:** `roster_shadow.mode="SHADOW"`,
+> `cycles_completed=4`, `diffs_found=0`, `auto_promote_blocked=false`,
+> auto-promotion still due `2026-11-02T03:47:18Z`. No frozen roster path touched.
+> Bridges **untouched**: WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…`
+> (`RestartCount=0`, same start times); PostgreSQL `vps-infra-postgres-1`
+> untouched. Cash Freeze intact: **0** current postings (1,586 archive-epoch
+> postings only), no financial posting, no bridge restart. Ingestion 9/9 cursors
+> fresh with 0 errors, 61 messages in the last 24 h.
+> Open: B2, B4, B5 (blocked — see §14.3), Phase D1 (after promotion), Phase E.
+> Deferred under B3: typeahead on `/cash/archive` and `/cash/submissions`
+> requires a new read-only employee lookup API endpoint.
+
+> **Superseded banner — 2026-10-31, post-B1:**
 > app image `sha256:8e4383a9544f567dbaaefb59af5e6167378c67817836b194c91c661df3448f25`
 > (tag `local/al-rifai:20261031-b1-columns`, source `6165f35`; verified via
 > `docker inspect al-rifai-app-1` and pinned in `compose.yaml` by commit `6d95083`).
@@ -849,7 +872,7 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 | **A** | `/transactions` typeahead search — unified employee search, 300 ms debounce, keyboard nav, ARIA, local `buildSuggestions` | **DEPLOYED** ✅ commit `8fb3327`, image `20261031-typeahead` |
 | **B1** | `/transactions` table — Method/Source abbreviation, per-employee Total column, CSV sync | **DEPLOYED** ✅ commit `6165f35`, pin `6d95083`, image `20261031-b1-columns` |
 | **B2** | Show All → `/transactions/employee/[phone]` page | PENDING |
-| **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **IMPLEMENTED — NOT DEPLOYED** (source only; see `docs/NEXT-HANDOFF.md`) |
+| **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **DEPLOYED** ✅ commit `c98e57e`, pin `8bc7017`, image `20261101-b3-typeahead` (`sha256:61ccaf56…`) |
 | **B4** | `/cash` page Total + Show All | PENDING |
 | **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
 | **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | PENDING — gated on SHADOW promotion confirmation |
@@ -863,6 +886,8 @@ Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
 ### 14.2 Recent commits (newest first)
 
 ```
+8bc7017 deploy: pin app image to 20261101-b3-typeahead
+c98e57e ui: employee typeahead on Add Transaction drawer and Cash search (B3)
 6d95083 deploy: pin app image to 20261031-b1-columns
 6165f35 transactions: abbreviate method/source, add total column (B1)
 51955a6 deploy: pin app image to 20261031-typeahead
