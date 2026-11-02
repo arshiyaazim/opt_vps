@@ -218,12 +218,12 @@ export default function VesselRegisterView(){
       <Table>
         <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Open</span></TableHead></TableRow></TableHeader>
         <TableBody>{rows.slice(0,200).map(program=><TableRow key={program.id}>
-          <TableCell className="w-[104px] max-w-[104px] truncate" title={program.motherVessel||undefined}>{program.motherVessel||'—'}</TableCell>
-          <TableCell className="w-[104px] max-w-[104px]">
+          <TableCell className="w-[120px] max-w-[120px] truncate" title={program.motherVessel||undefined}>{program.motherVessel||'—'}</TableCell>
+          <TableCell className="w-[120px] max-w-[120px]">
             <span className="block truncate" title={program.lighterVessel||undefined}>{program.lighterVessel||'—'}</span>
             <span className="block truncate text-[11px] text-muted-foreground" title={program.masterMobile||undefined}>{program.masterMobile||'—'}</span>
           </TableCell>
-          <TableCell className="w-[118px] max-w-[118px]">
+          <TableCell className="w-[136px] max-w-[136px]">
             <span className="block truncate" title={program.escortName||undefined}>{program.escortName||'—'}</span>
             <span className="block truncate text-[11px] text-muted-foreground" title={program.escortMobile||undefined}>{program.escortMobile||'—'}</span>
           </TableCell>
