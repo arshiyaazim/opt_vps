@@ -142,12 +142,26 @@ const VESSEL_CURRENT_EPOCH='CANONICAL_BACKFILL_20261026',VESSEL_ARCHIVE_EPOCH='L
 export async function historicalSnapshot(options:RosterReadOptions={},scope:'CURRENT'|'ARCHIVE'='CURRENT'):Promise<Snapshot>{
  try{
  const epoch=scope==='ARCHIVE'?VESSEL_ARCHIVE_EPOCH:VESSEL_CURRENT_EPOCH;
- const [result,imported]=await Promise.all([
+ const [result,imported,pay]=await Promise.all([
   database().all('SELECT * FROM programs WHERE dataset_epoch=$1 ORDER BY "startDate" DESC, id',[epoch]),
   importedPrograms(scope),
+  // Derived pay for the same epoch. Read-only join: program_pay is computed from
+  // escort_rate_config by recalculate_program_pay(); nothing here writes it.
+  database().all('SELECT pp.program_id,pp.state,pp.reasons,pp.half_day_units,pp.salary_minor::text AS salary_minor,pp.conveyance_minor::text AS conveyance_minor,pp.total_minor::text AS total_minor FROM public.program_pay pp JOIN public.programs p ON p.id=pp.program_id WHERE p.dataset_epoch=$1',[epoch]),
  ]);
  const stored=(result.results.length?result.results:(scope==='CURRENT'?[]:seed)) as unknown as Record<string,unknown>[];
  const rows=buildHistoricalRoster(stored,imported as unknown as Record<string,unknown>[],options,result.results.length?'STORED':'SEED');
+ // Attach pay to the derived rows. Amounts stay as exact integer minor-unit
+ // strings so no float rounding happens between the database and the formatter.
+ type PayRow={program_id:string;state:string;reasons:unknown;half_day_units:number|null;salary_minor:string|null;conveyance_minor:string|null;total_minor:string|null};
+ const payById=new Map<string,PayRow>((pay.results as unknown as PayRow[]).map(r=>[String(r.program_id),r]));
+ for(const row of rows){
+  const p=payById.get(row.id);if(!p)continue;
+  row.payState=p.state==='CALCULATED'?'CALCULATED':'UNRESOLVED';
+  row.payReason=Array.isArray(p.reasons)&&p.reasons.length?String(p.reasons[0]):null;
+  row.halfDayUnits=p.half_day_units===null?null:Number(p.half_day_units);
+  row.salaryMinor=p.salary_minor;row.conveyanceMinor=p.conveyance_minor;row.totalMinor=p.total_minor;
+ }
  return {rows,source:scope==='ARCHIVE'?'archive':'historical',checkedAt:new Date().toISOString(),complete:true,availableTotal:rows.length,sourceLabel:scope==='ARCHIVE'?'Archive · pre-transition vessel records (read-only)':'Canonical WA-01 backfill · '+importSummary.updatedAt,notice:scope==='ARCHIVE'?'Archive view: pre-transition vessel records preserved by provenance. Archive records are never counted in Current totals and are read-only.':'Current view: canonical vessel records only. Pre-transition records are held in Archive Records for Vessel. Stored IDs/status retained; ambiguous evidence remains Review.'};
  }catch(error){if(error instanceof RegisterError)throw error;throw new RegisterError('The updated register could not be loaded. Retry; original records are preserved.');}
 }

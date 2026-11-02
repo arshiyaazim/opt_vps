@@ -9,11 +9,14 @@ import {Sheet,SheetContent,SheetDescription,SheetFooter,SheetHeader,SheetTitle} 
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow} from '@/components/ui/table';
 import {Checkbox} from '@/components/ui/checkbox';
 import {ActionButtonDisabled,LoadingLines,StatusBadge,Unavailable,useApi} from '@/app/platform/ui';
+import {payCells,type PayCell} from '@/lib/vessel-pay';
 
 type Program={
   id:string;motherVessel:string;lighterVessel:string;masterMobile?:string;destination?:string;
   escortName?:string;escortMobile?:string;startDate?:string;endDate?:string;shift?:string;
   status?:string;source?:string;notes?:string;details?:Record<string,unknown>;
+  payState?:'CALCULATED'|'UNRESOLVED'|null;payReason?:string|null;halfDayUnits?:number|null;
+  salaryMinor?:string|null;conveyanceMinor?:string|null;totalMinor?:string|null;
 };
 type ProgramDetail={available:boolean;program?:Program&{revision?:number};history?:{events?:HistoryEvent[]}};
 type HistoryEvent={action?:string;key?:string;at?:string;actor?:string;note?:string;reason?:string;employeeMobile?:string;endDate?:string;endShift?:string;releasePoint?:string;patch?:Record<string,unknown>};
@@ -21,6 +24,17 @@ type CommandResponse={ok?:boolean;error?:string;available?:boolean;programId?:st
 type SourceResponse={available:boolean;source?:{message_id:string;chat_jid:string;direction:string;sender_jid?:string;sender_phone?:string;source_time?:string;text_content?:string}|null;error?:string};
 
 const commandKey=()=>`ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
+
+// A resolved amount renders plainly. A missing one renders in a highlighted chip
+// whose tooltip explains why — and never shows the internal reason code.
+function PayValue({cell}:{cell:PayCell}){
+  if(!cell.note)return <span className="vr-pay">{cell.value}</span>;
+  return <span className="vr-pay-missing" data-tip={cell.note} tabIndex={0} aria-label={`${cell.value} — ${cell.note}`}>{cell.value}</span>;
+}
+function PayCells({program}:{program:Program}){
+  const c=payCells(program);
+  return <><TableCell className="vr-num"><PayValue cell={c.days}/></TableCell><TableCell className="vr-num"><PayValue cell={c.salary}/></TableCell><TableCell className="vr-num"><PayValue cell={c.conveyance}/></TableCell><TableCell className="vr-num"><PayValue cell={c.total}/></TableCell></>;
+}
 
 export default function VesselRegisterView(){
   const register=useApi<{rows:Program[];total:number}>('/api/register?export=1');
@@ -101,17 +115,18 @@ export default function VesselRegisterView(){
     {register.loading&&<LoadingLines/>}
     {register.data&&<div className="overflow-x-auto rounded-md border">
       <Table>
-        <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>Shift</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>Shift</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
         <TableBody>{rows.slice(0,200).map(program=><TableRow key={program.id}>
           <TableCell>{program.motherVessel}</TableCell>
           <TableCell>{program.lighterVessel}</TableCell>
           <TableCell>{program.escortName||'—'}</TableCell>
           <TableCell className="whitespace-nowrap">{program.startDate||'—'}</TableCell>
           <TableCell>{program.shift||'—'}</TableCell>
+          <PayCells program={program}/>
           <TableCell><StatusBadge status={program.status||'RECORDED'}/></TableCell>
           <TableCell><span className="flex gap-1"><Button size="sm" variant="ghost" onClick={()=>void openDetail(program)}>Details</Button></span></TableCell>
         </TableRow>)}
-        {!rows.length&&<TableRow><TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">No programs match.</TableCell></TableRow>}
+        {!rows.length&&<TableRow><TableCell colSpan={11} className="py-6 text-center text-sm text-muted-foreground">No programs match.</TableCell></TableRow>}
         </TableBody>
       </Table>
       <p className="p-2 text-[11px] text-muted-foreground">Read-only register retained · first {Math.min(200,rows.length)} rows · write commands require the approved command layer.</p>
