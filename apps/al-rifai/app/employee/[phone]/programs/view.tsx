@@ -7,6 +7,7 @@ import {
 } from '@/app/platform/ui';
 import {PayValue} from '@/app/platform/pay-value';
 import {payCells,payAmount,shiftStamp} from '@/lib/vessel-pay';
+import {DataToolbar,applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/data-toolbar';
 import {csv,saveCsv} from '@/lib/register';
 
 const PAGE_SIZE=20;
@@ -30,10 +31,21 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
   const rows=useMemo(()=>api.data?.rows??[],[api.data?.rows]);
   const [page,setPage]=useState(1);
 
-  // Newest first, with a stable tiebreak — the API already sorts this way, but the
-  // page must not depend on that for its own determinism.
-  const sorted=useMemo(()=>[...rows].sort((a,b)=>
-    (b.startDate??'').localeCompare(a.startDate??'')||a.id.localeCompare(b.id)),[rows]);
+  const [filters,setFilters]=useState<ToolbarFilters>(defaultFilters('start_desc'));
+  const decorated=useMemo(()=>rows.map(r=>({...r,statusLabel:r.status||'Recorded'})),[rows]);
+  const filtered=useMemo(()=>applyFilters(decorated,filters,
+    {searchFields:['motherVessel','lighterVessel','escortName','escortMobile','masterMobile','destination'],dateField:'startDate'},
+  ),[decorated,filters]);
+  const sorted=useMemo(()=>sortRows(filtered,filters.sort),[filtered,filters.sort]);
+  const statusOptions=useMemo(()=>[...new Set(decorated.map(r=>String(r.statusLabel)))].sort(),[decorated]);
+  const facets=useMemo<FacetDef[]>(()=>[{key:'statusLabel',label:'Status',values:statusOptions}],[statusOptions]);
+  const sorts=useMemo<SortDef[]>(()=>[
+    {key:'start_desc',label:'Start date (newest first)'},
+    {key:'start_asc',label:'Start date (oldest first)'},
+    {key:'mother_asc',label:'Mother vessel A-Z'},
+    {key:'escort_asc',label:'Escort name A-Z'},
+    {key:'total_desc',label:'Total pay (highest first)'},
+  ],[]);
 
   const totals=useMemo(()=>{
     let units=0,salary=0,conveyance=0,total=0;
@@ -105,6 +117,14 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
           actions={<span className="text-xs text-muted-foreground">{fmtInt.format(sorted.length)} rows</span>}
           flush
         >
+          <DataToolbar
+            filters={filters}
+            onChange={setFilters}
+            facets={facets}
+            sorts={sorts}
+            urlKeys
+            resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
+          />
           <div className="grid gap-3 border-b px-4 py-3 sm:grid-cols-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Escort</p>
