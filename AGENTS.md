@@ -976,6 +976,27 @@ These rules are not negotiable. If an incident seems to require breaking one, st
     (`mode=DB`, `cycles_completed=60`, `diffs_found=0`), and the
     `ALRIFAI_ROSTER_*` values are still changed only by explicit Owner direction.
 
+21. **A roster change is not complete until the D2 bridge-profile cycle is
+    done.** Any change to `escort_roster`, `escort_roster_channel` or
+    `escort_roster_epoch` — adding or removing a person, adding or removing a
+    channel, or changing a domain — MUST be followed by the full D2 cycle:
+    1. regenerate the profile (`scripts/generate-bridge-profile.ts`);
+    2. drift-check it (`scripts/check-profile-drift.ts`);
+    3. obtain Owner authorization of that exact diff;
+    4. deploy the profile to the WA-01 control dir (`root:whatsapp-wa-01`,
+       `0440`, backed up first);
+    5. restart WA-01 **once** with `docker restart` — never
+       `systemctl restart docker`, and never WA-02, PostgreSQL or the app.
+    The order matters in one specific way: the renderer derives `chats` from
+    `escort_roster_channel`, so the roster rows must exist **before**
+    regeneration, and the bridge must be restarted **after** the deploy. A
+    roster edit without this cycle leaves the bridge unable to read the new
+    chats — the symptom is per-chat `NATIVE_READER_UNAVAILABLE`, a
+    `15 s → 60 s` ingestion backoff, and two error lines per cycle. That
+    happened on 2026-11-02 and is recorded in `docs/NEXT-HANDOFF.md`. Note also
+    that a correctly-detected functional change makes the drift checker exit
+    **1**; that is success, not an error.
+
 ## 14. Work items and recent history (updated 2026-11-02)
 
 ### 14.1 Item tracking
