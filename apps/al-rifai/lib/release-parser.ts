@@ -17,6 +17,8 @@ export type RosterProgram = {
   escortPhone: string | null;
   escortName: string | null;
   startDate: string; // YYYY-MM-DD
+  /** Released on, when already known. Empty/absent means the duty is open. */
+  endDate?: string | null;
 };
 
 export type Payment = {
@@ -271,4 +273,108 @@ export function matchRelease(payment: Payment, roster: readonly RosterProgram[])
     nearestStartDate: nearest?.startDate ?? null,
     startDeltaDays: nearest ? daysBetween(nearest.startDate, payment.calcStart) : null,
   };
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Three-pass assignment (§ pass 2/3 fix).
+//
+// Pass 1 is the authoritative signal: a payment back-calculates onto a program's
+// start date within ±2. Passes 2 and 3 exist only because a duty can produce
+// several payments — a partial settlement, or food plus conveyance on different
+// days — and those must attach to the duty they belong to instead of being read
+// as separate duties.
+//
+// Pass 3 never overrides Pass 1, and never guesses between overlapping windows.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type Assignment = Payment & {
+  status: MatchStatus;
+  programId: string | null;
+  matchPass: 1 | 2 | 3 | null;
+  note: string | null;
+  nearestProgramId: string | null;
+  nearestStartDate: string | null;
+  startDeltaDays: number | null;
+};
+
+function windowsFor(programs: readonly RosterProgram[]): Array<{ id: string; from: string; to: string }> {
+  const sorted = [...programs].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  return sorted.map((p, i) => {
+    const next = sorted[i + 1];
+    let to: string;
+    if (p.endDate && /^\d{4}-\d{2}-\d{2}$/.test(p.endDate)) {
+      to = p.endDate;                                    // already released
+    } else if (next) {
+      to = addDays(next.startDate, -1);                  // up to the next duty
+    } else {
+      to = addDays(p.startDate, 60);                     // open duty, bounded
+    }
+    return { id: p.id, from: p.startDate, to };
+  });
+}
+
+export function assignReleases(
+  payments: readonly Payment[],
+  roster: readonly RosterProgram[],
+): Assignment[] {
+  const results: Assignment[] = payments.map((payment) => {
+    const m = matchRelease(payment, roster);
+    return {
+      ...payment,
+      status: m.status,
+      programId: m.programId,
+      matchPass: m.status === 'MATCHED' ? 1 : null,
+      note: m.status === 'MATCHED' ? null : null,
+      nearestProgramId: m.nearestProgramId,
+      nearestStartDate: m.nearestStartDate,
+      startDeltaDays: m.startDeltaDays,
+    };
+  });
+
+  // Pass 2 — same-day partial payment for an escort that already matched today.
+  const primary = new Map<string, { programId: string; amount: number | null }>();
+  for (const a of results) {
+    if (a.status === 'MATCHED' && a.matchPass === 1 && a.programId) {
+      primary.set(`${a.escortPhone}|${a.endDate}`, { programId: a.programId, amount: a.amountBdt });
+    }
+  }
+  for (const a of results) {
+    if (a.status === 'MATCHED') continue;
+    const hit = primary.get(`${a.escortPhone}|${a.endDate}`);
+    if (!hit) continue;
+    a.status = 'MATCHED';
+    a.programId = hit.programId;
+    a.matchPass = 2;
+    a.note = `partial payment, same day as primary ৳${hit.amount ?? '?'}`;
+  }
+
+  // Pass 3 — duty-window attribution for anything still unplaced.
+  const byPhone = new Map<string, RosterProgram[]>();
+  for (const p of roster) {
+    const key = normalisePhone(p.escortPhone);
+    if (!key) continue;
+    const list = byPhone.get(key) ?? [];
+    list.push(p);
+    byPhone.set(key, list);
+  }
+  for (const a of results) {
+    if (a.status === 'MATCHED') continue;
+    const programs = byPhone.get(normalisePhone(a.escortPhone) ?? '');
+    if (!programs?.length) continue;
+    const containing = windowsFor(programs).filter((w) => a.endDate >= w.from && a.endDate <= w.to);
+    if (containing.length === 1) {
+      a.status = 'MATCHED';
+      a.programId = containing[0].id;
+      a.matchPass = 3;
+      a.note = `window attribution, calc_start ${a.calcStart ?? '—'} outside ±${START_TOLERANCE_DAYS}`;
+    } else if (containing.length > 1) {
+      a.status = 'PENDING_REVIEW';
+      a.programId = null;
+      a.matchPass = null;
+      a.note = `overlapping duty windows (${containing.length})`;
+    }
+  }
+
+  return results;
 }
