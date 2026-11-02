@@ -8,7 +8,7 @@ import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/compo
 import {Sheet,SheetContent,SheetDescription,SheetFooter,SheetHeader,SheetTitle} from '@/components/ui/sheet';
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow} from '@/components/ui/table';
 import {Checkbox} from '@/components/ui/checkbox';
-import {ActionButtonDisabled,LoadingLines,StatusBadge,Unavailable,useApi} from '@/app/platform/ui';
+import {ActionButtonDisabled,LoadingLines,Unavailable,useApi} from '@/app/platform/ui';
 import {payCells,shiftStamp} from '@/lib/vessel-pay';
 import {PayValue} from '@/app/platform/pay-value';
 import {useRouter} from 'next/navigation';
@@ -20,6 +20,7 @@ type Program={
   status?:string;source?:string;notes?:string;details?:Record<string,unknown>;
   employeeId?:string|null;
   endShift?:string|null;
+  revision?:number;
   payState?:'CALCULATED'|'UNRESOLVED'|null;payReason?:string|null;halfDayUnits?:number|null;
   salaryMinor?:string|null;conveyanceMinor?:string|null;totalMinor?:string|null;
 };
@@ -32,7 +33,9 @@ const commandKey=()=>`ui-${Date.now().toString(36)}-${Math.random().toString(36)
 
 function PayCells({program}:{program:Program}){
   const c=payCells(program);
-  return <><TableCell className="vr-num"><PayValue cell={c.days}/></TableCell><TableCell className="vr-num"><PayValue cell={c.salary}/></TableCell><TableCell className="vr-num"><PayValue cell={c.conveyance}/></TableCell><TableCell className="vr-num"><PayValue cell={c.total}/></TableCell></>;
+  // F12: money columns are plain text — no chip, no border. The explanation stays
+  // available as a native tooltip.
+  return <><TableCell className="vr-num"><PayValue cell={c.days} plain/></TableCell><TableCell className="vr-num"><PayValue cell={c.salary} plain/></TableCell><TableCell className="vr-num"><PayValue cell={c.conveyance} plain/></TableCell><TableCell className="vr-num"><PayValue cell={c.total} plain/></TableCell></>;
 }
 
 export default function VesselRegisterView(){
@@ -47,6 +50,11 @@ export default function VesselRegisterView(){
   const [drawer,setDrawer]=useState<'add'|'edit'|'release'|'assign'|'void'|null>(null);
   const router=useRouter();
   const [cancelTarget,setCancelTarget]=useState<Program|null>(null);
+  const [fleeTarget,setFleeTarget]=useState<Program|null>(null);
+  const [fleeReason,setFleeReason]=useState('');
+  // Local echo of the status just written, so the row updates without refetching
+  // the whole register. The database remains the source of truth.
+  const [statusPatch,setStatusPatch]=useState<Record<string,string>>({});
   const [editing,setEditing]=useState(false);
   const [editForm,setEditForm]=useState<Record<string,string>>({});
   const [form,setForm]=useState<Record<string,string>>({});
@@ -105,13 +113,56 @@ export default function VesselRegisterView(){
   const rowStatus=(p:Program)=>(p.status??'').trim().toLowerCase();
   const rowEditable=(p:Program)=>['confirmed','draft'].includes(rowStatus(p));
   const rowCancellable=(p:Program)=>rowStatus(p)==='confirmed';
+
+  // F13: display-only label mapping. The database values are never renamed.
+  //   Confirmed -> Running (or Released once an end date exists)
+  //   Voided    -> Cancel
+  //   fled      -> Fleed A
+  //   escort_changed -> E. Chng
+  // "Released" is a state derived from the release window, not a stored status:
+  // the release command sets endDate and leaves status Confirmed.
+  const statusLabel=(p:Program):string=>{
+    const st=(statusPatch[p.id]??p.status??'').trim().toLowerCase();
+    if(st==='voided')return 'Cancel';
+    if(st==='fled')return 'Fleed A';
+    if(st==='escort_changed')return 'E. Chng';
+    if(st==='draft')return 'Draft';
+    if(st==='confirmed')return p.endDate?'Released':'Running';
+    return p.status||'—';
+  };
+  const changeStatus=async(p:Program,next:string)=>{
+    if(next===statusLabel(p))return;
+    if(next==='Running')return;                      // already active
+    if(next==='Released'){await openRowDrawer(p,'release');return;}
+    if(next==='Cancel'){setCancelTarget(p);return;}
+    if(next==='E. Chng'){await openRowDrawer(p,'assign');return;}
+    if(next==='Fleed A'){setFleeTarget(p);setFleeReason('');return;}
+  };
+  const sendFled=async()=>{
+    const target=fleeTarget;
+    if(!target)return;
+    if(fleeReason.trim().length<3){setError('Enter a reason (at least 3 characters).');return;}
+    setBusy(true);setError('');setNotice('');
+    try{
+      const response=await fetch('/api/vessel-programs',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'fled',programId:target.id,expectedRevision:Number(target.revision??0),reason:fleeReason.trim(),commandKey:commandKey()})});
+      const data=await response.json() as CommandResponse;
+      if(response.status===503){setAvailable(false);throw new Error('Command layer is prepared but not applied.');}
+      if(!response.ok)throw new Error(data.error??'Command failed');
+      setStatusPatch(prev=>({...prev,[target.id]:'fled'}));
+      setNotice('Program marked Fleed A. The reason is recorded in the append-only audit history.');
+      setFleeTarget(null);setFleeReason('');
+      if(detail?.program.id===target.id)await openDetail(target);
+    }catch(cause){setError(cause instanceof Error?cause.message:'Command failed');}
+    finally{setBusy(false);}
+  };
   // `??` would not fall through an empty string, and the 5 archive-epoch rows
   // carry an empty escortMobile. Trim, then fall back to employeeId.
   const rowMobile=(p:Program)=>((p.escortMobile??'').trim()||(p.employeeId??'').trim());
   const programsHref=(p:Program)=>`/employee/${encodeURIComponent(rowMobile(p))}/programs`;
   // Edit and Cancel need the current revision, which only the detail fetch carries,
   // so both go through openDetail() first rather than issuing a blind command.
-  const openRowDrawer=async(p:Program,next:'edit'|'void')=>{await openDetail(p);setDrawer(next);};
+  const openRowDrawer=async(p:Program,next:'edit'|'void'|'release'|'assign')=>{await openDetail(p);setDrawer(next);};
 
   const EDITABLE=['motherVessel','lighterVessel','masterMobile','destination','escortName','escortMobile','startDate','shift','notes'] as const;
   const startEdit=()=>{
@@ -167,13 +218,31 @@ export default function VesselRegisterView(){
       <Table>
         <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Open</span></TableHead></TableRow></TableHeader>
         <TableBody>{rows.slice(0,200).map(program=><TableRow key={program.id}>
-          <TableCell>{program.motherVessel}</TableCell>
-          <TableCell>{program.lighterVessel}</TableCell>
-          <TableCell>{program.escortName||'—'}</TableCell>
+          <TableCell className="w-[104px] max-w-[104px] truncate" title={program.motherVessel||undefined}>{program.motherVessel||'—'}</TableCell>
+          <TableCell className="w-[104px] max-w-[104px]">
+            <span className="block truncate" title={program.lighterVessel||undefined}>{program.lighterVessel||'—'}</span>
+            <span className="block truncate text-[11px] text-muted-foreground" title={program.masterMobile||undefined}>{program.masterMobile||'—'}</span>
+          </TableCell>
+          <TableCell className="w-[118px] max-w-[118px]">
+            <span className="block truncate" title={program.escortName||undefined}>{program.escortName||'—'}</span>
+            <span className="block truncate text-[11px] text-muted-foreground" title={program.escortMobile||undefined}>{program.escortMobile||'—'}</span>
+          </TableCell>
           <TableCell className="whitespace-nowrap">{shiftStamp(program.startDate,program.shift)}</TableCell>
           <TableCell className="whitespace-nowrap">{shiftStamp(program.endDate,program.endShift)}</TableCell>
           <PayCells program={program}/>
-          <TableCell><StatusBadge status={program.status||'RECORDED'}/></TableCell>
+          <TableCell className="w-[132px]">
+            <Select
+              value={statusLabel(program)}
+              onValueChange={v=>void changeStatus(program,v)}
+              disabled={!canWrite||((statusPatch[program.id]??program.status??'').toLowerCase()!=='confirmed')}
+            >
+              <SelectTrigger className="h-8 w-[120px]" aria-label={`Status for ${program.lighterVessel||program.id.slice(0,12)}`}><SelectValue/></SelectTrigger>
+              <SelectContent>
+                {['Running','Released','Cancel','E. Chng','Fleed A'].map(option=>
+                  <SelectItem key={option} value={option}>{option}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </TableCell>
           <TableCell>
             <Button size="icon-sm" variant="ghost" aria-label={`Open ${program.motherVessel||'program'} ${program.lighterVessel||''}`} onClick={()=>void openDetail(program)}>⋮</Button>
           </TableCell>
@@ -183,6 +252,27 @@ export default function VesselRegisterView(){
       </Table>
       <p className="p-2 text-[11px] text-muted-foreground">Read-only register retained · first {Math.min(200,rows.length)} rows · write commands require the approved command layer.</p>
     </div>}
+
+    <AlertDialog open={!!fleeTarget} onOpenChange={open=>{if(!open){setFleeTarget(null);setFleeReason('');}}}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Mark this program as Fleed A?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {fleeTarget?`${fleeTarget.motherVessel||'Unknown mother vessel'} / ${fleeTarget.lighterVessel||'unknown lighter'}`:'This program'} will be recorded as <strong>fled</strong> — the escort left the vessel without a release. Nothing is deleted; the reason is appended to the audit history. A reason is required.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="px-1 py-2">
+          <label className="grid gap-1">
+            <span className="text-[11px] font-medium text-muted-foreground">Reason</span>
+            <Input value={fleeReason} onChange={e=>setFleeReason(e.target.value)} placeholder="Why the escort fled"/>
+          </label>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction disabled={busy||fleeReason.trim().length<3} onClick={()=>void sendFled()}>Mark Fleed A</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     <AlertDialog open={!!cancelTarget} onOpenChange={open=>{if(!open)setCancelTarget(null);}}>
       <AlertDialogContent>

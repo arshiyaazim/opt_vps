@@ -75,8 +75,16 @@ export const voidProgramSchema = z.object({
   reason: z.string().trim().min(3).max(500),
 }).strict();
 
+export const fledProgramSchema = z.object({
+  action: z.literal('fled'),
+  programId,
+  expectedRevision,
+  commandKey,
+  reason: z.string().trim().min(3).max(500),
+}).strict();
+
 export const commandSchema = z.discriminatedUnion('action', [
-  addProgramSchema, editProgramSchema, releaseProgramSchema, assignEscortSchema, voidProgramSchema,
+  addProgramSchema, editProgramSchema, releaseProgramSchema, assignEscortSchema, voidProgramSchema, fledProgramSchema,
 ]);
 
 export type VesselCommand = z.infer<typeof commandSchema>;

@@ -128,6 +128,12 @@ export async function POST(request: NextRequest) {
             command.expectedRevision, command.commandKey, command.replace ?? false, command.note ?? '']);
         return reply({ok: true, programId: command.programId, ...result.rows[0]?.result});
       }
+      case 'fled': {
+        const result = await pool.query<{result: Row}>(
+          'SELECT public.alrifai_vessel_program_fled($1,$2,$3,$4,$5) AS result',
+          [command.programId, actor, command.reason, command.expectedRevision, command.commandKey]);
+        return reply({ok: true, programId: command.programId, ...result.rows[0]?.result});
+      }
       case 'void': {
         const result = await pool.query<{result: Row}>(
           'SELECT public.alrifai_vessel_program_void($1,$2,$3,$4,$5) AS result',
