@@ -9,12 +9,17 @@ import {Sheet,SheetContent,SheetDescription,SheetFooter,SheetHeader,SheetTitle} 
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow} from '@/components/ui/table';
 import {Checkbox} from '@/components/ui/checkbox';
 import {ActionButtonDisabled,LoadingLines,StatusBadge,Unavailable,useApi} from '@/app/platform/ui';
-import {payCells,type PayCell} from '@/lib/vessel-pay';
+import {payCells} from '@/lib/vessel-pay';
+import {PayValue} from '@/app/platform/pay-value';
+import {useRouter} from 'next/navigation';
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator,DropdownMenuTrigger} from '@/components/ui/dropdown-menu';
+import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle} from '@/components/ui/alert-dialog';
 
 type Program={
   id:string;motherVessel:string;lighterVessel:string;masterMobile?:string;destination?:string;
   escortName?:string;escortMobile?:string;startDate?:string;endDate?:string;shift?:string;
   status?:string;source?:string;notes?:string;details?:Record<string,unknown>;
+  employeeId?:string|null;
   payState?:'CALCULATED'|'UNRESOLVED'|null;payReason?:string|null;halfDayUnits?:number|null;
   salaryMinor?:string|null;conveyanceMinor?:string|null;totalMinor?:string|null;
 };
@@ -25,12 +30,6 @@ type SourceResponse={available:boolean;source?:{message_id:string;chat_jid:strin
 
 const commandKey=()=>`ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
 
-// A resolved amount renders plainly. A missing one renders in a highlighted chip
-// whose tooltip explains why — and never shows the internal reason code.
-function PayValue({cell}:{cell:PayCell}){
-  if(!cell.note)return <span className="vr-pay">{cell.value}</span>;
-  return <span className="vr-pay-missing" data-tip={cell.note} tabIndex={0} aria-label={`${cell.value} — ${cell.note}`}>{cell.value}</span>;
-}
 function PayCells({program}:{program:Program}){
   const c=payCells(program);
   return <><TableCell className="vr-num"><PayValue cell={c.days}/></TableCell><TableCell className="vr-num"><PayValue cell={c.salary}/></TableCell><TableCell className="vr-num"><PayValue cell={c.conveyance}/></TableCell><TableCell className="vr-num"><PayValue cell={c.total}/></TableCell></>;
@@ -46,6 +45,8 @@ export default function VesselRegisterView(){
   const [notice,setNotice]=useState('');
   const [available,setAvailable]=useState<boolean|null>(null);
   const [drawer,setDrawer]=useState<'add'|'edit'|'release'|'assign'|'void'|null>(null);
+  const router=useRouter();
+  const [cancelTarget,setCancelTarget]=useState<Program|null>(null);
   const [form,setForm]=useState<Record<string,string>>({});
   const [replace,setReplace]=useState(false);
 
@@ -96,6 +97,16 @@ export default function VesselRegisterView(){
   };
 
   const canWrite=available===true;
+  // Row-level availability, per Owner decision 2026-11-02:
+  //   View/History  any status; Edit: Confirmed + Draft; Cancel: Confirmed only.
+  // Voided programs are terminal — void() itself rejects a second void.
+  const rowStatus=(p:Program)=>(p.status??'').trim().toLowerCase();
+  const rowEditable=(p:Program)=>['confirmed','draft'].includes(rowStatus(p));
+  const rowCancellable=(p:Program)=>rowStatus(p)==='confirmed';
+  const programsHref=(p:Program)=>`/employee/${encodeURIComponent(p.escortMobile??p.employeeId??'')}/programs`;
+  // Edit and Cancel need the current revision, which only the detail fetch carries,
+  // so both go through openDetail() first rather than issuing a blind command.
+  const openRowDrawer=async(p:Program,next:'edit'|'void')=>{await openDetail(p);setDrawer(next);};
 
   return <div className="flex flex-col gap-3">
     {register.error&&<Unavailable title="Register unavailable" reason={register.error}/>}
@@ -124,13 +135,44 @@ export default function VesselRegisterView(){
           <TableCell>{program.shift||'—'}</TableCell>
           <PayCells program={program}/>
           <TableCell><StatusBadge status={program.status||'RECORDED'}/></TableCell>
-          <TableCell><span className="flex gap-1"><Button size="sm" variant="ghost" onClick={()=>void openDetail(program)}>Details</Button></span></TableCell>
+          <TableCell>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="ghost" aria-label={`Actions for ${program.motherVessel||'program'} ${program.lighterVessel||''}`}>Actions</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="truncate">{program.lighterVessel||program.id.slice(0,12)}</DropdownMenuLabel>
+                <DropdownMenuSeparator/>
+                <DropdownMenuItem onSelect={()=>void openDetail(program)}>View</DropdownMenuItem>
+                <DropdownMenuItem disabled={!canWrite||!rowEditable(program)} onSelect={()=>void openRowDrawer(program,'edit')}>Edit…</DropdownMenuItem>
+                <DropdownMenuSeparator/>
+                <DropdownMenuItem variant="destructive" disabled={!canWrite||!rowCancellable(program)} onSelect={()=>setCancelTarget(program)}>Cancel program…</DropdownMenuItem>
+                <DropdownMenuSeparator/>
+                <DropdownMenuItem onSelect={()=>router.push(programsHref(program))}>History</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
         </TableRow>)}
         {!rows.length&&<TableRow><TableCell colSpan={11} className="py-6 text-center text-sm text-muted-foreground">No programs match.</TableCell></TableRow>}
         </TableBody>
       </Table>
       <p className="p-2 text-[11px] text-muted-foreground">Read-only register retained · first {Math.min(200,rows.length)} rows · write commands require the approved command layer.</p>
     </div>}
+
+    <AlertDialog open={!!cancelTarget} onOpenChange={open=>{if(!open)setCancelTarget(null);}}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel this program?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {cancelTarget?`${cancelTarget.motherVessel||'Unknown mother vessel'} / ${cancelTarget.lighterVessel||'unknown lighter'}`:'This program'} will be marked <strong>Voided</strong>. Nothing is deleted: the row is retained and the change is appended to the audit history. A reason is required in the next step.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep program</AlertDialogCancel>
+          <AlertDialogAction onClick={()=>{const target=cancelTarget;setCancelTarget(null);if(target)void openRowDrawer(target,'void');}}>Continue</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     <Sheet open={!!detail} onOpenChange={open=>{if(!open){setDetail(null);setSource(null);}}}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
