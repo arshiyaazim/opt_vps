@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import {useMemo,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -173,7 +174,19 @@ export default function TransactionsView(){
                     <td data-label="Status">
                       {r.issues?.length?<StatusPill status="REVIEW" label="Review"/>:<StatusPill status={r.identityVerified===true?'CONFIRMED':'UNVERIFIED'} label={r.identityVerified===true?'Identity verified':'Unverified'}/>}
                     </td>
-                    <td data-label="Detail"><Button size="sm" variant="ghost" onClick={()=>setDetail(r)}>View</Button></td>
+                    <td data-label="Detail">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="ghost" onClick={()=>setDetail(r)}>View</Button>
+                        {r.employeePhone&&(
+                          <Button asChild size="sm" variant="ghost">
+                            <Link
+                              href={`/transactions/employee/${encodeURIComponent(r.employeePhone)}`}
+                              aria-label={`Show all transactions for ${r.name||r.employeePhone}`}
+                            >Show All</Link>
+                          </Button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
