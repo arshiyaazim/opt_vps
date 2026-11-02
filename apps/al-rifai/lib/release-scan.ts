@@ -130,3 +130,70 @@ export function messageTriggersParse(body: string | null | undefined, mediaType?
   if ((mediaType ?? '').toLowerCase() === 'image') return true;
   return /release|conv|conveyance|খালাস/i.test(text);
 }
+
+/**
+ * Auto-apply high-confidence releases from the ingestion hook (R2 Action 4).
+ *
+ * Safety rails, all enforced here rather than trusted to the caller:
+ *   - confidence 'high' only (Step D lump sums are medium and always reviewed)
+ *   - match_pass 1 or 2 only (Step D leaves match_pass NULL)
+ *   - program status is 'confirmed'
+ *   - program has no endDate yet, so an already-released duty is never rewritten
+ * Any failure is collected and returned; it never throws into the worker.
+ */
+export async function autoApplyHigh(
+  client: Queryable,
+  command: {query(sql: string, values?: unknown[]): Promise<{rows: unknown[]}>},
+  actor: string,
+): Promise<{applied: number; skipped: number; failed: number}> {
+  let applied = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  const {rows} = await client.query(
+    `SELECT rc.id::text AS id, rc.program_id, rc.end_date::text AS end_date, rc.end_shift,
+            rc.source_msg_id, p.revision
+       FROM public.release_candidates rc
+       JOIN public.programs p ON p.id = rc.program_id
+      WHERE rc.applied = false
+        AND rc.match_status = 'MATCHED'
+        AND rc.confidence = 'high'
+        AND rc.match_pass IN (1, 2)
+        AND rc.program_id IS NOT NULL
+        AND rc.end_shift IS NOT NULL
+        AND lower(btrim(p.status)) = 'confirmed'
+        AND btrim(coalesce(p."endDate", '')) = ''
+      ORDER BY rc.end_date, rc.id`,
+  ) as {rows: Array<{id: string; program_id: string; end_date: string; end_shift: string; source_msg_id: string | null; revision: number}>};
+
+  for (const row of rows) {
+    try {
+      await command.query(
+        'SELECT public.alrifai_vessel_program_release($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
+        [row.program_id, row.end_date, row.end_shift, '', actor, row.revision,
+          `auto-release-${row.id}`, JSON.stringify({source: 'ingestion-auto-apply', candidateId: row.id})],
+      );
+      await command.query('SELECT public.recalculate_program_pay($1)', [row.program_id]);
+      await client.query(
+        `UPDATE public.release_candidates
+            SET applied = true, match_status = 'APPLIED', reviewed_by = 'auto-apply', reviewed_at = now()
+          WHERE id = $1::bigint`, [row.id],
+      );
+      await client.query(
+        `INSERT INTO public.release_auto_apply_log (candidate_id, program_id, trigger_message_id, end_date, end_shift)
+         VALUES ($1::bigint,$2,$3,$4::date,$5)`,
+        [row.id, row.program_id, row.source_msg_id, row.end_date, row.end_shift],
+      );
+      applied += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  const remaining = await client.query(
+    `SELECT count(*)::text AS n FROM public.release_candidates
+      WHERE applied = false AND match_status = 'MATCHED' AND confidence = 'high'`,
+  ) as {rows: Array<{n: string}>};
+  skipped = Number(remaining.rows[0]?.n ?? 0);
+  return {applied, skipped, failed};
+}
