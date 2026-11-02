@@ -8,6 +8,7 @@ import {OWNER_ESCORT_CLIENTS} from "../lib/escort-register.mjs";
 import {loadConversationScopeWithShadow,type ConversationScope} from "../lib/conversation-scope.ts";
 import {NativeLiveReader,advanceNativeCursor,ensureNativeCursor,recordNativeError} from "../lib/native-live-reader.ts";
 import {ingestNativePage} from "../lib/native-ingest.ts";
+import {scanReleaseGroup,persistRows,RELEASE_GROUP_JID} from "../lib/release-scan.ts";
 import type {ArchivePool,CompatibilityMessage} from "../lib/whatsapp-archive.ts";
 
 type JsonObject=Record<string,unknown>;
@@ -272,6 +273,20 @@ async function runNativeChat(
   for(let pageNumber=0;pageNumber<MAX_PAGES_PER_CHAT_PER_CYCLE;pageNumber++){
     const page=await reader.page("wa-01",chatJid,cursor);
     await ingestNativePage(pool as unknown as Parameters<typeof ingestNativePage>[0],scope,"wa-01",page);
+    // Release parser hook (§Step 5). Only the Escort Release Slip group, only when
+    // something new arrived, and never allowed to disturb ingestion: a parser
+    // failure is logged and swallowed. Candidates are queued for admin review and
+    // are never auto-applied.
+    if(chatJid===RELEASE_GROUP_JID&&page.records.length){
+      try{
+        const db={query:(sql:string,values?:unknown[])=>pool.query(sql,values) as Promise<{rows:Array<Record<string,unknown>>}>};
+        const scan=await scanReleaseGroup(db);
+        const inserted=await persistRows(db,scan.rows);
+        if(inserted)console.error(`Release parser: ${inserted} new candidates from ${scan.messages} messages`);
+      }catch(error){
+        console.error(`Release parser hook failed; ingestion unaffected (${safeError(error)}).`);
+      }
+    }
     cursor=page.nextCursor;
     await advanceNativeCursor(db,"wa-01",chatJid,page);
     if(page.complete||!page.records.length)break;
