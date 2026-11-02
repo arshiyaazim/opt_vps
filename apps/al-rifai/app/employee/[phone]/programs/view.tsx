@@ -7,7 +7,8 @@ import {
 } from '@/app/platform/ui';
 import {PayValue} from '@/app/platform/pay-value';
 import {payCells,payAmount,shiftStamp} from '@/lib/vessel-pay';
-import {DataToolbar,applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/data-toolbar';
+import {DataToolbar} from '@/app/platform/data-toolbar';
+import {applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/toolbar-logic';
 import {csv,saveCsv} from '@/lib/register';
 
 const PAGE_SIZE=20;
@@ -122,8 +123,7 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
             onChange={setFilters}
             facets={facets}
             sorts={sorts}
-            urlKeys
-            resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
+                resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
           />
           <div className="grid gap-3 border-b px-4 py-3 sm:grid-cols-4">
             <div>

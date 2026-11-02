@@ -11,7 +11,8 @@ import {Checkbox} from '@/components/ui/checkbox';
 import {ActionButtonDisabled,LoadingLines,Unavailable,useApi} from '@/app/platform/ui';
 import {payCells,shiftStamp} from '@/lib/vessel-pay';
 import {PayValue} from '@/app/platform/pay-value';
-import {DataToolbar,applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/data-toolbar';
+import {DataToolbar} from '@/app/platform/data-toolbar';
+import {applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/toolbar-logic';
 import {useRouter} from 'next/navigation';
 import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle} from '@/components/ui/alert-dialog';
 
@@ -245,7 +246,6 @@ export default function VesselRegisterView(){
         onChange={setFilters}
         facets={facets}
         sorts={sorts}
-        urlKeys
         resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
       />
     </div>
