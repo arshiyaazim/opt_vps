@@ -960,7 +960,7 @@ These rules are not negotiable. If an incident seems to require breaking one, st
     (`mode=DB`, `cycles_completed=60`, `diffs_found=0`), and the
     `ALRIFAI_ROSTER_*` values are still changed only by explicit Owner direction.
 
-## 14. Work items and recent history (2026-10-31)
+## 14. Work items and recent history (updated 2026-11-02)
 
 ### 14.1 Item tracking
 
@@ -974,9 +974,9 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 | **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **DEPLOYED** ✅ commit `c98e57e`, pin `8bc7017`, image `20261101-b3-typeahead` (`sha256:61ccaf56…`) |
 | **B4** | `/cash` page Total + Show All | PENDING |
 | **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
-| **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | PENDING — gated on SHADOW promotion confirmation |
+| **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | **DONE 2026-11-02** ✅ promotion fired `03:50:59Z` (`roster_shadow.mode="DB"`, 60 cycles, 0 diffs); `app.env` set to `DB`, app recreated on the same pinned image `sha256:381fd22f…` (no rebuild); verified `roster_mode="DB"`, 0 `ROSTER_SHADOW*` lines, 9/9 cursors. Backups `pre-d1-cutover-20261102-0415.dump` + `app.env.pre-d1-cutover-20261102.bak` |
 | **D2** | Bridge profile generator | CODE COMPLETE, not deployed (`scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`) |
-| **E** | Wire `/review` to the roster outbox, decommission legacy paths | PENDING — after D1 |
+| **E** | Wire `/review` to the roster outbox, decommission legacy paths | PENDING — D1 is complete, so this is now the next large work item (see `docs/NEXT-HANDOFF.md`) |
 | **AI/Ollama** | Assistant / model integration | DEFERRED |
 
 Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
@@ -985,6 +985,9 @@ Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
 ### 14.2 Recent commits (newest first)
 
 ```
+fa5ba16 docs: D1 part 2 — roster source cutover to DB
+a8fbf3a docs: D1 part 1 — promotion confirmed; LID channels attempted and reverted
+7bfc2ab docs: record shadow recheck fix, LID findings, and audit results
 836e8b1 deploy: pin app image to 20261101-shadow-recheck
 6b457a6 fix: shadow recheck every 10m and use canonical personRef
 8bc7017 deploy: pin app image to 20261101-b3-typeahead

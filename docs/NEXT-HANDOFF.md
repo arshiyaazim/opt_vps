@@ -1,4 +1,4 @@
-# Next Handoff — 2026-10-31
+# Next Handoff — 2026-11-02
 
 > **Scope note.** This file is a short, current-state handoff created after the
 > Item A and Item B1 deploys. The long-form historical record remains
@@ -33,6 +33,20 @@
 - `sha256:1d4602c3…` — tag `rollback-app-phase2`
 
 ## Completed This Session
+
+- **Phase C SHADOW — promoted; Phase D1 cutover — done (2026-11-02)**
+  Auto-promotion fired on its own 10-minute tick at `03:50:59Z` (due
+  `03:47:18Z`, no restart or manual step) after 60 cycles with `diffs_found=0`:
+  `roster_shadow.mode` `SHADOW → DB`. Phase D1 then set
+  `ALRIFAI_ROSTER_SOURCE=DB` in `app.env` (single key; file stayed
+  `600 root:root`) and recreated the app with
+  `docker compose up -d --no-deps app` on the **same pinned image**
+  `sha256:381fd22f…` — no rebuild. Verified: `roster_mode="DB"`,
+  `roster_shadow.mode="DB"`, zero `ROSTER_SHADOW*` lines, `Approved scope
+  loaded: 9 chat addresses across 7 conversations`, 9/9 cursors with 0 errors,
+  bridges and PostgreSQL untouched. Part 1 (LID channels) was attempted and then
+  reverted as bridge-blocked — see "Phase D1 Part 1" below. This is the first
+  change session in which the roster tables are the only ingestion scope.
 
 - **Item A — Typeahead search on `/transactions`**
   Unified search + employee picker: one field both filters the table across all
@@ -239,6 +253,11 @@ in the same session once a blocker was proven.
   history would create duplicates rather than recover anything.
 
 ## Pending Work (Priority Order)
+
+**Next up after D1:** Phase E (`/review` wired to the roster outbox, legacy paths
+decommissioned) or B5 (vessel operations page — still blocked on an Owner
+data-model decision). D1-LID stays blocked on Phase D2; do not re-add those
+roster channels before a regenerated `native-reader-profile.json` exists.
 
 1. ~~Verify SHADOW auto-promotion after `2026-11-02T03:47Z`~~ — **DONE
    2026-11-02**: fired at `03:50:59Z`, `roster_shadow.mode == "DB"`.
