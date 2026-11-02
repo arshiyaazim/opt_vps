@@ -63,6 +63,22 @@ export default function VesselRegisterView(){
 
   const rows=useMemo(()=>register.data?.rows??[],[register.data?.rows]);
 
+  // F13: display-only label mapping. The database values are never renamed.
+  //   Confirmed -> Running (or Released once an end date exists)
+  //   Voided    -> Cancel
+  //   fled      -> Fleed A
+  //   escort_changed -> E. Chng
+  // "Released" is a state derived from the release window, not a stored status:
+  // the release command sets endDate and leaves status Confirmed.
+  const statusLabel=(p:Program):string=>{
+    const st=(statusPatch[p.id]??p.status??'').trim().toLowerCase();
+    if(st==='voided')return 'Cancel';
+    if(st==='fled')return 'Fleed A';
+    if(st==='escort_changed')return 'E. Chng';
+    if(st==='draft')return 'Draft';
+    if(st==='confirmed')return p.endDate?'Released':'Running';
+    return p.status||'—';
+  };
   // Toolbar state. Filtering happens before pagination (§C9).
   const PAGE_SIZE=20;
   const [filters,setFilters]=useState<ToolbarFilters>(defaultFilters('start_desc'));
@@ -142,22 +158,6 @@ export default function VesselRegisterView(){
   const rowEditable=(p:Program)=>['confirmed','draft'].includes(rowStatus(p));
   const rowCancellable=(p:Program)=>rowStatus(p)==='confirmed';
 
-  // F13: display-only label mapping. The database values are never renamed.
-  //   Confirmed -> Running (or Released once an end date exists)
-  //   Voided    -> Cancel
-  //   fled      -> Fleed A
-  //   escort_changed -> E. Chng
-  // "Released" is a state derived from the release window, not a stored status:
-  // the release command sets endDate and leaves status Confirmed.
-  const statusLabel=(p:Program):string=>{
-    const st=(statusPatch[p.id]??p.status??'').trim().toLowerCase();
-    if(st==='voided')return 'Cancel';
-    if(st==='fled')return 'Fleed A';
-    if(st==='escort_changed')return 'E. Chng';
-    if(st==='draft')return 'Draft';
-    if(st==='confirmed')return p.endDate?'Released':'Running';
-    return p.status||'—';
-  };
   const changeStatus=async(p:Program,next:string)=>{
     if(next===statusLabel(p))return;
     if(next==='Running')return;                      // already active
