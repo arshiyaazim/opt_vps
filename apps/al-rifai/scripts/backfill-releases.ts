@@ -104,17 +104,32 @@ async function main() {
           `INSERT INTO public.release_candidates
              (escort_phone, escort_name, program_id, end_date, end_shift,
               amount_bdt, duty_days, calc_start, conveyance, match_status,
-              match_pass, notes, source_msg_id, source_date, source_text)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+              match_pass, mismatch_kind, notes, source_msg_id, source_date, source_text)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
            ON CONFLICT DO NOTHING`,
           [
             a.escortPhone, a.escortName, a.programId, a.endDate, a.endShift,
             a.amountBdt, a.dutyDays, a.calcStart, a.conveyance, a.status,
-            a.matchPass, a.note, row.msgId, row.msgAt, row.msgText.slice(0, 4000),
+            a.matchPass, a.mismatchKind, a.note, row.msgId, row.msgAt, row.msgText.slice(0, 4000),
           ],
         );
       }
     }
+
+    // ---- data source verification (§ before re-run) ----
+    const ids = [...new Set(rows.map((r) => r.msgId).filter(Boolean))];
+    let foreign = 0;
+    if (ids.length) {
+      const check = await client.query<{n: string}>(
+        `SELECT count(*)::text AS n FROM public.whatsapp_messages_original
+          WHERE coalesce(message_id, id::text) = ANY($1::text[]) AND chat_jid <> $2`,
+        [ids, RELEASE_GROUP_JID],
+      );
+      foreign = Number(check.rows[0]?.n ?? 0);
+    }
+    console.log(foreign === 0
+      ? `source verified: all ${ids.length} source messages come from the Release Slip group ${RELEASE_GROUP_JID}`
+      : `source WARNING: ${foreign} source messages come from a different group`);
 
     // ---------------- report ----------------
     const byStatus = tally(rows, (r) => r.assignment.status);
@@ -161,6 +176,32 @@ async function main() {
       for (const r of ambiguous.slice(0, 5)) {
         const a = r.assignment;
         console.log(`  ${a.escortPhone}  ${a.endDate}  calc_start ${a.calcStart}  ${a.note ?? ''}`);
+      }
+    }
+
+    const byKind = tally(mismatched, (r) => String(r.assignment.mismatchKind ?? 'UNCLASSIFIED'));
+    console.log('\nROSTER_MISMATCH by kind');
+    for (const k of ['NO_ROSTER_PHONE', 'NEW_DUTY_AFTER_RELEASE', 'BEFORE_PROGRAM', 'OUTSIDE_TOLERANCE', 'AMBIGUOUS']) {
+      console.log(`  ${k.padEnd(24)} ${byKind.get(k) ?? 0}`);
+    }
+
+    const newDuty = mismatched.filter((r) => r.assignment.mismatchKind === 'NEW_DUTY_AFTER_RELEASE');
+    console.log(`\n--- NEW DUTY after a release (possible missing programs): ${newDuty.length} ---`);
+    console.log('  Escort | Payment Date | Amount | Days | Calc Start | Previous Release');
+    for (const r of newDuty) {
+      const a = r.assignment;
+      const prev = a.note?.match(/new duty after (\d{4}-\d{2}-\d{2})/)?.[1] ?? '—';
+      console.log(`  ${a.escortPhone} | ${a.endDate} | ${a.amountBdt ?? '—'} | ${a.dutyDays ?? '—'} | ${a.calcStart ?? '—'} | ${prev}`);
+    }
+
+    console.log('\n--- the four dual-date escorts ---');
+    for (const name of ['Kofil', 'Korban', 'Robiul', 'Nazmul-Hasan']) {
+      const rowsFor = rows.filter((r) => (r.assignment.escortName ?? '').toLowerCase().includes(name.toLowerCase()));
+      if (!rowsFor.length) continue;
+      console.log(`  ${name}:`);
+      for (const r of rowsFor) {
+        const a = r.assignment;
+        console.log(`    ${a.endDate} food ${a.amountBdt ?? '—'} ${a.dutyDays ?? '—'}d calc ${a.calcStart ?? '—'} -> ${a.status}${a.matchPass ? ` p${a.matchPass}` : ''}${a.mismatchKind ? ` ${a.mismatchKind}` : ''}`);
       }
     }
   } finally {
