@@ -11,6 +11,7 @@ import {Checkbox} from '@/components/ui/checkbox';
 import {ActionButtonDisabled,LoadingLines,Unavailable,useApi} from '@/app/platform/ui';
 import {payCells,shiftStamp} from '@/lib/vessel-pay';
 import {PayValue} from '@/app/platform/pay-value';
+import {DataToolbar,applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/data-toolbar';
 import {useRouter} from 'next/navigation';
 import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle} from '@/components/ui/alert-dialog';
 
@@ -40,7 +41,6 @@ function PayCells({program}:{program:Program}){
 
 export default function VesselRegisterView(){
   const register=useApi<{rows:Program[];total:number}>('/api/register?export=1');
-  const [q,setQ]=useState('');
   const [detail,setDetail]=useState<{program:Program;data:ProgramDetail}|null>(null);
   const [source,setSource]=useState<SourceResponse|null>(null);
   const [busy,setBusy]=useState(false);
@@ -60,11 +60,38 @@ export default function VesselRegisterView(){
   const [form,setForm]=useState<Record<string,string>>({});
   const [replace,setReplace]=useState(false);
 
-  const rows=useMemo(()=>{
-    const list=register.data?.rows??[];
-    const term=q.toLowerCase();
-    return term?list.filter(row=>[row.motherVessel,row.lighterVessel,row.escortName,row.escortMobile,row.id,row.status].join(' ').toLowerCase().includes(term)):list;
-  },[register.data,q]);
+  const rows=useMemo(()=>register.data?.rows??[],[register.data?.rows]);
+
+  // Toolbar state. Filtering happens before pagination (§C9).
+  const PAGE_SIZE=20;
+  const [filters,setFilters]=useState<ToolbarFilters>(defaultFilters('start_desc'));
+  const [page,setPage]=useState(1);
+  // statusLabel is derived from statusPatch, which is the real dependency.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const decorated=useMemo(()=>rows.map(r=>({...r,statusLabel:statusLabel(r)})),[rows,statusPatch]);
+  const filtered=useMemo(()=>applyFilters(decorated,filters,
+    {searchFields:['motherVessel','lighterVessel','escortName','escortMobile','masterMobile'],dateField:'startDate'},
+  ),[decorated,filters]);
+  const sorted=useMemo(()=>sortRows(filtered,filters.sort),[filtered,filters.sort]);
+  const pages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));
+  // Clamp rather than reset in an effect: a shrinking result set must never blank
+  // the table, and setState-in-effect is rejected by this project's lint rules.
+  const current=Math.min(page,pages);
+  const visible=sorted.slice((current-1)*PAGE_SIZE,current*PAGE_SIZE);
+  const motherOptions=useMemo(()=>[...new Set(rows.map(r=>r.motherVessel).filter(Boolean))].sort(),[rows]);
+  const statusOptions=useMemo(()=>[...new Set(decorated.map(r=>String(r.statusLabel)))].sort(),[decorated]);
+  const facets=useMemo<FacetDef[]>(()=>[
+    {key:'motherVessel',label:'Mother',values:motherOptions},
+    {key:'statusLabel',label:'Status',values:statusOptions},
+  ],[motherOptions,statusOptions]);
+  const sorts=useMemo<SortDef[]>(()=>[
+    {key:'start_desc',label:'Start date (newest first)'},
+    {key:'start_asc',label:'Start date (oldest first)'},
+    {key:'mother_asc',label:'Mother vessel A-Z'},
+    {key:'mother_desc',label:'Mother vessel Z-A'},
+    {key:'escort_asc',label:'Escort name A-Z'},
+    {key:'total_desc',label:'Total pay (highest first)'},
+  ],[]);
 
   const refreshAvailability=async()=>{
     const response=await fetch('/api/vessel-programs',{headers:{Accept:'application/json'}});
@@ -201,7 +228,7 @@ export default function VesselRegisterView(){
   return <div className="flex flex-col gap-3">
     {register.error&&<Unavailable title="Register unavailable" reason={register.error}/>}
     <div className="flex flex-wrap items-center gap-2">
-      <h2 className="text-sm font-semibold">Programs <span className="font-normal text-muted-foreground">({rows.length} shown)</span></h2>
+      <h2 className="text-sm font-semibold">Programs <span className="font-normal text-muted-foreground">({sorted.length} shown)</span></h2>
       <div className="ml-auto flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={()=>void refreshAvailability()}>Check command layer</Button>
         <Button size="sm" disabled={!canWrite} onClick={()=>{setForm({});setDrawer('add');}}>+ Add program</Button>
@@ -212,12 +239,21 @@ export default function VesselRegisterView(){
     {error&&<p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-sm text-destructive">{error}</p>}
     {notice&&<p role="status" className="rounded-md border bg-muted/40 p-2 text-sm">{notice}</p>}
 
-    <div className="max-w-sm"><Input type="search" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search vessel, escort, ID, status…" aria-label="Search programs"/></div>
+    <div className="rounded-md border">
+      <DataToolbar
+        filters={filters}
+        onChange={setFilters}
+        facets={facets}
+        sorts={sorts}
+        urlKeys
+        resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
+      />
+    </div>
     {register.loading&&<LoadingLines/>}
     {register.data&&<div className="overflow-x-auto rounded-md border">
       <Table>
         <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Open</span></TableHead></TableRow></TableHeader>
-        <TableBody>{rows.slice(0,200).map(program=><TableRow key={program.id}>
+        <TableBody>{visible.map(program=><TableRow key={program.id}>
           <TableCell className="w-[120px] max-w-[120px] truncate" title={program.motherVessel||undefined}>{program.motherVessel||'—'}</TableCell>
           <TableCell className="w-[120px] max-w-[120px]">
             <span className="block truncate" title={program.lighterVessel||undefined}>{program.lighterVessel||'—'}</span>
@@ -247,10 +283,18 @@ export default function VesselRegisterView(){
             <Button size="icon-sm" variant="ghost" aria-label={`Open ${program.motherVessel||'program'} ${program.lighterVessel||''}`} onClick={()=>void openDetail(program)}>⋮</Button>
           </TableCell>
         </TableRow>)}
-        {!rows.length&&<TableRow><TableCell colSpan={11} className="py-6 text-center text-sm text-muted-foreground">No programs match.</TableCell></TableRow>}
+        {!sorted.length&&<TableRow><TableCell colSpan={11} className="py-6 text-center text-sm text-muted-foreground">No programs match.</TableCell></TableRow>}
         </TableBody>
       </Table>
-      <p className="p-2 text-[11px] text-muted-foreground">Read-only register retained · first {Math.min(200,rows.length)} rows · write commands require the approved command layer.</p>
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2 text-[11px] text-muted-foreground">
+        <span>Showing {sorted.length?`${(current-1)*PAGE_SIZE+1}-${Math.min(current*PAGE_SIZE,sorted.length)} of ${sorted.length}`:'0'} filtered ({rows.length} total)</span>
+        <span className="flex items-center gap-1">
+          <Button size="sm" variant="outline" disabled={current<=1} onClick={()=>setPage(Math.max(1,current-1))}>Previous</Button>
+          <span>Page {current} of {pages}</span>
+          <Button size="sm" variant="outline" disabled={current>=pages} onClick={()=>setPage(Math.min(pages,current+1))}>Next</Button>
+        </span>
+      </div>
+      <p className="p-2 text-[11px] text-muted-foreground">Read-only register retained · write commands require the approved command layer.</p>
     </div>}
 
     <AlertDialog open={!!fleeTarget} onOpenChange={open=>{if(!open){setFleeTarget(null);setFleeReason('');}}}>
