@@ -10,7 +10,7 @@
 
 | Field | Value |
 |---|---|
-| App image | `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3` (tag `20261101-shadow-recheck`, source `6b457a6`, compose pin `836e8b1`) |
+| App image | `sha256:7735007b7080020aa1d05e8d18640233eff8c25275cc97c6e0667a2e3d555fbb` (tag `20261102-b2-employee-txn`, source `5541d12`, compose pin `df1e2a6`) |
 | App mode | `on` |
 | SHADOW | **PROMOTED 2026-11-02** — `mode=DB`, `cycles_completed=60`, `diffs_found=0`, `auto_promote_blocked=false` |
 | SHADOW started | `2026-10-31T15:47:18Z` |
@@ -19,13 +19,14 @@
 | Roster | 10 active persons / **28** active channels / **epoch 4** |
 | Bridge profile | sha256 `1a967be7…` — 11 chats, epoch 4, `root:whatsapp-wa-01` `0440` (generated, deployed 2026-11-02) |
 | Ingestion | **11/11** chats fresh, 0 errors |
-| Bridges | **untouched** — WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…` |
+| Bridges | WA-01 `sha256:28a646d2…` restarted **once** at `2026-11-02T07:17:09Z` for the D2 profile; WA-02 `sha256:d36ca851…` **untouched** |
 | PostgreSQL | `vps-infra-postgres-1` untouched |
 | Health | `{"status":"ok","roster_mode":"DB","roster_shadow":{"mode":"DB",…}}` |
 
 **Rollback images available**
 
-- `sha256:61ccaf56…` — tag `20261101-b3-typeahead` (immediate rollback, pre-recheck-fix)
+- `sha256:381fd22f…` — tag `20261101-shadow-recheck` (immediate rollback, pre-B2)
+- `sha256:61ccaf56…` — tag `20261101-b3-typeahead` (pre-recheck-fix)
 - `sha256:8e4383a9…` — tag `20261031-b1-columns`
 - `sha256:1911fdfd…` — tag `20261031-typeahead` (Item A)
 - `sha256:d2c2e675…` — tag `20261031-shadow-v2-fix1`
@@ -34,6 +35,34 @@
 - `sha256:1d4602c3…` — tag `rollback-app-phase2`
 
 ## Completed This Session
+
+- **Item B2 — per-employee transaction history (DEPLOYED 2026-11-02)**
+  New route `/transactions/employee/[phone]` plus a "Show All" link in each
+  `/transactions` row. Image `sha256:7735007b…` (tag `20261102-b2-employee-txn`,
+  source `5541d12`), compose pin `df1e2a6`.
+  - **Server page → client view**, mirroring `app/transactions/page.tsx`. A
+    single `"use client"` route was rejected: `PlatformPage` is an async server
+    function, so a client page would lose the AppShell and the server-side
+    `requireChatGPTUser` redirect.
+  - Reuses `GET /api/operations?view=cash&export=1` and filters by employee
+    phone client-side — no new endpoint, no server-side DB access, no migration.
+  - Header carries employee name, employee ID, total instructed and count; the
+    table deliberately omits a Total column because the aggregate is already in
+    the header. Sort `date DESC, time DESC, id DESC`; 20 rows/page with
+    Previous/Next and "Page X of Y" (page number clamped, not reset in an
+    effect). Distinct empty state when the phone matches no Current-scope row.
+  - Print via `window.print()` with scoped CSS hiding the shell and the page
+    controls; CSV export mirrors `/transactions`, filtered to this employee.
+  - Phone matching uses `normalizeEmployeePhone`, so `+880…` and `0…` URLs
+    resolve to the same person.
+  - Method/Source abbreviations extracted to `lib/transaction-format.ts`
+    (commit `fa389c1`) so both tables share one implementation.
+  - Verified: `tsc` clean, ESLint clean, route registered in
+    `app-paths-manifest.json` and compiled with the shared util bundled;
+    `/transactions` and the new route both answer 401 unauthenticated (no 5xx);
+    health `roster_mode=DB`; scope loaded as 11 chat addresses; 11/11 cursors
+    with 0 errors; no new error signatures versus the pre-deploy baseline.
+    **Authenticated visual check is still pending Owner login.**
 
 - **Phase C SHADOW — promoted; Phase D1 cutover — done (2026-11-02)**
   Auto-promotion fired on its own 10-minute tick at `03:50:59Z` (due

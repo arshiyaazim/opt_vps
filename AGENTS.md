@@ -12,12 +12,30 @@
 
 ## 0. Current Production Position (verified 2026-11-02)
 
-> **Current production position — 2026-11-02, post-D1-cutover and D2 deploy (authoritative; supersedes every banner below):**
-> app image `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3`
-> (tag `local/al-rifai:20261101-shadow-recheck`, source `6b457a6`; **unchanged —
-> no rebuild**; verified via `docker inspect al-rifai-app-1` and still pinned in
-> `apps/al-rifai/compose.yaml` by commit `836e8b1`). Mode `on`. Ledger **41**
-> rows (unchanged — no migration). `app.env` `600 root:root`, 14 lines.
+> **Current production position — 2026-11-02, post-B2 deploy (authoritative; supersedes every banner below):**
+> app image `sha256:7735007b7080020aa1d05e8d18640233eff8c25275cc97c6e0667a2e3d555fbb`
+> (tag `local/al-rifai:20261102-b2-employee-txn`, source `5541d12`; built with
+> `--build-context evidence=/var/lib/vps/al-rifai/evidence`, pinned in
+> `apps/al-rifai/compose.yaml` by commit `df1e2a6`, deployed via
+> `docker compose up -d --no-deps app`; verified via `docker inspect
+> al-rifai-app-1`). Mode `on`. Ledger **41** rows (unchanged — no migration).
+> `app.env` `600 root:root`, 14 lines. **Rollback image `sha256:381fd22f…`**
+> (tag `20261101-shadow-recheck`).
+> **Item B2 DEPLOYED** (commits `fa389c1` + `5541d12`):
+> `/transactions/employee/[phone]` shows one employee's Cash instruction history
+> with 20-row pagination, Print and employee-filtered CSV, reached by a
+> "Show All" link in each `/transactions` row. Server page wrapping a
+> `"use client"` view, mirroring the existing route so the AppShell and the
+> server-side auth redirect survive; reuses `GET /api/operations?view=cash&export=1`
+> and filters client-side — **no new endpoint, no migration, no `app.env`
+> change**. Method/Source abbreviations now live in `lib/transaction-format.ts`
+> (one implementation for both tables). Verified: `tsc` and ESLint clean, route
+> in `app-paths-manifest.json` with the shared util bundled, both paths answer
+> 401 unauthenticated (no 5xx), health `roster_mode="DB"`, scope 11 chat
+> addresses, ingestion 11/11 cursors with 0 errors, no new error signatures.
+> Authenticated visual check still pending Owner login.
+> Roster **10** persons / **28** channels / epoch **4**; bridge profile
+> **11** chats (D2 deployed, profile `1a967be7…`).
 > **Phase C SHADOW is COMPLETE and PROMOTED.** The 36 h period ran 60 cycles with
 > `diffs_found=0` throughout, and auto-promotion fired on its own 10-minute tick
 > at **2026-11-02T03:50:59Z** (due `03:47:18Z`) with no restart, deploy or manual
@@ -67,7 +85,7 @@
 > `2026-10-31T10:45:58Z`). Cash Freeze intact: **0** current postings (1,586
 > archive-epoch postings only), no financial posting. The single WA-01 restart
 > was profile-only and touched no Cash state.
-> Open: B2, B4, B5 (blocked — see §14.3), Phase E.
+> Open: B4, B5 (blocked — see §14.3), Phase E.
 > Deferred under B3: typeahead on `/cash/archive` and `/cash/submissions`
 > requires a new read-only employee lookup API endpoint.
 >
@@ -1007,7 +1025,7 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 | **B1** | `/transactions` table — Method/Source abbreviation, per-employee Total column, CSV sync | **DEPLOYED** ✅ commit `6165f35`, pin `6d95083`, image `20261031-b1-columns` |
 | **SHADOW-FIX** | Phase C SHADOW: recheck + auto-promotion every 10 min inside the worker loop; roster emits `COALESCE(canonical_person_ref, id)`; new `person_ref_mismatch` comparison bucket (Owner-authorized on the frozen path) | **DEPLOYED** ✅ commit `6b457a6`, pin `836e8b1`, image `20261101-shadow-recheck` (`sha256:381fd22f…`) |
 | **D1-LID** | Rezaul LID `155508031901923` + TCIS LID `243103839576097` in `escort_roster_channel` | **ACTIVE 2026-11-02** ✅ added as `ch-rezaul-direct-lid` / `ch-tcis-direct-lid` after D2 proved the bridge could read them; profile now allowlists 11 chats and both LID cursors are live with `last_error=NULL` (no backfill) |
-| **B2** | Show All → `/transactions/employee/[phone]` page | PENDING |
+| **B2** | Show All → `/transactions/employee/[phone]` page | **DEPLOYED** ✅ commit `5541d12` (shared util `fa389c1`), pin `df1e2a6`, image `20261102-b2-employee-txn` (`sha256:7735007b…`): per-employee history, 20-row pagination, Print, employee-filtered CSV |
 | **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **DEPLOYED** ✅ commit `c98e57e`, pin `8bc7017`, image `20261101-b3-typeahead` (`sha256:61ccaf56…`) |
 | **B4** | `/cash` page Total + Show All | PENDING |
 | **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
@@ -1022,6 +1040,12 @@ Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
 ### 14.2 Recent commits (newest first)
 
 ```
+df1e2a6 deploy: pin app image to 20261102-b2-employee-txn
+5541d12 feat: employee transaction history page with pagination
+fa389c1 refactor: extract transaction format helpers to shared util
+d46254b docs: add D2 cycle guardrail to AGENTS.md §13.21
+e210ac4 docs: D2 deployed — generated bridge profile, LID channels active
+c3aae52 docs: D1 part 3 — final state sync after roster cutover
 fa5ba16 docs: D1 part 2 — roster source cutover to DB
 a8fbf3a docs: D1 part 1 — promotion confirmed; LID channels attempted and reverted
 7bfc2ab docs: record shadow recheck fix, LID findings, and audit results
