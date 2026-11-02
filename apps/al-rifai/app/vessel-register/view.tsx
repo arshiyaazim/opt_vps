@@ -9,10 +9,9 @@ import {Sheet,SheetContent,SheetDescription,SheetFooter,SheetHeader,SheetTitle} 
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow} from '@/components/ui/table';
 import {Checkbox} from '@/components/ui/checkbox';
 import {ActionButtonDisabled,LoadingLines,StatusBadge,Unavailable,useApi} from '@/app/platform/ui';
-import {payCells} from '@/lib/vessel-pay';
+import {payCells,shiftStamp} from '@/lib/vessel-pay';
 import {PayValue} from '@/app/platform/pay-value';
 import {useRouter} from 'next/navigation';
-import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator,DropdownMenuTrigger} from '@/components/ui/dropdown-menu';
 import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle} from '@/components/ui/alert-dialog';
 
 type Program={
@@ -20,6 +19,7 @@ type Program={
   escortName?:string;escortMobile?:string;startDate?:string;endDate?:string;shift?:string;
   status?:string;source?:string;notes?:string;details?:Record<string,unknown>;
   employeeId?:string|null;
+  endShift?:string|null;
   payState?:'CALCULATED'|'UNRESOLVED'|null;payReason?:string|null;halfDayUnits?:number|null;
   salaryMinor?:string|null;conveyanceMinor?:string|null;totalMinor?:string|null;
 };
@@ -47,6 +47,8 @@ export default function VesselRegisterView(){
   const [drawer,setDrawer]=useState<'add'|'edit'|'release'|'assign'|'void'|null>(null);
   const router=useRouter();
   const [cancelTarget,setCancelTarget]=useState<Program|null>(null);
+  const [editing,setEditing]=useState(false);
+  const [editForm,setEditForm]=useState<Record<string,string>>({});
   const [form,setForm]=useState<Record<string,string>>({});
   const [replace,setReplace]=useState(false);
 
@@ -111,6 +113,40 @@ export default function VesselRegisterView(){
   // so both go through openDetail() first rather than issuing a blind command.
   const openRowDrawer=async(p:Program,next:'edit'|'void')=>{await openDetail(p);setDrawer(next);};
 
+  const EDITABLE=['motherVessel','lighterVessel','masterMobile','destination','escortName','escortMobile','startDate','shift','notes'] as const;
+  const startEdit=()=>{
+    if(!detail)return;
+    const source=detail.program as unknown as Record<string,unknown>;
+    setEditForm(Object.fromEntries(EDITABLE.map(k=>[k,String(source[k]??'')])));
+    setEditing(true);setError('');setNotice('');
+  };
+  const cancelEdit=()=>{setEditing(false);setEditForm({});setError('');};
+
+  // Save stays inside the panel: it posts the existing edit command, then refreshes
+  // the detail (new revision + history) without closing the sidebar.
+  const saveEdit=async()=>{
+    if(!detail)return;
+    const current=detail.program as unknown as Record<string,unknown>;
+    const patch:Record<string,string>={};
+    for(const k of EDITABLE){
+      const next=(editForm[k]??'').trim();
+      const before=String(current[k]??'').trim();
+      if(next!==before)patch[k]=next;
+    }
+    if(!Object.keys(patch).length){setEditing(false);return;}
+    setBusy(true);setError('');setNotice('');
+    try{
+      const response=await fetch('/api/vessel-programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'edit',programId:detail.program.id,expectedRevision:Number(detail.data.program?.revision??0),patch,commandKey:commandKey()})});
+      const data=await response.json() as CommandResponse;
+      if(response.status===503){setAvailable(false);throw new Error('Command layer is prepared but not applied (migration 0032).');}
+      if(!response.ok)throw new Error(data.error??'Command failed');
+      setNotice(data.idempotent?'Command already applied — no changes recorded.':`Saved. Revision ${data.revision??'—'} recorded in the append-only audit history.`);
+      setEditing(false);setEditForm({});
+      await openDetail(detail.program);
+    }catch(cause){setError(cause instanceof Error?cause.message:'Command failed');}
+    finally{setBusy(false);}
+  };
+
   return <div className="flex flex-col gap-3">
     {register.error&&<Unavailable title="Register unavailable" reason={register.error}/>}
     <div className="flex flex-wrap items-center gap-2">
@@ -129,31 +165,17 @@ export default function VesselRegisterView(){
     {register.loading&&<LoadingLines/>}
     {register.data&&<div className="overflow-x-auto rounded-md border">
       <Table>
-        <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>Shift</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Open</span></TableHead></TableRow></TableHeader>
         <TableBody>{rows.slice(0,200).map(program=><TableRow key={program.id}>
           <TableCell>{program.motherVessel}</TableCell>
           <TableCell>{program.lighterVessel}</TableCell>
           <TableCell>{program.escortName||'—'}</TableCell>
-          <TableCell className="whitespace-nowrap">{program.startDate||'—'}</TableCell>
-          <TableCell>{program.shift||'—'}</TableCell>
+          <TableCell className="whitespace-nowrap">{shiftStamp(program.startDate,program.shift)}</TableCell>
+          <TableCell className="whitespace-nowrap">{shiftStamp(program.endDate,program.endShift)}</TableCell>
           <PayCells program={program}/>
           <TableCell><StatusBadge status={program.status||'RECORDED'}/></TableCell>
           <TableCell>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost" aria-label={`Actions for ${program.motherVessel||'program'} ${program.lighterVessel||''}`}>Actions</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel className="truncate">{program.lighterVessel||program.id.slice(0,12)}</DropdownMenuLabel>
-                <DropdownMenuSeparator/>
-                <DropdownMenuItem onSelect={()=>void openDetail(program)}>View</DropdownMenuItem>
-                <DropdownMenuItem disabled={!canWrite||!rowEditable(program)} onSelect={()=>void openRowDrawer(program,'edit')}>Edit…</DropdownMenuItem>
-                <DropdownMenuSeparator/>
-                <DropdownMenuItem variant="destructive" disabled={!canWrite||!rowCancellable(program)} onSelect={()=>setCancelTarget(program)}>Cancel program…</DropdownMenuItem>
-                <DropdownMenuSeparator/>
-                <DropdownMenuItem disabled={!rowMobile(program)} title={rowMobile(program)?undefined:'No escort mobile recorded for this program'} onSelect={()=>router.push(programsHref(program))}>History</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button size="icon-sm" variant="ghost" aria-label={`Open ${program.motherVessel||'program'} ${program.lighterVessel||''}`} onClick={()=>void openDetail(program)}>⋮</Button>
           </TableCell>
         </TableRow>)}
         {!rows.length&&<TableRow><TableCell colSpan={11} className="py-6 text-center text-sm text-muted-foreground">No programs match.</TableCell></TableRow>}
@@ -177,27 +199,70 @@ export default function VesselRegisterView(){
       </AlertDialogContent>
     </AlertDialog>
 
-    <Sheet open={!!detail} onOpenChange={open=>{if(!open){setDetail(null);setSource(null);}}}>
+    <Sheet open={!!detail} onOpenChange={open=>{if(!open){setDetail(null);setSource(null);setEditing(false);setEditForm({});}}}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>{detail?.program.motherVessel} / {detail?.program.lighterVessel}</SheetTitle>
-          <SheetDescription>Read-only detail with append-only command history. Status {detail?.program.status||'—'} · revision {detail?.data.program?.revision??'—'}.</SheetDescription>
+          <SheetDescription>
+            {editing?'Editing — changes are written through the program command layer and appended to the audit history.':'Read-only detail with append-only command history.'}
+            {' '}Status {detail?.program.status||'—'} · revision {detail?.data.program?.revision??'—'}.
+          </SheetDescription>
         </SheetHeader>
         {detail&&<div className="grid gap-3 px-4 pb-4 text-sm">
-          <div className="grid grid-cols-2 gap-2">
-            {[['Mother',detail.program.motherVessel],['Lighter',detail.program.lighterVessel],['Master',detail.program.masterMobile||'—'],['Destination',detail.program.destination||'—'],['Escort',detail.program.escortName||'—'],['Escort mobile',detail.program.escortMobile||'—'],['Start',detail.program.startDate||'—'],['Release',detail.program.endDate||'—'],['Shift',detail.program.shift||'—'],['Status',detail.program.status||'—']].map(([label,value])=>
-              <div key={label} className="rounded border p-2"><p className="text-[11px] text-muted-foreground">{label}</p><p className="font-medium">{String(value)}</p></div>)}
+
+          {!editing&&(
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ['Mother',detail.program.motherVessel],['Lighter',detail.program.lighterVessel],
+                ['Master',detail.program.masterMobile||'—'],['Destination',detail.program.destination||'—'],
+                ['Escort',detail.program.escortName||'—'],['Escort mobile',detail.program.escortMobile||'—'],
+                ['Start',shiftStamp(detail.program.startDate,detail.program.shift)],
+                ['End',shiftStamp(detail.program.endDate,detail.program.endShift)],
+                ['Status',detail.program.status||'—'],
+                ['Days',payCells(detail.program).days.value],
+                ['Salary',payCells(detail.program).salary.value],
+                ['Total',payCells(detail.program).total.value],
+              ] as [string,string][]).map(([label,value])=>
+                <div key={label} className="rounded border p-2"><p className="text-[11px] text-muted-foreground">{label}</p><p className="font-medium">{String(value)}</p></div>)}
+            </div>
+          )}
+
+          {editing&&(
+            <div className="grid gap-2">
+              {([
+                ['motherVessel','Mother vessel','text'],['lighterVessel','Lighter vessel','text'],
+                ['masterMobile','Master mobile','text'],['destination','Destination','text'],
+                ['escortName','Escort name','text'],['escortMobile','Escort mobile','text'],
+                ['startDate','Start date','date'],['notes','Notes','text'],
+              ] as [keyof typeof editForm,string,string][]).map(([field,label,type])=>
+                <label key={field} className="grid gap-1">
+                  <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
+                  <Input type={type} value={editForm[field]??''} onChange={e=>setEditForm(prev=>({...prev,[field]:e.target.value}))}/>
+                </label>)}
+              <label className="grid gap-1">
+                <span className="text-[11px] font-medium text-muted-foreground">Shift</span>
+                <Select value={editForm.shift??''} onValueChange={v=>setEditForm(prev=>({...prev,shift:v}))}>
+                  <SelectTrigger><SelectValue placeholder="Choose shift"/></SelectTrigger>
+                  <SelectContent><SelectItem value="D">D · Day</SelectItem><SelectItem value="N">N · Night</SelectItem></SelectContent>
+                </Select>
+              </label>
+              <p className="text-[11px] text-muted-foreground">End date and end shift are set by the Release command, not by Edit.</p>
+            </div>
+          )}
+
+          <div className="grid gap-1">
+            {!editing&&<Button className="w-full" variant="outline" disabled={!canWrite||!rowEditable(detail.program)} onClick={startEdit}>Edit</Button>}
+            {!editing&&<Button className="w-full" variant="outline" disabled={!canWrite||!rowCancellable(detail.program)} onClick={()=>{setForm({reason:''});setCancelTarget(detail.program);}}>Cancel program</Button>}
+            {!editing&&<Button className="w-full" variant="outline" disabled={!rowMobile(detail.program)} onClick={()=>router.push(programsHref(detail.program))}>History</Button>}
+            {editing&&<Button className="w-full" disabled={busy} onClick={()=>void saveEdit()}>{busy?'Saving…':'Save'}</Button>}
+            {editing&&<Button className="w-full" variant="outline" disabled={busy} onClick={cancelEdit}>Cancel</Button>}
+            <Button className="w-full" variant="ghost" onClick={()=>setDetail(null)}>Close</Button>
           </div>
-          <div className="flex flex-wrap gap-1">
-            <Button size="sm" variant="outline" disabled={!canWrite} onClick={()=>{setForm({destination:detail.program.destination??'',masterMobile:detail.program.masterMobile??'',escortName:detail.program.escortName??'',escortMobile:detail.program.escortMobile??'',notes:detail.program.notes??''});setDrawer('edit');}}>Edit</Button>
-            <Button size="sm" variant="outline" disabled={!canWrite} onClick={()=>{setForm({endDate:detail.program.endDate??'',endShift:detail.program.shift??'D',releasePoint:''});setDrawer('release');}}>Release</Button>
-            <Button size="sm" variant="outline" disabled={!canWrite} onClick={()=>{setReplace(Boolean(detail.program.escortMobile));setForm({employeeMobile:'',startDate:detail.program.startDate??'',startShift:detail.program.shift??'D',note:''});setDrawer('assign');}}>{detail.program.escortMobile?'Replace escort':'Assign escort'}</Button>
-            <Button size="sm" variant="outline" disabled={!canWrite||detail.program.status==='Voided'} onClick={()=>{setForm({reason:''});setDrawer('void');}}>Void</Button>
-          </div>
+
           <div>
             <p className="mb-1 text-xs font-medium">Source &amp; audit</p>
-            <div className="flex flex-wrap gap-1">
-              <Button size="sm" variant="ghost" onClick={()=>void openSource(String((detail.program.details as Record<string,unknown>|undefined)?.sourceMessageId??(detail.program.details as Record<string,unknown>|undefined)?.confirmationMessageId??''))}>WhatsApp source</Button>
+            <div className="grid gap-1">
+              <Button className="w-full" size="sm" variant="ghost" onClick={()=>void openSource(String((detail.program.details as Record<string,unknown>|undefined)?.sourceMessageId??(detail.program.details as Record<string,unknown>|undefined)?.confirmationMessageId??''))}>WhatsApp source</Button>
             </div>
             {source&&<div className="mt-2 rounded border p-2 text-xs"><p className="text-muted-foreground">{source.source?`${source.source.direction} · ${source.source.sender_phone??source.source.sender_jid??'unknown'} · ${String(source.source.source_time??'').slice(0,16).replace('T',' ')}`:'No archived source message is linked to this program.'}</p>{source.source?.text_content&&<pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted/40 p-2">{source.source.text_content}</pre>}</div>}
             <ul className="mt-2 grid gap-1 text-xs">
@@ -209,7 +274,6 @@ export default function VesselRegisterView(){
               {!(detail.data.history?.events??[]).length&&<li className="text-muted-foreground">No command events recorded yet.</li>}
             </ul>
           </div>
-          <SheetFooter className="flex-row justify-end"><Button variant="outline" onClick={()=>setDetail(null)}>Close</Button></SheetFooter>
         </div>}
       </SheetContent>
     </Sheet>

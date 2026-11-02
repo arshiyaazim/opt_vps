@@ -36,11 +36,24 @@ export function payDays(units: number | null | undefined): string {
 export function payNote(reason: string | null | undefined): string {
   switch (reason) {
     case 'RATE_CONFIG_MISSING': return PAY_NOTE_UNSET;
+    // Duty still running: nothing is payable until it is released.
+    case 'END_DATE_REQUIRED': return 'ডিউটি এখনো শেষ হয়নি';
+    case 'END_DATE_INVALID': return 'শেষ তারিখ ঠিক নেই';
+    case 'END_SHIFT_REQUIRED': return 'শেষ শিফট নেই';
     case 'START_DATE_INVALID': return 'শুরুর তারিখ ঠিক নেই';
     case 'SHIFT_INVALID': return 'শিফট ঠিক নেই';
     case 'SHIFT_WINDOW_INVALID': return 'শিফট হিসাব করা যায়নি';
     default: return 'হিসাব করা যায়নি';
   }
+}
+
+/**
+ * A date with its shift, as the register shows it: `2026-11-02(N)`.
+ * `—` when the date is absent, so an unset end never looks like a real one.
+ */
+export function shiftStamp(date: string | null | undefined, shift: string | null | undefined): string {
+  if (!date) return '—';
+  return shift ? `${date}(${shift})` : date;
 }
 
 export type PayCell = { value: string; note: string | null };
@@ -57,10 +70,13 @@ export function payCells(row: {
   conveyanceMinor?: string | null;
   totalMinor?: string | null;
 }): { days: PayCell; salary: PayCell; conveyance: PayCell; total: PayCell } {
-  const note = row.payState === 'UNRESOLVED' ? payNote(row.payReason) : null;
+  const unresolved = row.payState === 'UNRESOLVED';
+  const note = unresolved ? payNote(row.payReason) : null;
   const withNote = (value: string): PayCell => ({ value, note: value === '৳—' || value === '—' ? note : null });
   return {
-    days: withNote(payDays(row.halfDayUnits)),
+    // An unresolved program has no worked days at all — showing 0.00 would imply
+    // a finished duty that earned nothing.
+    days: withNote(unresolved ? '—' : payDays(row.halfDayUnits)),
     salary: withNote(payAmount(row.salaryMinor)),
     conveyance: withNote(payAmount(row.conveyanceMinor)),
     total: withNote(payAmount(row.totalMinor)),

@@ -6,15 +6,14 @@ import {
   EmptyState,ErrorState,LoadingSkeleton,PageHeader,SectionCard,StatusPill,TableShell,useApi,fmtInt,
 } from '@/app/platform/ui';
 import {PayValue} from '@/app/platform/pay-value';
-import {payCells,payAmount} from '@/lib/vessel-pay';
-import {displayDate} from '@/lib/vessel-data';
+import {payCells,payAmount,shiftStamp} from '@/lib/vessel-pay';
 import {csv,saveCsv} from '@/lib/register';
 
 const PAGE_SIZE=20;
 
 type Program={
   id:string;motherVessel:string;lighterVessel:string;escortName?:string;escortMobile?:string;
-  destination?:string;startDate?:string;shift?:string;status?:string;
+  destination?:string;startDate?:string;endDate?:string;shift?:string;endShift?:string|null;status?:string;
   payState?:'CALCULATED'|'UNRESOLVED'|null;payReason?:string|null;halfDayUnits?:number|null;
   salaryMinor?:string|null;conveyanceMinor?:string|null;totalMinor?:string|null;
 };
@@ -57,12 +56,12 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
 
   const exportCsv=()=>{
     const content=csv(
-      ['Mother vessel','Lighter vessel','Escort','Escort mobile','Destination','Start date','Shift','Days','Salary (BDT)','Conveyance (BDT)','Total (BDT)','Status'],
+      ['Mother vessel','Lighter vessel','Escort','Escort mobile','Destination','Start','End','Days','Salary (BDT)','Conveyance (BDT)','Total (BDT)','Status'],
       sorted.map(r=>{
         const c=payCells(r);
         const plain=(minor:string|null|undefined)=>minor==null||minor===''?'':(Number(minor)/100).toFixed(2);
         return [r.motherVessel,r.lighterVessel,r.escortName??'',r.escortMobile??'',r.destination??'',
-          r.startDate??'',r.shift??'',c.days.value.replace('৳',''),
+          shiftStamp(r.startDate,r.shift),shiftStamp(r.endDate,r.endShift),c.days.value,
           plain(r.salaryMinor),plain(r.conveyanceMinor),plain(r.totalMinor),r.status??''];
       }));
     saveCsv(content,`al-rifai-programs-${escortMobile.replace(/[^0-9]/g,'')}.csv`);
@@ -130,7 +129,7 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
               <thead>
                 <tr>
                   <th>Mother vessel</th><th>Lighter</th><th>Escort</th>
-                  <th>Start</th><th>Shift</th>
+                  <th>Start</th><th>End</th>
                   <th className="num">Days</th><th className="num">Salary</th>
                   <th className="num">Conv.</th><th className="num">Total</th>
                   <th>Status</th>
@@ -143,8 +142,8 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
                     <td data-label="Mother vessel"><span className="strong">{r.motherVessel||'—'}</span><span className="muted" style={{display:'block'}}>{r.destination||'No destination'}</span></td>
                     <td data-label="Lighter">{r.lighterVessel||'—'}</td>
                     <td data-label="Escort"><span className="strong">{r.escortName||'—'}</span><span className="muted" style={{display:'block'}}>{r.escortMobile||'—'}</span></td>
-                    <td data-label="Start"><span className="strong">{r.startDate?displayDate(r.startDate):'—'}</span></td>
-                    <td data-label="Shift">{r.shift||'—'}</td>
+                    <td data-label="Start"><span className="strong">{shiftStamp(r.startDate,r.shift)}</span></td>
+                    <td data-label="End"><span className="strong">{shiftStamp(r.endDate,r.endShift)}</span></td>
                     <td data-label="Days" className="num"><PayValue cell={c.days}/></td>
                     <td data-label="Salary" className="num"><PayValue cell={c.salary}/></td>
                     <td data-label="Conv." className="num"><PayValue cell={c.conveyance}/></td>
