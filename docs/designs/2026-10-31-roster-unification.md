@@ -559,18 +559,49 @@ priorities shift.
 
 ## 12. Implementation status — 2026-10-31
 
-Phases A and B are applied and verified in Production. Phase C SHADOW is live.
-D2 is code-complete and execution-verified but not deployed. D1 and E are
-pending.
+Phases A and B are applied and verified in Production. Phase C SHADOW completed
+its 36 h window with `diffs_found=0` and auto-promoted to `DB` on 2026-11-02.
+D1 (app cutover) and D2 (bridge profile) are deployed and verified on the same
+day. E is pending.
 
 | Phase | Status | Evidence |
 |---|---|---|
 | A — roster schema | applied | migration `0037`, `escort_roster_apply()` |
 | B — backfill + views | applied | migrations `0038` (10 persons / 26 channels after 0041), `0039` (4 compatibility views); equivalence assertions 4a–4d passed |
-| C — SHADOW | **live** | migration `0040` (persistent state), app `d2c2e675…`; `diffs_found=0`, promotion at `2026-11-02T03:47:18Z` |
-| D1 — app cutover | pending | waits on SHADOW promotion |
-| D2 — bridge profile | code complete, not deployed | `scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`; regenerated profile differs from live only in chat ordering |
-| E — `/review` wiring | pending | waits on D1 |
+| C — SHADOW | **promoted** | migration `0040` (persistent state); 60 cycles, `diffs_found=0`, auto-promoted `2026-11-02T03:50:59Z` → `roster_shadow.mode=DB` |
+| D1 — app cutover | **deployed 2026-11-02** | `ALRIFAI_ROSTER_SOURCE=DB`; app recreated on the same image; `roster_mode="DB"`, 9/9 cursors clean |
+| D2 — bridge profile | **deployed 2026-11-02** | profile sha256 `1a967be7…` (11 chats, epoch 4); drift showed `chats_added=2`, `bridge_restart_required=true`; WA-01 restarted once; 11/11 cursors clean |
+| E — `/review` wiring | pending | D1 and D2 are done, so this is the next large item |
+
+### D2 deployment record (2026-11-02)
+
+The renderer derives `chats` from `escort_roster_channel`, so the LID channel
+rows had to exist **before** the profile could include them — the opposite of
+the original sequencing assumption. One dry run proved this: with the LID rows
+absent, the regenerated profile was byte-different only in chat ordering
+(`functional_drift=false`, `bridge_restart_required=false`), i.e. it would have
+been a no-op that still left the LIDs unreadable.
+
+After the two LID channel rows were re-added (28 active channels, epoch 4), the
+regeneration produced exactly the intended functional change:
+
+- `chats_added`: `155508031901923@lid`, `243103839576097@lid`
+- `chats_removed`: none; `participants_changed`: none; `binding_drift`: none
+- `functional_drift=true`, `bridge_restart_required=true`
+
+Deploy: profile backed up to
+`native-reader-profile-pre-d2-lid-20261102-0717.json` (sha256 `4708cd0c…`,
+mode 600), new profile installed `root:whatsapp-wa-01` `0440`, then
+`docker restart vps-whatsapp-wa-01-cap4-20261011` (the only authorized restart;
+`systemctl restart docker` is never permitted, and WA-02/PostgreSQL/app were not
+touched). Post-restart: bridge reconnected (`✓ Connected to WhatsApp!`), all
+**11** native cursors activated with `last_error=NULL`, zero
+`NATIVE_READER_UNAVAILABLE` lines after `07:17:09Z`, and **no backfill** —
+neither LID chat has any historic message row, consistent with activation
+starting at the stream boundary.
+
+`functional_drift=true` returning exit 1 from the drift checker is correct and
+expected; it signals "functional change present", not an error.
 
 ### Deviations from this design, and why
 

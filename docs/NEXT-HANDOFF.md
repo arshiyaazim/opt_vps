@@ -16,8 +16,9 @@
 | SHADOW started | `2026-10-31T15:47:18Z` |
 | Auto-promote at | `2026-11-02T03:47:18Z` |
 | Ledger | **41** rows (`0037`–`0041`) |
-| Roster | 10 active persons / **26** active channels / **epoch 3** (epoch 3 records the 2026-11-02 Part 1 add+revert; channel content equals pre-D1) |
-| Ingestion | 9/9 chats fresh, 0 errors |
+| Roster | 10 active persons / **28** active channels / **epoch 4** |
+| Bridge profile | sha256 `1a967be7…` — 11 chats, epoch 4, `root:whatsapp-wa-01` `0440` (generated, deployed 2026-11-02) |
+| Ingestion | **11/11** chats fresh, 0 errors |
 | Bridges | **untouched** — WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…` |
 | PostgreSQL | `vps-infra-postgres-1` untouched |
 | Health | `{"status":"ok","roster_mode":"DB","roster_shadow":{"mode":"DB",…}}` |
@@ -47,6 +48,16 @@
   bridges and PostgreSQL untouched. Part 1 (LID channels) was attempted and then
   reverted as bridge-blocked — see "Phase D1 Part 1" below. This is the first
   change session in which the roster tables are the only ingestion scope.
+
+- **Phase D2 — bridge profile generated and deployed (2026-11-02)**
+  The bridge profile is now a generated artifact rather than hand-maintained.
+  `check-profile-drift.ts` reported `functional_drift=true`, `chats_added=2`
+  (the two LID aliases), `chats_removed=0`, `participants_changed=0`,
+  `bridge_restart_required=true`. Deployed as profile sha256 `1a967be7…`
+  (11 chats, epoch 4, `root:whatsapp-wa-01` `0440`) with exactly one WA-01
+  restart. Verified 11/11 native cursors clean, no `NATIVE_READER_UNAVAILABLE`
+  after `07:17:09Z`, and no backfill. This also completed D1 Part 1: the Rezaul
+  and TCIS LID channels are now live.
 
 - **Item A — Typeahead search on `/transactions`**
   Unified search + employee picker: one field both filters the table across all
@@ -200,7 +211,7 @@ deploy or manual step. `roster_shadow.mode` = `DB`, `cycles_completed` = 60,
 `roster_mode` still reported `SHADOW` (the configured env value) until the Phase
 D1 cutover below.
 
-### Phase D1 Part 1 — LID channels: attempted, reverted (bridge-blocked)
+### Phase D1 Part 1 + D2 — LID channels: reverted, then activated via a generated profile
 
 Promotion was confirmed first, then Part 1 ran on **2026-11-02** and was reverted
 in the same session once a blocker was proven.
@@ -252,12 +263,49 @@ in the same session once a blocker was proven.
   and `ensureNativeCursor` starts at the current stream boundary, so replaying
   history would create duplicates rather than recover anything.
 
+**Resolution (2026-11-02) — activated via Phase D2.** The dry run proved the
+ordering constraint: `generate-bridge-profile.ts` derives `chats` from
+`escort_roster_channel`, so with the LID rows absent the regenerated profile was
+byte-different only in chat ordering (`functional_drift=false`,
+`bridge_restart_required=false`) — a no-op that would still have left the LIDs
+unreadable. The rows were therefore re-added first, then the profile regenerated:
+
+| Check | Result |
+|---|---|
+| `escort_roster_channel` active | 26 → **28** |
+| `escort_roster_epoch` | 3 → **4** |
+| Generated chats / epoch | **11** / 4 |
+| Drift `chats_added` | `155508031901923@lid`, `243103839576097@lid` |
+| Drift `chats_removed` / `participants_changed` / `binding_drift` | none / none / none |
+| `functional_drift` / `bridge_restart_required` | **true** / **true** |
+
+**Deployed.** Live profile backed up to
+`/var/lib/vps/al-rifai/backups/native-reader-profile-pre-d2-lid-20261102-0717.json`
+(sha256 `4708cd0c…`, mode 600); new profile sha256
+`1a967be7…` installed `root:whatsapp-wa-01` `0440`; then a single
+`docker restart vps-whatsapp-wa-01-cap4-20261011`. WA-02, PostgreSQL and the app
+container were **not** restarted, and `systemctl restart docker` was not used.
+
+**Verified after restart:** bridge reconnected (`✓ Connected to WhatsApp!`);
+all **11** native cursors carry a valid cursor with `last_error=NULL` (the LID
+cursors had failed with `NATIVE_READER_UNAVAILABLE` until this point); **zero**
+`NATIVE_READER_UNAVAILABLE` lines after `07:17:09Z`; and **no backfill** —
+neither LID chat has any historic `whatsapp_messages_original` row, consistent
+with activation starting at the stream boundary. A nonzero drift exit code (1)
+is expected here: it reports a functional change, not a failure.
+
+**Rollback:** copy the backup back over
+`/var/lib/vps/whatsapp/wa-01/control/native-reader-profile.json`, restore
+`root:whatsapp-wa-01` / `0440`, and restart WA-01 once. Cursor advances are not
+rewound (documented and accepted).
+
 ## Pending Work (Priority Order)
 
-**Next up after D1:** Phase E (`/review` wired to the roster outbox, legacy paths
-decommissioned) or B5 (vessel operations page — still blocked on an Owner
-data-model decision). D1-LID stays blocked on Phase D2; do not re-add those
-roster channels before a regenerated `native-reader-profile.json` exists.
+**Next up after D1/D2:** Phase E (`/review` wired to the roster outbox, legacy
+paths decommissioned) or B5 (vessel operations page — still blocked on an Owner
+data-model decision). D1-LID is resolved; the LID channels are live and the
+bridge profile is now a generated artifact, so future roster changes must be
+followed by a regenerate + drift check + profile deploy + single WA-01 restart.
 
 1. ~~Verify SHADOW auto-promotion after `2026-11-02T03:47Z`~~ — **DONE
    2026-11-02**: fired at `03:50:59Z`, `roster_shadow.mode == "DB"`.

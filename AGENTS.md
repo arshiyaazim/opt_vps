@@ -10,9 +10,9 @@
 
 ---
 
-## 0. Current Production Position (verified 2026-11-01)
+## 0. Current Production Position (verified 2026-11-02)
 
-> **Current production position — 2026-11-02, post-D1-cutover (authoritative; supersedes every banner below):**
+> **Current production position — 2026-11-02, post-D1-cutover and D2 deploy (authoritative; supersedes every banner below):**
 > app image `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3`
 > (tag `local/al-rifai:20261101-shadow-recheck`, source `6b457a6`; **unchanged —
 > no rebuild**; verified via `docker inspect al-rifai-app-1` and still pinned in
@@ -37,21 +37,37 @@
 > (sha256 `c87a20e9…`, 75 table-data sections, mode 600) and
 > `app.env.pre-d1-cutover-20261102.bak` (mode 600); earlier same-session
 > `pre-d1-lid-channels-20261102-0401.dump` (sha256 `c9102f3a…`, 75 sections).
-> **D1 Part 1 (LID channels) was attempted and REVERTED** — see §14.1 `D1-LID`
-> and `docs/NEXT-HANDOFF.md`. The bridge's `native-reader-profile.json`
-> allowlists only 9 chats, so both new LID cursors failed
+> **D1 Part 1 (LID channels) + Phase D2 — COMPLETE 2026-11-02.** Part 1 was
+> first attempted and reverted: the bridge's `native-reader-profile.json`
+> allowlisted only 9 chats, so both new LID cursors failed
 > `NATIVE_READER_UNAVAILABLE` and the ingestion loop backed off from 15 s toward
 > its 60 s cap; Owner directed a revert. No message was lost or duplicated.
-> Roster is back to **26** active channels / 10 persons / epoch **3**; the
-> `whatsapp_identity_aliases` LID values for Rezaul and TCIS were **kept**
-> (`BRIDGE_LID_MAP` — all four contacts now mapped). Activating those LIDs needs
-> Phase D2 (profile regeneration) plus a WA-01 restart — neither authorized.
-> Bridges **untouched**: WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…`
-> (`RestartCount=0`, unchanged start `2026-10-31T13:20:03Z`); PostgreSQL
-> `vps-infra-postgres-1` untouched (`RestartCount=0`, start
+> D2 then established that the renderer derives `chats` from
+> `escort_roster_channel`, so the roster rows must exist **before** the profile
+> can contain them — the reverse of the original sequencing. A dry run with the
+> rows absent produced a formatting-only diff (`functional_drift=false`), i.e. a
+> no-op. After the two LID rows were re-added, regeneration yielded exactly
+> `chats_added=[155508031901923@lid, 243103839576097@lid]`, `chats_removed=[]`,
+> `participants_changed=[]`, `bridge_restart_required=true`.
+> **Deployed:** roster **28** active channels / 10 persons / epoch **4**; bridge
+> profile sha256 `1a967be73390340b814c92afb2ab227150e326d90561f5c1687fbe0246c7b200`
+> (11 chats, epoch 4) installed `root:whatsapp-wa-01` `0440`, from backup
+> `native-reader-profile-pre-d2-lid-20261102-0717.json` (sha256 `4708cd0c…`,
+> 600). WA-01 restarted **once** (`docker restart`); WA-02, PostgreSQL and the
+> app were **not** restarted. Verified: bridge reconnected
+> (`✓ Connected to WhatsApp!`), **11/11** native cursors with `last_error=NULL`,
+> **zero** `NATIVE_READER_UNAVAILABLE` after `07:17:09Z`, and **no backfill**
+> (neither LID chat holds historic message rows). All four contacts now carry
+> LID identity mappings.
+> **Bridges:** WA-01 `sha256:28a646d2…` **restarted once** at
+> `2026-11-02T07:17:09Z` to load the new profile (authorized); WA-02
+> `sha256:d36ca851…` **untouched** (`RestartCount=0`, start
+> `2026-10-31T13:20:03Z`); PostgreSQL `vps-infra-postgres-1` untouched
+> (`RestartCount=0`, start
 > `2026-10-31T10:45:58Z`). Cash Freeze intact: **0** current postings (1,586
-> archive-epoch postings only), no financial posting, no bridge restart.
-> Open: B2, B4, B5 (blocked — see §14.3), D1-LID (blocked on D2), Phase E.
+> archive-epoch postings only), no financial posting. The single WA-01 restart
+> was profile-only and touched no Cash state.
+> Open: B2, B4, B5 (blocked — see §14.3), Phase E.
 > Deferred under B3: typeahead on `/cash/archive` and `/cash/submissions`
 > requires a new read-only employee lookup API endpoint.
 >
@@ -969,13 +985,13 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 | **A** | `/transactions` typeahead search — unified employee search, 300 ms debounce, keyboard nav, ARIA, local `buildSuggestions` | **DEPLOYED** ✅ commit `8fb3327`, image `20261031-typeahead` |
 | **B1** | `/transactions` table — Method/Source abbreviation, per-employee Total column, CSV sync | **DEPLOYED** ✅ commit `6165f35`, pin `6d95083`, image `20261031-b1-columns` |
 | **SHADOW-FIX** | Phase C SHADOW: recheck + auto-promotion every 10 min inside the worker loop; roster emits `COALESCE(canonical_person_ref, id)`; new `person_ref_mismatch` comparison bucket (Owner-authorized on the frozen path) | **DEPLOYED** ✅ commit `6b457a6`, pin `836e8b1`, image `20261101-shadow-recheck` (`sha256:381fd22f…`) |
-| **D1-LID** | Add Rezaul LID `155508031901923` and TCIS LID `243103839576097` to `escort_roster_channel` | **ATTEMPTED + REVERTED 2026-11-02** — bridge `native-reader-profile.json` allowlists only 9 chats, so both LID cursors failed `NATIVE_READER_UNAVAILABLE` and ingestion backed off to 60 s; rows removed, alias LID values kept. **BLOCKED on Phase D2 profile regen + WA-01 restart** |
+| **D1-LID** | Rezaul LID `155508031901923` + TCIS LID `243103839576097` in `escort_roster_channel` | **ACTIVE 2026-11-02** ✅ added as `ch-rezaul-direct-lid` / `ch-tcis-direct-lid` after D2 proved the bridge could read them; profile now allowlists 11 chats and both LID cursors are live with `last_error=NULL` (no backfill) |
 | **B2** | Show All → `/transactions/employee/[phone]` page | PENDING |
 | **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **DEPLOYED** ✅ commit `c98e57e`, pin `8bc7017`, image `20261101-b3-typeahead` (`sha256:61ccaf56…`) |
 | **B4** | `/cash` page Total + Show All | PENDING |
 | **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
 | **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | **DONE 2026-11-02** ✅ promotion fired `03:50:59Z` (`roster_shadow.mode="DB"`, 60 cycles, 0 diffs); `app.env` set to `DB`, app recreated on the same pinned image `sha256:381fd22f…` (no rebuild); verified `roster_mode="DB"`, 0 `ROSTER_SHADOW*` lines, 9/9 cursors. Backups `pre-d1-cutover-20261102-0415.dump` + `app.env.pre-d1-cutover-20261102.bak` |
-| **D2** | Bridge profile generator | CODE COMPLETE, not deployed (`scripts/generate-bridge-profile.ts`, `scripts/check-profile-drift.ts`) |
+| **D2** | Bridge profile generator | **DEPLOYED 2026-11-02** ✅ `scripts/generate-bridge-profile.ts` + `scripts/check-profile-drift.ts`; profile sha256 `1a967be7…`, 11 chats, epoch 4, `root:whatsapp-wa-01` `0440`; drift `chats_added=2`, `bridge_restart_required=true`; WA-01 restarted once; 11/11 cursors clean. Rollback: `native-reader-profile-pre-d2-lid-20261102-0717.json` (sha256 `4708cd0c…`) |
 | **E** | Wire `/review` to the roster outbox, decommission legacy paths | PENDING — D1 is complete, so this is now the next large work item (see `docs/NEXT-HANDOFF.md`) |
 | **AI/Ollama** | Assistant / model integration | DEFERRED |
 
