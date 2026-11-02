@@ -310,6 +310,8 @@ export type Assignment = Payment & {
   matchPass: 1 | 2 | 3 | null;
   note: string | null;
   mismatchKind: MismatchKind | null;
+  /** high = Steps A/B/C (calc_start matched); medium = Step D lump sum. */
+  confidence: 'high' | 'medium' | null;
   nearestProgramId: string | null;
   nearestStartDate: string | null;
   startDeltaDays: number | null;
@@ -327,6 +329,7 @@ export function assignReleases(
     matchPass: null,
     note: null,
     mismatchKind: null,
+    confidence: null,
     nearestProgramId: null,
     nearestStartDate: null,
     startDeltaDays: null,
@@ -366,6 +369,7 @@ export function assignReleases(
     a.status = 'MATCHED';
     a.programId = programId;
     a.matchPass = 1;
+    a.confidence = 'high';
     a.nearestProgramId = programId;
     a.nearestStartDate = start;
     a.startDeltaDays = daysBetween(start, a.calcStart ?? '');
@@ -416,6 +420,7 @@ export function assignReleases(
         a.status = 'MATCHED';
         a.programId = inside.programId;
         a.matchPass = 2;
+        a.confidence = 'high';
         a.note = 'partial payment within duty window';
         a.nearestProgramId = inside.programId;
         a.nearestStartDate = inside.start;
@@ -439,6 +444,7 @@ export function assignReleases(
         a.status = 'MATCHED';
         a.programId = other.id;
         a.matchPass = 3;
+        a.confidence = 'high';
         a.nearestProgramId = other.id;
         a.nearestStartDate = start;
         a.startDeltaDays = daysBetween(start, a.calcStart ?? '');
@@ -476,6 +482,63 @@ export function assignReleases(
         a.nearestProgramId = nearest.id;
         a.nearestStartDate = nearest.startDate;
         a.startDeltaDays = a.calcStart ? daysBetween(nearest.startDate, a.calcStart) : null;
+      }
+    }
+  }
+
+  // ---- Step D: orphan programs — lump-sum settlements that do not back-calculate
+  //
+  // For an escort's program that received no match from A/B/C, a payment dated at
+  // or after its start (and before the next duty) is very likely its release
+  // settlement: ৳900 "release + conveyance" divides into 6 meaningless food days.
+  //
+  // The FIRST such payment is taken as the release; anything later in the same
+  // window is a new duty and stays a mismatch. That ordering is deliberate: it is
+  // what makes Korban Ali's 10-07 the release and 10-12 a new duty, which the
+  // owner verified. Step D matches are 'medium' confidence and always go through
+  // admin review.
+  for (const [phone, idxs] of byEscort) {
+    const programs = (byPhone.get(phone) ?? []).slice().sort((a, b) => a.startDate.localeCompare(b.startDate));
+    if (!programs.length) continue;
+
+    const matchedPrograms = new Set(
+      results.filter((a) => a.status === 'MATCHED' && (normalisePhone(a.escortPhone) ?? '') === phone && a.programId)
+        .map((a) => a.programId as string),
+    );
+
+    for (let pi = 0; pi < programs.length; pi += 1) {
+      const program = programs[pi];
+      if (matchedPrograms.has(program.id)) continue;
+
+      const nextStart = programs[pi + 1]?.startDate ?? null;
+      const candidates = idxs
+        .map((i) => results[i])
+        .filter((a) => a.status === 'ROSTER_MISMATCH'
+          && a.endDate >= program.startDate
+          && (nextStart === null || a.endDate < nextStart))
+        .sort((a, b) => a.endDate.localeCompare(b.endDate));
+
+      if (!candidates.length) continue;
+
+      const release = candidates[0];
+      release.status = 'MATCHED';
+      release.programId = program.id;
+      release.matchPass = null;
+      release.confidence = 'medium';
+      release.mismatchKind = null;
+      release.nearestProgramId = program.id;
+      release.nearestStartDate = program.startDate;
+      release.startDeltaDays = release.calcStart ? daysBetween(program.startDate, release.calcStart) : null;
+      release.note = candidates.length > 1
+        ? `lump-sum release (first of ${candidates.length} payments in window), amount does not back-calculate`
+        : 'lump-sum release, amount does not back-calculate';
+      matchedPrograms.add(program.id);
+
+      // Payments still in the window after that release belong to a later duty.
+      for (const later of candidates.slice(1)) {
+        if (later.status !== 'ROSTER_MISMATCH') continue;
+        later.mismatchKind = 'NEW_DUTY_AFTER_RELEASE';
+        later.note = `new duty after ${release.endDate}, calc_start ${later.calcStart ?? '—'}`;
       }
     }
   }
