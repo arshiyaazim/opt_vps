@@ -66,6 +66,7 @@ async function main() {
       [ACCOUNT, RELEASE_GROUP_JID],
     );
 
+    const startOfById = new Map(roster.map((p) => [p.id, p.startDate]));
     let messages = 0;
     let withPhone = 0;
     const payments: Payment[] = [];
@@ -104,13 +105,13 @@ async function main() {
           `INSERT INTO public.release_candidates
              (escort_phone, escort_name, program_id, end_date, end_shift,
               amount_bdt, duty_days, calc_start, conveyance, match_status,
-              match_pass, mismatch_kind, notes, source_msg_id, source_date, source_text)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+              match_pass, mismatch_kind, confidence, notes, source_msg_id, source_date, source_text)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
            ON CONFLICT DO NOTHING`,
           [
             a.escortPhone, a.escortName, a.programId, a.endDate, a.endShift,
             a.amountBdt, a.dutyDays, a.calcStart, a.conveyance, a.status,
-            a.matchPass, a.mismatchKind, a.note, row.msgId, row.msgAt, row.msgText.slice(0, 4000),
+            a.matchPass, a.mismatchKind, a.confidence, a.note, row.msgId, row.msgAt, row.msgText.slice(0, 4000),
           ],
         );
       }
@@ -136,7 +137,7 @@ async function main() {
     const matched = rows.filter((r) => r.assignment.status === 'MATCHED');
     const mismatched = rows.filter((r) => r.assignment.status === 'ROSTER_MISMATCH');
     const ambiguous = rows.filter((r) => r.assignment.status === 'PENDING_REVIEW');
-    const byPass = tally(matched, (r) => String(r.assignment.matchPass ?? '?'));
+
 
     console.log(`\n=== RELEASE PARSER BACKFILL (${DRY_RUN ? 'DRY RUN' : 'APPLIED'}) — three-pass ===`);
     console.log(`group                  ${RELEASE_GROUP_JID}`);
@@ -147,7 +148,11 @@ async function main() {
     for (const s of ['MATCHED', 'ROSTER_MISMATCH', 'PENDING_REVIEW', 'NO_PAYMENT']) {
       console.log(`  ${s.padEnd(18)} ${byStatus.get(s) ?? 0}`);
     }
-    console.log(`\nMATCHED by pass        pass1:${byPass.get('1') ?? 0}  pass2:${byPass.get('2') ?? 0}  pass3:${byPass.get('3') ?? 0}`);
+    const stepA = matched.filter((r) => r.assignment.matchPass === 1).length;
+    const stepCWindow = matched.filter((r) => r.assignment.matchPass === 2).length;
+    const stepCOther = matched.filter((r) => r.assignment.matchPass === 3).length;
+    const stepD = matched.filter((r) => r.assignment.confidence === 'medium').length;
+    console.log(`\nMATCHED by step        A:${stepA}  C-window:${stepCWindow}  C-other:${stepCOther}  D-orphan:${stepD}`);
 
     const covered = new Set(matched.map((r) => r.assignment.programId));
     console.log(`distinct programs covered: ${covered.size} of ${roster.length}`);
@@ -192,6 +197,20 @@ async function main() {
       const a = r.assignment;
       const prev = a.note?.match(/new duty after (\d{4}-\d{2}-\d{2})/)?.[1] ?? '—';
       console.log(`  ${a.escortPhone} | ${a.endDate} | ${a.amountBdt ?? '—'} | ${a.dutyDays ?? '—'} | ${a.calcStart ?? '—'} | ${prev}`);
+    }
+
+    const stepDRows = matched.filter((r) => r.assignment.confidence === 'medium');
+    console.log(`\n--- Step D lump-sum matches (${stepDRows.length}) ---`);
+    for (const r of stepDRows) {
+      const a = r.assignment;
+      console.log(`  ${a.escortPhone} ${a.escortName ?? ''} | ${a.endDate} | ${a.amountBdt} | ${a.dutyDays}d | calc ${a.calcStart} | program start ${a.nearestStartDate} | ${a.note ?? ''}`);
+    }
+
+    console.log('\n--- Korban Ali detail ---');
+    for (const r of rows.filter((r) => (r.assignment.escortName ?? '').toLowerCase().includes('korban'))) {
+      const a = r.assignment;
+      const prog = a.programId ? (startOfById.get(a.programId) ?? '?') : '—';
+      console.log(`  ${a.endDate} amount ${a.amountBdt} ${a.dutyDays}d calc ${a.calcStart} -> ${a.status}${a.matchPass ? ` (Step${a.matchPass === 1 ? 'A' : 'C'})` : ''}${a.confidence === 'medium' ? ' (StepD medium)' : ''}${a.mismatchKind ? ' ' + a.mismatchKind : ''} program_start ${prog}`);
     }
 
     console.log('\n--- the four dual-date escorts ---');
