@@ -39,8 +39,10 @@ function writePool() {
 }
 
 export class ApplyError extends Error {
-  constructor(message: string, public status = 400) {
+  status: number;
+  constructor(message: string, status = 400) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -106,10 +108,16 @@ export async function rejectCandidate(id: string, reviewedBy: string): Promise<v
 
 /** Apply every high-confidence MATCHED candidate. Returns per-program outcome. */
 export async function applyAllHigh(reviewedBy: string): Promise<{applied: number; failed: Array<{id: string; error: string}>}> {
+  // Several candidates can describe one duty (a food bill and a same-day partial).
+  // Releasing a program twice would append duplicate RELEASE_PROGRAM events and
+  // rewrite the same end date, so only the first candidate per program is applied;
+  // the rest are annotated for the reviewer instead of being issued again.
   const rows = await database().all<{id: string}>(
-    `SELECT id FROM public.release_candidates
+    `SELECT DISTINCT ON (program_id) id
+       FROM public.release_candidates
       WHERE applied = false AND match_status = 'MATCHED' AND confidence = 'high'
-      ORDER BY end_date, id`,
+        AND program_id IS NOT NULL
+      ORDER BY program_id, end_date, id`,
   );
   let applied = 0;
   const failed: Array<{id: string; error: string}> = [];
@@ -120,6 +128,16 @@ export async function applyAllHigh(reviewedBy: string): Promise<{applied: number
     } catch (error) {
       failed.push({id: row.id, error: error instanceof Error ? error.message : String(error)});
     }
+  }
+  const appliedIds = rows.results.map((r) => r.id);
+  if (appliedIds.length) {
+    await writePool().query(
+      `UPDATE public.release_candidates
+          SET notes = coalesce(notes || ' · ', '') || 'duplicate for a program already released by apply-all-high'
+        WHERE applied = false AND match_status = 'MATCHED' AND confidence = 'high'
+          AND program_id IS NOT NULL AND id <> ALL($1::bigint[])`,
+      [appliedIds],
+    );
   }
   return {applied, failed};
 }
