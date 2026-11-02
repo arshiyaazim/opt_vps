@@ -103,7 +103,10 @@ export default function VesselRegisterView(){
   const rowStatus=(p:Program)=>(p.status??'').trim().toLowerCase();
   const rowEditable=(p:Program)=>['confirmed','draft'].includes(rowStatus(p));
   const rowCancellable=(p:Program)=>rowStatus(p)==='confirmed';
-  const programsHref=(p:Program)=>`/employee/${encodeURIComponent(p.escortMobile??p.employeeId??'')}/programs`;
+  // `??` would not fall through an empty string, and the 5 archive-epoch rows
+  // carry an empty escortMobile. Trim, then fall back to employeeId.
+  const rowMobile=(p:Program)=>((p.escortMobile??'').trim()||(p.employeeId??'').trim());
+  const programsHref=(p:Program)=>`/employee/${encodeURIComponent(rowMobile(p))}/programs`;
   // Edit and Cancel need the current revision, which only the detail fetch carries,
   // so both go through openDetail() first rather than issuing a blind command.
   const openRowDrawer=async(p:Program,next:'edit'|'void')=>{await openDetail(p);setDrawer(next);};
@@ -148,7 +151,7 @@ export default function VesselRegisterView(){
                 <DropdownMenuSeparator/>
                 <DropdownMenuItem variant="destructive" disabled={!canWrite||!rowCancellable(program)} onSelect={()=>setCancelTarget(program)}>Cancel program…</DropdownMenuItem>
                 <DropdownMenuSeparator/>
-                <DropdownMenuItem onSelect={()=>router.push(programsHref(program))}>History</DropdownMenuItem>
+                <DropdownMenuItem disabled={!rowMobile(program)} title={rowMobile(program)?undefined:'No escort mobile recorded for this program'} onSelect={()=>router.push(programsHref(program))}>History</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </TableCell>
