@@ -277,102 +277,206 @@ export function matchRelease(payment: Payment, roster: readonly RosterProgram[])
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Three-pass assignment (§ pass 2/3 fix).
+// Assignment (Steps A-D, owner correction 2026-11-02).
 //
-// Pass 1 is the authoritative signal: a payment back-calculates onto a program's
-// start date within ±2. Passes 2 and 3 exist only because a duty can produce
-// several payments — a partial settlement, or food plus conveyance on different
-// days — and those must attach to the duty they belong to instead of being read
-// as separate duties.
+// A payment dated AFTER a duty's release is a NEW DUTY on a new ship, not a
+// partial payment for the same duty. Treating them as partials merged distinct
+// ships into one program, which is why the earlier passes were wrong.
 //
-// Pass 3 never overrides Pass 1, and never guesses between overlapping windows.
+//   Step A  calc_start within ±2 of a program start  -> primary match
+//   Step B  if several payments claim one program, the closest calc_start wins
+//   Step C  remaining payments, per escort, relative to that escort's releases:
+//             a) inside [program.start, release]      -> partial for that duty
+//             b) after the last release               -> new duty: try another
+//                program, else ROSTER_MISMATCH (missing program)
+//             c) before the first program             -> try another, else mismatch
+//   Step D  escorts with no program at all -> every payment is a mismatch
+//
+// ROSTER_MISMATCH is a useful result here: NEW_DUTY_AFTER_RELEASE points at a
+// program the roster is missing.
 // ─────────────────────────────────────────────────────────────────────────────
+
+export type MismatchKind =
+  | 'NO_ROSTER_PHONE'
+  | 'NEW_DUTY_AFTER_RELEASE'
+  | 'BEFORE_PROGRAM'
+  | 'OUTSIDE_TOLERANCE'
+  | 'AMBIGUOUS';
 
 export type Assignment = Payment & {
   status: MatchStatus;
   programId: string | null;
+  /** 1 = Step A, 2 = Step C inside an existing duty, 3 = Step C another program. */
   matchPass: 1 | 2 | 3 | null;
   note: string | null;
+  mismatchKind: MismatchKind | null;
   nearestProgramId: string | null;
   nearestStartDate: string | null;
   startDeltaDays: number | null;
 };
 
-function windowsFor(programs: readonly RosterProgram[]): Array<{ id: string; from: string; to: string }> {
-  const sorted = [...programs].sort((a, b) => a.startDate.localeCompare(b.startDate));
-  return sorted.map((p, i) => {
-    const next = sorted[i + 1];
-    let to: string;
-    if (p.endDate && /^\d{4}-\d{2}-\d{2}$/.test(p.endDate)) {
-      to = p.endDate;                                    // already released
-    } else if (next) {
-      to = addDays(next.startDate, -1);                  // up to the next duty
-    } else {
-      to = addDays(p.startDate, 60);                     // open duty, bounded
-    }
-    return { id: p.id, from: p.startDate, to };
-  });
-}
-
 export function assignReleases(
   payments: readonly Payment[],
   roster: readonly RosterProgram[],
 ): Assignment[] {
-  const results: Assignment[] = payments.map((payment) => {
-    const m = matchRelease(payment, roster);
-    return {
-      ...payment,
-      status: m.status,
-      programId: m.programId,
-      matchPass: m.status === 'MATCHED' ? 1 : null,
-      note: m.status === 'MATCHED' ? null : null,
-      nearestProgramId: m.nearestProgramId,
-      nearestStartDate: m.nearestStartDate,
-      startDeltaDays: m.startDeltaDays,
-    };
-  });
+  const results: Assignment[] = payments.map((p) => ({
+    ...p,
+    // A payment with no usable amount is NO_PAYMENT, not a roster mismatch.
+    status: (p.amountBdt === null ? 'NO_PAYMENT' : 'ROSTER_MISMATCH') as MatchStatus,
+    programId: null,
+    matchPass: null,
+    note: null,
+    mismatchKind: null,
+    nearestProgramId: null,
+    nearestStartDate: null,
+    startDeltaDays: null,
+  }));
 
-  // Pass 2 — same-day partial payment for an escort that already matched today.
-  const primary = new Map<string, { programId: string; amount: number | null }>();
-  for (const a of results) {
-    if (a.status === 'MATCHED' && a.matchPass === 1 && a.programId) {
-      primary.set(`${a.escortPhone}|${a.endDate}`, { programId: a.programId, amount: a.amountBdt });
-    }
-  }
-  for (const a of results) {
-    if (a.status === 'MATCHED') continue;
-    const hit = primary.get(`${a.escortPhone}|${a.endDate}`);
-    if (!hit) continue;
-    a.status = 'MATCHED';
-    a.programId = hit.programId;
-    a.matchPass = 2;
-    a.note = `partial payment, same day as primary ৳${hit.amount ?? '?'}`;
-  }
-
-  // Pass 3 — duty-window attribution for anything still unplaced.
   const byPhone = new Map<string, RosterProgram[]>();
-  for (const p of roster) {
-    const key = normalisePhone(p.escortPhone);
-    if (!key) continue;
+  for (const pr of roster) {
+    const key = normalisePhone(pr.escortPhone);
+    if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(pr.startDate)) continue;
     const list = byPhone.get(key) ?? [];
-    list.push(p);
+    list.push(pr);
     byPhone.set(key, list);
   }
-  for (const a of results) {
-    if (a.status === 'MATCHED') continue;
-    const programs = byPhone.get(normalisePhone(a.escortPhone) ?? '');
-    if (!programs?.length) continue;
-    const containing = windowsFor(programs).filter((w) => a.endDate >= w.from && a.endDate <= w.to);
-    if (containing.length === 1) {
-      a.status = 'MATCHED';
-      a.programId = containing[0].id;
-      a.matchPass = 3;
-      a.note = `window attribution, calc_start ${a.calcStart ?? '—'} outside ±${START_TOLERANCE_DAYS}`;
-    } else if (containing.length > 1) {
-      a.status = 'PENDING_REVIEW';
-      a.programId = null;
-      a.matchPass = null;
-      a.note = `overlapping duty windows (${containing.length})`;
+  const startOf = new Map(roster.map((p) => [p.id, p.startDate]));
+
+  // ---- Step A: candidate (payment, program) pairs within tolerance
+  const pairs: Array<{idx: number; programId: string; delta: number}> = [];
+  results.forEach((a, idx) => {
+    if (!a.calcStart) return;
+    for (const pr of byPhone.get(normalisePhone(a.escortPhone) ?? '') ?? []) {
+      const d = daysBetween(pr.startDate, a.calcStart);
+      if (Number.isFinite(d) && Math.abs(d) <= START_TOLERANCE_DAYS) {
+        pairs.push({idx, programId: pr.id, delta: Math.abs(d)});
+      }
+    }
+  });
+
+  // ---- Step B: one payment per program; closest calc_start wins
+  const winner = new Map<string, {idx: number; programId: string; delta: number}>();
+  for (const pair of pairs) {
+    const cur = winner.get(pair.programId);
+    if (!cur || pair.delta < cur.delta) winner.set(pair.programId, pair);
+  }
+  for (const [programId, pair] of winner) {
+    const a = results[pair.idx];
+    const start = startOf.get(programId) ?? '';
+    a.status = 'MATCHED';
+    a.programId = programId;
+    a.matchPass = 1;
+    a.nearestProgramId = programId;
+    a.nearestStartDate = start;
+    a.startDeltaDays = daysBetween(start, a.calcStart ?? '');
+  }
+
+  // ---- Steps C and D, per escort
+  const byEscort = new Map<string, number[]>();
+  results.forEach((a, i) => {
+    const key = normalisePhone(a.escortPhone) ?? '';
+    const list = byEscort.get(key) ?? [];
+    list.push(i);
+    byEscort.set(key, list);
+  });
+
+  for (const [phone, idxs] of byEscort) {
+    const programs = byPhone.get(phone) ?? [];
+    const releases = () =>
+      results
+        .map((a, i) => ({a, i}))
+        .filter(({a}) => a.status === 'MATCHED' && (normalisePhone(a.escortPhone) ?? '') === phone && a.programId)
+        .map(({a}) => ({
+          programId: a.programId as string,
+          start: startOf.get(a.programId as string) ?? '',
+          release: a.endDate,
+        }));
+
+    if (!programs.length) {
+      // Step D
+      for (const i of idxs) {
+        if (results[i].status === 'NO_PAYMENT') continue;
+        results[i].mismatchKind = 'NO_ROSTER_PHONE';
+      }
+      continue;
+    }
+
+    const used = new Set(releases().map((r) => r.programId));
+    const ordered = [...idxs].sort((x, y) => results[x].endDate.localeCompare(results[y].endDate));
+
+    for (const i of ordered) {
+      const a = results[i];
+      if (a.status === 'MATCHED' || a.status === 'NO_PAYMENT') continue;
+
+      const current = releases();
+
+      // (a) inside an existing duty window -> partial for that duty
+      const inside = current.find((r) => a.endDate >= r.start && a.endDate <= r.release);
+      if (inside) {
+        a.status = 'MATCHED';
+        a.programId = inside.programId;
+        a.matchPass = 2;
+        a.note = 'partial payment within duty window';
+        a.nearestProgramId = inside.programId;
+        a.nearestStartDate = inside.start;
+        a.startDeltaDays = daysBetween(inside.start, a.calcStart ?? '');
+        continue;
+      }
+
+      // (b)/(c) another program of this escort whose start fits this payment
+      let other: {id: string; delta: number} | null = null;
+      if (a.calcStart) {
+        for (const pr of programs) {
+          if (used.has(pr.id)) continue;
+          const d = daysBetween(pr.startDate, a.calcStart);
+          if (Number.isFinite(d) && Math.abs(d) <= START_TOLERANCE_DAYS && (!other || Math.abs(d) < other.delta)) {
+            other = {id: pr.id, delta: Math.abs(d)};
+          }
+        }
+      }
+      if (other) {
+        const start = startOf.get(other.id) ?? '';
+        a.status = 'MATCHED';
+        a.programId = other.id;
+        a.matchPass = 3;
+        a.nearestProgramId = other.id;
+        a.nearestStartDate = start;
+        a.startDeltaDays = daysBetween(start, a.calcStart ?? '');
+        used.add(other.id);
+        continue;
+      }
+
+      // ---- mismatch classification
+      const releaseDates = current.map((r) => r.release).sort();
+      const latestRelease = releaseDates.length ? releaseDates[releaseDates.length - 1] : null;
+      const firstStart = programs.map((pr) => pr.startDate).sort()[0] ?? null;
+
+      if (latestRelease && a.endDate > latestRelease) {
+        a.mismatchKind = 'NEW_DUTY_AFTER_RELEASE';
+        a.note = `new duty after ${latestRelease}, calc_start ${a.calcStart ?? '—'}`;
+      } else if (firstStart && a.endDate < firstStart) {
+        a.mismatchKind = 'BEFORE_PROGRAM';
+        a.note = `before first program ${firstStart}, calc_start ${a.calcStart ?? '—'}`;
+      } else {
+        a.mismatchKind = 'OUTSIDE_TOLERANCE';
+        a.note = `calc_start ${a.calcStart ?? '—'} outside ±${START_TOLERANCE_DAYS}`;
+      }
+
+      // nearest program by start date, for the report
+      let nearest: RosterProgram | null = null;
+      let nearestDelta = Number.POSITIVE_INFINITY;
+      for (const pr of programs) {
+        const d = Math.abs(daysBetween(pr.startDate, a.calcStart ?? a.endDate));
+        if (Number.isFinite(d) && d < nearestDelta) {
+          nearestDelta = d;
+          nearest = pr;
+        }
+      }
+      if (nearest) {
+        a.nearestProgramId = nearest.id;
+        a.nearestStartDate = nearest.startDate;
+        a.startDeltaDays = a.calcStart ? daysBetween(nearest.startDate, a.calcStart) : null;
+      }
     }
   }
 
