@@ -20,7 +20,7 @@
 | Ingestion | 9/9 chats fresh, 0 errors |
 | Bridges | **untouched** — WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…` |
 | PostgreSQL | `vps-infra-postgres-1` untouched |
-| Health | `{"status":"ok","roster_mode":"SHADOW",…}` |
+| Health | `{"status":"ok","roster_mode":"DB","roster_shadow":{"mode":"DB",…}}` |
 
 **Rollback images available**
 
@@ -159,8 +159,9 @@
   `cycles_completed` now advances on its own. Two log lines per tick are
   expected: `ROSTER_SHADOW_OK` (loader) and `ROSTER_SHADOW_RECHECK` (worker).
 - **Signal:** `roster_shadow.mode` in `/api/health` flips to `"DB"`.
-  `roster_mode` stays `"SHADOW"` because it reports the configured env value;
-  it only becomes `"DB"` when `ALRIFAI_ROSTER_SOURCE` is changed in Phase D1.
+  `roster_mode` reports the configured env value, so it stayed `"SHADOW"` until
+  Phase D1 changed `ALRIFAI_ROSTER_SOURCE`; it has read `"DB"` since the
+  2026-11-02 cutover.
 - Once promoted the process will not revert on its own. Reverting requires a
   deploy and an explicit `DELETE FROM roster_shadow_state` to restart the period.
 - **Observation window is intact.** The 36 h period, `diffs_found=0` and
@@ -171,7 +172,10 @@
   `0037`–`0041`, `public.roster_shadow_state`, or the `ALRIFAI_ROSTER_*` values
   in `app.env`. A diff or block is reported, never remediated. The single
   exception on record is the Owner-authorized 2026-11-01 fix above; the freeze
-  resumed on completion.
+  resumed on completion. **Lifted 2026-11-02:** the `=SHADOW` condition no longer
+  holds (promoted, then `ALRIFAI_ROSTER_SOURCE=DB`), so the freeze is over by its
+  own terms — see `AGENTS.md` §13.20 (`RESOLVED`). The paths stay subject to the
+  normal rules; unfrozen does not mean freely editable.
 
 **Promotion result — 2026-11-02.** The predicate fired on its own tick at
 `03:50:59Z`, ~3 min 40 s after the `03:47:18Z` deadline, with no restart,
@@ -236,10 +240,13 @@ in the same session once a blocker was proven.
 
 ## Pending Work (Priority Order)
 
-1. Verify SHADOW auto-promotion after `2026-11-02T03:47Z` — report
-   `roster_shadow.mode == "DB"`.
-2. **Phase D1** — app cutover: set `ALRIFAI_ROSTER_SOURCE=DB` in `app.env`,
-   deploy, verify 9/9 chats, then retire the static list.
+1. ~~Verify SHADOW auto-promotion after `2026-11-02T03:47Z`~~ — **DONE
+   2026-11-02**: fired at `03:50:59Z`, `roster_shadow.mode == "DB"`.
+2. **Phase D1** — app cutover — **DONE 2026-11-02**: `ALRIFAI_ROSTER_SOURCE=DB`
+   in `app.env`, app recreated on the same pinned image, verified
+   `roster_mode="DB"`, no `ROSTER_SHADOW*` lines, 9/9 cursors, bridges and
+   PostgreSQL untouched. Part 1 (LID channels) was attempted and reverted —
+   blocked on Phase D2, see "Phase D1 Part 1" above.
 3. **Item B2** — Show All → `/transactions/employee/[phone]` page.
 4. **Item B3** — Typeahead on the Add Transaction sidebar and `/cash` pages —
    **DEPLOYED 2026-11-01** (image `sha256:61ccaf56…`, source `c98e57e`, pin

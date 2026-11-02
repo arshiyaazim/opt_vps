@@ -12,7 +12,50 @@
 
 ## 0. Current Production Position (verified 2026-11-01)
 
-> **Current production position — 2026-11-01, post-shadow-recheck (authoritative; supersedes every banner below):**
+> **Current production position — 2026-11-02, post-D1-cutover (authoritative; supersedes every banner below):**
+> app image `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3`
+> (tag `local/al-rifai:20261101-shadow-recheck`, source `6b457a6`; **unchanged —
+> no rebuild**; verified via `docker inspect al-rifai-app-1` and still pinned in
+> `apps/al-rifai/compose.yaml` by commit `836e8b1`). Mode `on`. Ledger **41**
+> rows (unchanged — no migration). `app.env` `600 root:root`, 14 lines.
+> **Phase C SHADOW is COMPLETE and PROMOTED.** The 36 h period ran 60 cycles with
+> `diffs_found=0` throughout, and auto-promotion fired on its own 10-minute tick
+> at **2026-11-02T03:50:59Z** (due `03:47:18Z`) with no restart, deploy or manual
+> step: `roster_shadow.mode="DB"`, `cycles_completed=60`,
+> `auto_promote_blocked=false`, worker log `ROSTER_AUTO_PROMOTED after 36 hours,
+> 0 diffs`.
+> **Phase D1 cutover COMPLETE** (Owner-authorized 2026-11-02):
+> `ALRIFAI_ROSTER_SOURCE=SHADOW → DB` — a single-line change in
+> `/etc/vps/apps/al-rifai/app.env`; file verified `600 root:root` with unchanged
+> line count and no duplicate keys — then the app recreated with
+> `docker compose -f compose.yaml up -d --no-deps app` on the **same pinned
+> image** (no rebuild, no re-cut). Verified after restart: `/api/health` shows
+> `roster_mode="DB"` **and** `roster_shadow.mode="DB"`; **zero** `ROSTER_SHADOW*`
+> log lines (the shadow path is off in DB mode); `Approved scope loaded: 9 chat
+> addresses across 7 conversations`; ingestion **9/9 cursors, 0 errors**.
+> Pre-cutover backups: `/var/lib/vps/al-rifai/backups/pre-d1-cutover-20261102-0415.dump`
+> (sha256 `c87a20e9…`, 75 table-data sections, mode 600) and
+> `app.env.pre-d1-cutover-20261102.bak` (mode 600); earlier same-session
+> `pre-d1-lid-channels-20261102-0401.dump` (sha256 `c9102f3a…`, 75 sections).
+> **D1 Part 1 (LID channels) was attempted and REVERTED** — see §14.1 `D1-LID`
+> and `docs/NEXT-HANDOFF.md`. The bridge's `native-reader-profile.json`
+> allowlists only 9 chats, so both new LID cursors failed
+> `NATIVE_READER_UNAVAILABLE` and the ingestion loop backed off from 15 s toward
+> its 60 s cap; Owner directed a revert. No message was lost or duplicated.
+> Roster is back to **26** active channels / 10 persons / epoch **3**; the
+> `whatsapp_identity_aliases` LID values for Rezaul and TCIS were **kept**
+> (`BRIDGE_LID_MAP` — all four contacts now mapped). Activating those LIDs needs
+> Phase D2 (profile regeneration) plus a WA-01 restart — neither authorized.
+> Bridges **untouched**: WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…`
+> (`RestartCount=0`, unchanged start `2026-10-31T13:20:03Z`); PostgreSQL
+> `vps-infra-postgres-1` untouched (`RestartCount=0`, start
+> `2026-10-31T10:45:58Z`). Cash Freeze intact: **0** current postings (1,586
+> archive-epoch postings only), no financial posting, no bridge restart.
+> Open: B2, B4, B5 (blocked — see §14.3), D1-LID (blocked on D2), Phase E.
+> Deferred under B3: typeahead on `/cash/archive` and `/cash/submissions`
+> requires a new read-only employee lookup API endpoint.
+>
+> **Superseded banner — 2026-11-01, post-shadow-recheck (superseded by the block above; retained as evidence):**
 > app image `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3`
 > (tag `local/al-rifai:20261101-shadow-recheck`, source `6b457a6`; verified via
 > `docker inspect al-rifai-app-1` and pinned in `apps/al-rifai/compose.yaml` by
@@ -906,6 +949,16 @@ These rules are not negotiable. If an incident seems to require breaking one, st
     table and env value were left unchanged; the freeze resumed on completion.
     That exception is not a precedent — no further edit to these paths is
     authorized without a new, equally explicit Owner ruling.
+    **RESOLVED 2026-11-02 — the freeze is LIFTED, not extended.** The window
+    closed by its own terms: the 36 h period completed with `diffs_found=0` on
+    all 60 cycles, auto-promotion fired at `03:50:59Z`
+    (`roster_shadow.mode="DB"`), and Phase D1 set `ALRIFAI_ROSTER_SOURCE=DB`, so
+    the `=SHADOW` condition this rule was written against no longer holds. No
+    further ruling is needed to resume ordinary work here. The paths remain
+    protected by the normal rules: an unfrozen path is not a licence to edit the
+    roster silently, `public.roster_shadow_state` stays the promotion record
+    (`mode=DB`, `cycles_completed=60`, `diffs_found=0`), and the
+    `ALRIFAI_ROSTER_*` values are still changed only by explicit Owner direction.
 
 ## 14. Work items and recent history (2026-10-31)
 
