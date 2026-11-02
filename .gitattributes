@@ -1,0 +1,12 @@
+# Keep SQL migration files byte-stable across platforms.
+#
+# Migration integrity depends on exact bytes: scripts/database.mjs computes a
+# SHA-256 of each file and refuses to run when an applied migration's hash no
+# longer matches ("Applied migration checksum changed"). A checkout that
+# rewrote LF to CRLF on Windows would change every hash and block `migrate`.
+# Forcing LF for SQL keeps the stored checksum valid everywhere.
+*.sql text eol=lf
+
+# Shell and Node entrypoints are likewise sensitive to line endings when they
+# are executed directly.
+*.sh  text eol=lf
