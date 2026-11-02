@@ -12,11 +12,11 @@
 |---|---|
 | App image | `sha256:381fd22f85f16c43f54f90607a89f1697aebc804885f53d97c1e65d96ea94fc3` (tag `20261101-shadow-recheck`, source `6b457a6`, compose pin `836e8b1`) |
 | App mode | `on` |
-| SHADOW | `mode=SHADOW`, `cycles_completed=7`, `diffs_found=0`, `auto_promote_blocked=false` (advances every 10 min on a real timer — see Promotion Schedule) |
+| SHADOW | **PROMOTED 2026-11-02** — `mode=DB`, `cycles_completed=60`, `diffs_found=0`, `auto_promote_blocked=false` |
 | SHADOW started | `2026-10-31T15:47:18Z` |
 | Auto-promote at | `2026-11-02T03:47:18Z` |
 | Ledger | **41** rows (`0037`–`0041`) |
-| Roster | 10 active persons / 26 active channels / epoch 2 |
+| Roster | 10 active persons / **26** active channels / **epoch 3** (epoch 3 records the 2026-11-02 Part 1 add+revert; channel content equals pre-D1) |
 | Ingestion | 9/9 chats fresh, 0 errors |
 | Bridges | **untouched** — WA-01 `sha256:28a646d2…`, WA-02 `sha256:d36ca851…` |
 | PostgreSQL | `vps-infra-postgres-1` untouched |
@@ -173,28 +173,66 @@
   exception on record is the Owner-authorized 2026-11-01 fix above; the freeze
   resumed on completion.
 
-### Known roster gap — LIDs not yet in the roster (deferred to D1)
+**Promotion result — 2026-11-02.** The predicate fired on its own tick at
+`03:50:59Z`, ~3 min 40 s after the `03:47:18Z` deadline, with no restart,
+deploy or manual step. `roster_shadow.mode` = `DB`, `cycles_completed` = 60,
+`diffs_found` = 0, `auto_promote_blocked` = false, and the worker logged
+`ROSTER_AUTO_PROMOTED after 36 hours, 0 diffs`. The app began routing from
+`escort_roster`/`escort_roster_channel` on the next scope load while
+`roster_mode` still reported `SHADOW` (the configured env value) until the Phase
+D1 cutover below.
 
-Two people talk to WA-01 from their **LID** rather than their phone number:
+### Phase D1 Part 1 — LID channels: attempted, reverted (bridge-blocked)
 
-| Person | LID | In roster? |
-|---|---|---|
-| Rezaul Karim | `155508031901923` | **no** |
-| TCIS W/A | `243103839576097` | **no** |
+Promotion was confirmed first, then Part 1 ran on **2026-11-02** and was reverted
+in the same session once a blocker was proven.
 
-- **No message loss today.** The bridge normalizes LID traffic to the paired PN
-  before the app sees it, so Rezaul's 12 LID-origin events (6 in / 6 out,
-  2026-10-18/19) were ingested under his PN chat once each — no loss, no
-  duplication. TCIS has no traffic at all.
-- **Not added now, deliberately.** Adding the two LID channels before promotion
-  would make the roster scope diverge from the legacy scope and register a
-  non-zero diff, which would block or muddy auto-promotion. The risk is latent,
-  not live.
-- **Phase D1 adds them**, after promotion, when the roster becomes the only
-  scope. A backfill must not be attempted: the mirror key is
-  `(wa_account, chat_jid, message_id)` and `ensureNativeCursor` starts at the
-  current stream boundary, so replaying history would create duplicates rather
-  than recover anything.
+| Person | PN | LID | LID↔PN evidence | Roster channel |
+|---|---|---|---|---|
+| Rezaul Karim | `8801836743754` | `155508031901923` | WA-01 `whatsmeow_lid_map` | **reverted** |
+| TCIS W/A | `8801757622300` | `243103839576097` | WA-01 `whatsmeow_lid_map` | **reverted** |
+
+- **What was written, then undone.** Two `escort_roster_channel` DIRECT rows
+  (`ch-rezaul-direct-lid`, `ch-tcis-direct-lid`), and in
+  `whatsapp_identity_aliases` the `lid_bare` value plus `verification`
+  `BRIDGE_LID_MAP` for both people. `escort_roster_epoch` went 2 → 3. Both
+  LID↔PN pairs were confirmed against the bridge store's authoritative
+  `whatsmeow_lid_map`, not taken from the plan text
+  (`155508031901923 → 8801836743754`, `243103839576097 → 8801757622300`; the
+  TCIS LID appears in no other source in the repo or the mirror).
+- **The plan SQL was not run verbatim — it would have failed or silently
+  no-opped.** (a) the alias `INSERT` omitted `scope_account`, which is `NOT
+  NULL`; (b) worse, both people already had an alias row on the unique
+  `(scope_account, pn_bare)` index with an empty `lid_bare`, so
+  `INSERT … ON CONFLICT DO NOTHING` would have changed **nothing** while an
+  insert-then-count check reported success. It was replaced with an idempotent
+  `UPDATE … WHERE lid_bare IS DISTINCT FROM …`; (c) the epoch bump was made
+  conditional so a re-run could not inflate it. A re-run produced
+  `channels_present=2 aliases_updated=0 epoch_rows=0`.
+- **Blocker: the bridge, not the roster, decides what is readable.** The scope
+  loaded 11 chat addresses and the worker created cursors for both new LIDs, but
+  both failed immediately with `NATIVE_READER_UNAVAILABLE`. Cause:
+  `native-reader-profile.json` (WA-01 control dir) allowlists **exactly nine**
+  chats and neither LID is among them; in the bridge store Rezaul's LID chat
+  holds **0 messages** and TCIS's LID has **no chat row at all** (Hridoy's LID
+  works only because it holds 38). Because the bridge normalizes LID traffic to
+  the PN, these streams may never populate on their own.
+- **Consequence, then outcome.** One failed per-chat read marks the whole cycle
+  failed, so the loop backed off from 15 s toward its 60 s cap and logged two
+  `WA-01 approved chat ingestion failed; cursor retained` lines per cycle. **No
+  message was lost or duplicated** (cursors retained; activation never replays
+  history). **Owner decision: revert.** The two channel rows and the two inert
+  cursor rows (no cursor, no sequence, no activation, zero messages) were
+  deleted; the `whatsapp_identity_aliases` LID values were kept. Roster is back
+  to 26 active channels, 9/9 cursors, 0 errors.
+- **Activating these LIDs requires Phase D2 plus a bridge change** — a
+  regenerated `native-reader-profile.json` covering both LIDs and a WA-01
+  restart. Neither is authorized. Do **not** re-add the roster channels before
+  that profile exists: it yields failing cursors and slower ingestion with no
+  capture benefit.
+- **Do not backfill.** The mirror key is `(wa_account, chat_jid, message_id)`
+  and `ensureNativeCursor` starts at the current stream boundary, so replaying
+  history would create duplicates rather than recover anything.
 
 ## Pending Work (Priority Order)
 
