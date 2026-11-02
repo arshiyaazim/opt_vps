@@ -10,7 +10,7 @@
 
 | Field | Value |
 |---|---|
-| App image | `sha256:7735007b7080020aa1d05e8d18640233eff8c25275cc97c6e0667a2e3d555fbb` (tag `20261102-b2-employee-txn`, source `5541d12`, compose pin `df1e2a6`) |
+| App image | `sha256:c2759c80e712439be80ae8e38f08f9b19fe275bcd8021e3f38614dfeac44f3a1` (tag `20261102-b4-cash-page`, source `dd21806`, compose pin `d9168aa`) |
 | App mode | `on` |
 | SHADOW | **PROMOTED 2026-11-02** — `mode=DB`, `cycles_completed=60`, `diffs_found=0`, `auto_promote_blocked=false` |
 | SHADOW started | `2026-10-31T15:47:18Z` |
@@ -25,7 +25,8 @@
 
 **Rollback images available**
 
-- `sha256:381fd22f…` — tag `20261101-shadow-recheck` (immediate rollback, pre-B2)
+- `sha256:7735007b…` — tag `20261102-b2-employee-txn` (immediate rollback, pre-B4)
+- `sha256:381fd22f…` — tag `20261101-shadow-recheck` (pre-B2)
 - `sha256:61ccaf56…` — tag `20261101-b3-typeahead` (pre-recheck-fix)
 - `sha256:8e4383a9…` — tag `20261031-b1-columns`
 - `sha256:1911fdfd…` — tag `20261031-typeahead` (Item A)
@@ -35,6 +36,44 @@
 - `sha256:1d4602c3…` — tag `rollback-app-phase2`
 
 ## Completed This Session
+
+- **Item B4 — `/cash` parity with `/transactions` (DEPLOYED 2026-11-02)**
+  Image `sha256:c2759c80…` (tag `20261102-b4-cash-page`, source `dd21806`),
+  compose pin `d9168aa`.
+  - **Method** column renders the shared `methodAbbreviation()` with the raw
+    value in a `title` tooltip (previously raw `row.method`).
+  - **Total** column: each employee's lifetime instruction total across the full
+    Current scope, matching B1's semantics.
+  - **Actions** column with a "Show All" link to
+    `/transactions/employee/{employee_mobile}`, rendered only when the mobile is
+    present. The per-row **Source** evidence button is deliberately retained —
+    Show All was added beside it, not in place of it.
+  - **CSV export** gains the Total column.
+
+  **Why the Total needed a second data source.** `/api/cash/summary` is
+  server-paginated (100 rows/page) and hard-caps `limit` at 200, while the
+  Current scope holds 1,964 instructions, so the page cannot aggregate a
+  lifetime total from its own rows — a `useMemo` over `rows` would total only the
+  loaded page and change as the operator pages. The total is therefore built
+  from one `GET /api/operations?view=cash&export=1` call, which returns the
+  complete Current set and is reachable with the same Cash session
+  (`getChatGPTUser` → `currentIdentity` reads the same `__Host-alrifai_cash`
+  cookie), from the same `public.cash_instructions` CURRENT epoch. The map is
+  keyed by `normalizeEmployeePhone` so `0…` and `+880…` spellings agree. If that
+  call fails the column renders `—` rather than a wrong figure, and nothing else
+  on the page depends on it.
+
+  **Accepted deviation:** `className="num"` was not applied. The cash table has
+  no `.num` rule and no stacked mobile layout, and its Amount column is not
+  right-aligned, so `num` would have been either a no-op or a single
+  right-aligned cell among left-aligned ones. `data-label="Total"` was kept;
+  Owner approved this on 2026-11-02.
+
+  Verified: `tsc` and ESLint clean; `/cash` serves 200 (it renders its own login
+  form client-side); the built client chunk contains the Show All link, the
+  abbreviation and the totals call; health `roster_mode=DB`; scope 11 chat
+  addresses; 11/11 cursors with 0 errors; no new error signatures; 1,586
+  postings unchanged. Authenticated visual check still pending Owner login.
 
 - **Item B2 — per-employee transaction history (DEPLOYED 2026-11-02)**
   New route `/transactions/employee/[phone]` plus a "Show All" link in each
@@ -330,25 +369,28 @@ rewound (documented and accepted).
 
 ## Pending Work (Priority Order)
 
-**Next up after D1/D2:** Phase E (`/review` wired to the roster outbox, legacy
-paths decommissioned) or B5 (vessel operations page — still blocked on an Owner
-data-model decision). D1-LID is resolved; the LID channels are live and the
-bridge profile is now a generated artifact, so future roster changes must be
-followed by a regenerate + drift check + profile deploy + single WA-01 restart.
+**Next up:** Phase E (`/review` wired to the roster outbox, legacy paths
+decommissioned) or B5 (vessel operations page — still blocked on an Owner
+data-model decision). B2 and B4 are done; D1-LID is resolved and the LID
+channels are live. The bridge profile is now a generated artifact, so any future
+roster change must be followed by regenerate + drift check + Owner review of the
+diff + profile deploy + a single WA-01 restart.
 
 1. ~~Verify SHADOW auto-promotion after `2026-11-02T03:47Z`~~ — **DONE
    2026-11-02**: fired at `03:50:59Z`, `roster_shadow.mode == "DB"`.
 2. **Phase D1** — app cutover — **DONE 2026-11-02**: `ALRIFAI_ROSTER_SOURCE=DB`
    in `app.env`, app recreated on the same pinned image, verified
    `roster_mode="DB"`, no `ROSTER_SHADOW*` lines, 9/9 cursors, bridges and
-   PostgreSQL untouched. Part 1 (LID channels) was attempted and reverted —
-   blocked on Phase D2, see "Phase D1 Part 1" above.
-3. **Item B2** — Show All → `/transactions/employee/[phone]` page.
+   PostgreSQL untouched. Part 1 (LID channels) was later completed via Phase D2
+   (see "Phase D1 Part 1 + D2" above).
+3. ~~**Item B2** — Show All → `/transactions/employee/[phone]` page.~~ — **DONE
+   2026-11-02** (image `sha256:7735007b…`, source `5541d12`).
 4. **Item B3** — Typeahead on the Add Transaction sidebar and `/cash` pages —
    **DEPLOYED 2026-11-01** (image `sha256:61ccaf56…`, source `c98e57e`, pin
    `8bc7017`). Deferred sub-task: `/cash/archive` and `/cash/submissions`
    typeahead requires a new employee lookup API endpoint — deferred.
-5. **Item B4** — `/cash` page Total + Show All.
+5. ~~**Item B4** — `/cash` page Total + Show All.~~ — **DONE 2026-11-02** (image
+   `sha256:c2759c80…`, source `dd21806`). Source evidence button retained.
 6. **Item B5** — Vessel page. **BLOCKED**: no salary/rate, attendance or
    conveyance data exists. Needs an Owner data-model decision. See
    `AGENTS.md` §14.3.

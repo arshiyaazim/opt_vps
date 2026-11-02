@@ -12,15 +12,35 @@
 
 ## 0. Current Production Position (verified 2026-11-02)
 
-> **Current production position — 2026-11-02, post-B2 deploy (authoritative; supersedes every banner below):**
-> app image `sha256:7735007b7080020aa1d05e8d18640233eff8c25275cc97c6e0667a2e3d555fbb`
-> (tag `local/al-rifai:20261102-b2-employee-txn`, source `5541d12`; built with
+> **Current production position — 2026-11-02, post-B4 deploy (authoritative; supersedes every banner below):**
+> app image `sha256:c2759c80e712439be80ae8e38f08f9b19fe275bcd8021e3f38614dfeac44f3a1`
+> (tag `local/al-rifai:20261102-b4-cash-page`, source `dd21806`; built with
 > `--build-context evidence=/var/lib/vps/al-rifai/evidence`, pinned in
-> `apps/al-rifai/compose.yaml` by commit `df1e2a6`, deployed via
+> `apps/al-rifai/compose.yaml` by commit `d9168aa`, deployed via
 > `docker compose up -d --no-deps app`; verified via `docker inspect
 > al-rifai-app-1`). Mode `on`. Ledger **41** rows (unchanged — no migration).
-> `app.env` `600 root:root`, 14 lines. **Rollback image `sha256:381fd22f…`**
-> (tag `20261101-shadow-recheck`).
+> `app.env` `600 root:root`, 14 lines. **Rollback image `sha256:7735007b…`**
+> (tag `20261102-b2-employee-txn`).
+> **Item B4 DEPLOYED** (commit `dd21806`): `/cash` now matches
+> `/transactions` after B1/B2 — the Method column renders the shared
+> `methodAbbreviation()` with the raw value in a `title`, a new **Total**
+> column shows each employee's lifetime instruction total across the full
+> Current scope, a new **Actions** column carries a "Show All" link to
+> `/transactions/employee/{employee_mobile}` (only when the mobile is present),
+> and the CSV export gains Total. The per-row **Source evidence button is
+> deliberately kept** — Show All was added beside it, not in place of it.
+> Because `/api/cash/summary` is server-paginated (100/page, hard cap 200) over
+> 1,964 Current instructions, the lifetime total is built from one
+> `GET /api/operations?view=cash&export=1` call, which is reachable with the same
+> Cash session (`currentIdentity` reads the same `__Host-alrifai_cash` cookie)
+> and reads the same CURRENT epoch; the map is keyed by
+> `normalizeEmployeePhone`. If that call fails the column shows `—` rather than a
+> wrong figure. **No new endpoint, no migration, no `app.env` change.** Verified:
+> `tsc` and ESLint clean, `/cash` serves 200 (it renders its own login form),
+> the built client chunk contains the Show All link, the abbreviation and the
+> totals call, health `roster_mode="DB"`, scope 11 chat addresses, ingestion 11/11
+> cursors with 0 errors, no new error signatures, 1,586 postings unchanged.
+> Authenticated visual check still pending Owner login.
 > **Item B2 DEPLOYED** (commits `fa389c1` + `5541d12`):
 > `/transactions/employee/[phone]` shows one employee's Cash instruction history
 > with 20-row pagination, Print and employee-filtered CSV, reached by a
@@ -85,7 +105,7 @@
 > `2026-10-31T10:45:58Z`). Cash Freeze intact: **0** current postings (1,586
 > archive-epoch postings only), no financial posting. The single WA-01 restart
 > was profile-only and touched no Cash state.
-> Open: B4, B5 (blocked — see §14.3), Phase E.
+> Open: B5 (blocked — see §14.3), Phase E.
 > Deferred under B3: typeahead on `/cash/archive` and `/cash/submissions`
 > requires a new read-only employee lookup API endpoint.
 >
@@ -1027,7 +1047,7 @@ These rules are not negotiable. If an incident seems to require breaking one, st
 | **D1-LID** | Rezaul LID `155508031901923` + TCIS LID `243103839576097` in `escort_roster_channel` | **ACTIVE 2026-11-02** ✅ added as `ch-rezaul-direct-lid` / `ch-tcis-direct-lid` after D2 proved the bridge could read them; profile now allowlists 11 chats and both LID cursors are live with `last_error=NULL` (no backfill) |
 | **B2** | Show All → `/transactions/employee/[phone]` page | **DEPLOYED** ✅ commit `5541d12` (shared util `fa389c1`), pin `df1e2a6`, image `20261102-b2-employee-txn` (`sha256:7735007b…`): per-employee history, 20-row pagination, Print, employee-filtered CSV |
 | **B3** | Typeahead on the Add Transaction sidebar and `/cash` pages — shared `lib/employee-suggest.ts` + `app/platform/employee-typeahead.tsx`, single implementation for all three pickers, `tests/employee-suggest.mjs` | **DEPLOYED** ✅ commit `c98e57e`, pin `8bc7017`, image `20261101-b3-typeahead` (`sha256:61ccaf56…`) |
-| **B4** | `/cash` page Total + Show All | PENDING |
+| **B4** | `/cash` page Total + Show All | **DEPLOYED** ✅ commit `dd21806`, pin `d9168aa`, image `20261102-b4-cash-page` (`sha256:c2759c80…`): Total column (lifetime per employee), Method abbreviation, Show All Actions column, CSV with Total; Source evidence button retained |
 | **B5** | Complete vessel operations page (salary, conveyance, total days) | **BLOCKED** — awaiting an Owner data-model decision, see §14.3 |
 | **D1** | App cutover to `ALRIFAI_ROSTER_SOURCE=DB` | **DONE 2026-11-02** ✅ promotion fired `03:50:59Z` (`roster_shadow.mode="DB"`, 60 cycles, 0 diffs); `app.env` set to `DB`, app recreated on the same pinned image `sha256:381fd22f…` (no rebuild); verified `roster_mode="DB"`, 0 `ROSTER_SHADOW*` lines, 9/9 cursors. Backups `pre-d1-cutover-20261102-0415.dump` + `app.env.pre-d1-cutover-20261102.bak` |
 | **D2** | Bridge profile generator | **DEPLOYED 2026-11-02** ✅ `scripts/generate-bridge-profile.ts` + `scripts/check-profile-drift.ts`; profile sha256 `1a967be7…`, 11 chats, epoch 4, `root:whatsapp-wa-01` `0440`; drift `chats_added=2`, `bridge_restart_required=true`; WA-01 restarted once; 11/11 cursors clean. Rollback: `native-reader-profile-pre-d2-lid-20261102-0717.json` (sha256 `4708cd0c…`) |
@@ -1040,6 +1060,9 @@ Item A and B1 are frontend-only. Neither touched a migration, `app.env`,
 ### 14.2 Recent commits (newest first)
 
 ```
+d9168aa deploy: pin app image to 20261102-b4-cash-page
+dd21806 feat: cash page method abbreviation and Show All (B4)
+d81e5d7 docs: update state post-B2 deploy
 df1e2a6 deploy: pin app image to 20261102-b2-employee-txn
 5541d12 feat: employee transaction history page with pagination
 fa389c1 refactor: extract transaction format helpers to shared util
