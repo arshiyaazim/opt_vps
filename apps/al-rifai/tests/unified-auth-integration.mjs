@@ -75,14 +75,25 @@ test('the unified layer adds no second identity store and no automatic credentia
     assert.doesNotMatch(text, /INSERT INTO public\.cash_portal_users/i);
     assert.doesNotMatch(text, /DELETE FROM public\.cash_portal_users/i);
   }
-  // Credential writes exist only inside explicit, password-confirmed actions.
+  // Credential writes exist only inside explicit, authenticated actions.
   const passwordUpdate = unified.match(/UPDATE public\.cash_portal_users SET password_hash/g) || [];
   const usernameUpdate = unified.match(/UPDATE public\.cash_portal_users SET username=/g) || [];
   assert.equal(passwordUpdate.length, 1);
   assert.equal(usernameUpdate.length, 1);
-  assert.match(unified, /async function changeOwnPassword[\s\S]*verifyPassword\(current,row\.password_hash\)|changeOwnPassword[\s\S]*verifyPassword/);
-  assert.match(unified, /verifyPassword\(current, row\.password_hash\)/);
-  assert.equal((unified.match(/verifyPassword\(current, row\.password_hash\)/g) || []).length, 2);
+
+  // Owner direction 2026-11-03: the self-service change is authorised by the
+  // session alone. No old password is read, so none can be guessed or replayed.
+  const changeOwnPassword = unified.slice(
+    unified.indexOf('export async function changeOwnPassword'),
+    unified.indexOf('export async function changeOwnUsername'),
+  );
+  assert.ok(changeOwnPassword.length > 0, 'changeOwnPassword present');
+  assert.doesNotMatch(changeOwnPassword, /currentPassword|CURRENT_PASSWORD_INVALID|verifyPassword\(current/);
+  assert.match(changeOwnPassword, /revokeOtherSessions\(row\.id, currentToken\)/);
+
+  // Renaming the login identity remains password-confirmed; that was not in scope.
+  assert.match(unified, /async function changeOwnUsername[\s\S]*?verifyPassword\(current, row\.password_hash\)/);
+  assert.equal((unified.match(/verifyPassword\(current, row\.password_hash\)/g) || []).length, 1);
 });
 
 test('login reuses the stored Cash credential verification path', () => {
@@ -203,7 +214,9 @@ test('a first-login password change is enforced by the server session boundary',
   assert.match(proxy, /pathname\.startsWith\("\/api\/"\)/);
   assert.match(loginPage, /forcePasswordChange=\{mode === 'on' && identity\?\.mustChangePassword === true\}/);
   assert.match(loginView, /call<\{user: \{mustChangePassword: boolean\}; csrf: string\}>\('session'\)/);
-  assert.match(loginView, /needsCurrentPassword/);
+  // The forced change asks for the new password twice and nothing else.
+  assert.doesNotMatch(loginView, /needsCurrentPassword/);
+  assert.doesNotMatch(loginView, /id="currentPassword"/);
   assert.match(loginView, /autoComplete="current-password"/);
 });
 

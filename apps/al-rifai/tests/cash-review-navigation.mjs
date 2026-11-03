@@ -213,7 +213,7 @@ live('live: Admin sees pending submissions with submitter and purpose; USER scop
     assert.equal(user.json.user.role, 'USER');
     const me = await call('GET', '/api/cash/me', {cookie: user.cookie});
     const changed = await call('POST', '/api/cash/password', {
-      body: {currentPassword: 'TempPass123456', newPassword: 'ChosenPass123456', confirmPassword: 'ChosenPass123456'},
+      body: {newPassword: 'ChosenPass123456', confirmPassword: 'ChosenPass123456'},
       cookie: user.cookie, csrf: me.json.csrf,
     });
     assert.equal(changed.status, 200);

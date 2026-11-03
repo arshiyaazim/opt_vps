@@ -125,7 +125,8 @@ async function handle(request: NextRequest, segments: string[]) {
     return reply({user: identity, csrf});
   }
 
-  // Voluntary, authenticated, password-confirmed credential changes only.
+  // Authenticated, CSRF-checked credential changes. The session is the proof of
+  // identity; the caller is not asked to re-type their old password.
   if (request.method === "POST" && action === "password") {
     requireUnifiedOrigin(request);
     const {identity, token} = await currentSession(request);

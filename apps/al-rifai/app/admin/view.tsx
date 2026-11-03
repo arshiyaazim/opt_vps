@@ -5,6 +5,7 @@ import {Button} from '@/components/ui/button';
 import {PageHeader} from '@/app/platform/ui';
 import {Card,CardContent,CardDescription,CardHeader,CardTitle} from '@/components/ui/card';
 import {Input} from '@/components/ui/input';
+import {MIN_PASSWORD_LENGTH} from '@/lib/password-policy';
 import {Label} from '@/components/ui/label';
 import {Checkbox} from '@/components/ui/checkbox';
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow} from '@/components/ui/table';
@@ -82,7 +83,7 @@ const messages: Record<string, string> = {
   USERNAME_INVALID: 'Username must be 3-80 characters: letters, digits, dot, dash or underscore.',
   USERNAME_UNCHANGED: 'The new username is the same as the current one.',
   CURRENT_PASSWORD_INVALID: 'The current password is not correct.',
-  PASSWORD_POLICY: 'The new password must be at least 12 characters.',
+  PASSWORD_POLICY: 'The new password must be at least 8 characters.',
   PASSWORD_CONFIRMATION_MISMATCH: 'The new password and confirmation do not match.',
   PASSWORD_UNCHANGED: 'The new password must be different from the current one.',
   USER_FIELDS_INVALID: 'The new account is incomplete or invalid.',
@@ -130,7 +131,7 @@ export default function AdminView() {
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState({displayName: '', email: '', mobile: '', whatsappNumber: ''});
   const [rename, setRename] = useState({username: '', currentPassword: ''});
-  const [selfPassword, setSelfPassword] = useState({currentPassword: '', newPassword: '', confirmPassword: ''});
+  const [selfPassword, setSelfPassword] = useState({newPassword: '', confirmPassword: ''});
   const [created, setCreated] = useState({username: '', displayName: '', email: '', password: '', role: 'USER' as Role});
   const [reset, setReset] = useState<{id: string; password: string} | null>(null);
 
@@ -380,7 +381,7 @@ export default function AdminView() {
         <Card>
           <CardHeader>
             <CardTitle>Change password</CardTitle>
-            <CardDescription>Voluntary only. Nothing rotates your credential unless you submit this form.</CardDescription>
+            <CardDescription>Enter a new password twice. Every other signed-in device is signed out; this session stays valid.</CardDescription>
           </CardHeader>
           <CardContent>
             <form
@@ -388,21 +389,17 @@ export default function AdminView() {
               onSubmit={e => {
                 e.preventDefault();
                 void mutate('/api/auth/password', 'POST', selfPassword, 'Password changed. Other signed-in devices have been signed out.').then(() =>
-                  setSelfPassword({currentPassword: '', newPassword: '', confirmPassword: ''}),
+                  setSelfPassword({newPassword: '', confirmPassword: ''}),
                 );
               }}
             >
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="currentPassword">Current password</Label>
-                <Input id="currentPassword" type="password" autoComplete="current-password" value={selfPassword.currentPassword} onChange={e => setSelfPassword({...selfPassword, currentPassword: e.target.value})} required />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="newPassword">New password (12+ characters)</Label>
-                <Input id="newPassword" type="password" autoComplete="new-password" minLength={12} value={selfPassword.newPassword} onChange={e => setSelfPassword({...selfPassword, newPassword: e.target.value})} required />
+                <Label htmlFor="newPassword">New password ({MIN_PASSWORD_LENGTH}+ characters)</Label>
+                <Input id="newPassword" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} value={selfPassword.newPassword} onChange={e => setSelfPassword({...selfPassword, newPassword: e.target.value})} required />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="confirmPassword">Confirm new password</Label>
-                <Input id="confirmPassword" type="password" autoComplete="new-password" minLength={12} value={selfPassword.confirmPassword} onChange={e => setSelfPassword({...selfPassword, confirmPassword: e.target.value})} required />
+                <Input id="confirmPassword" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} value={selfPassword.confirmPassword} onChange={e => setSelfPassword({...selfPassword, confirmPassword: e.target.value})} required />
               </div>
               <Button type="submit" variant="outline" disabled={busy}>Change password</Button>
             </form>
@@ -437,8 +434,8 @@ export default function AdminView() {
                 <Input id="newAccountEmail" type="email" value={created.email} onChange={e => setCreated({...created, email: e.target.value})} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="newAccountPassword">Temporary password (12+ characters)</Label>
-                <Input id="newAccountPassword" type="password" minLength={12} value={created.password} onChange={e => setCreated({...created, password: e.target.value})} required />
+                <Label htmlFor="newAccountPassword">Temporary password ({MIN_PASSWORD_LENGTH}+ characters)</Label>
+                <Input id="newAccountPassword" type="password" minLength={MIN_PASSWORD_LENGTH} value={created.password} onChange={e => setCreated({...created, password: e.target.value})} required />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="newAccountRole">Role</Label>
@@ -534,8 +531,8 @@ export default function AdminView() {
               }}
             >
               <div className="flex flex-1 flex-col gap-1.5">
-                <Label htmlFor="resetPassword">Temporary password for the selected account (12+ characters)</Label>
-                <Input id="resetPassword" type="password" minLength={12} value={reset.password} onChange={e => setReset({id: reset.id, password: e.target.value})} required />
+                <Label htmlFor="resetPassword">Temporary password for the selected account ({MIN_PASSWORD_LENGTH}+ characters)</Label>
+                <Input id="resetPassword" type="password" minLength={MIN_PASSWORD_LENGTH} value={reset.password} onChange={e => setReset({id: reset.id, password: e.target.value})} required />
               </div>
               <Button type="submit" disabled={busy}>Reset</Button>
               <Button type="button" variant="ghost" onClick={() => setReset(null)}>Cancel</Button>

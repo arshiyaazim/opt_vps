@@ -29,6 +29,7 @@ import {
   userById,
   verifyPassword,
 } from './cash-portal';
+import {isAcceptablePassword} from './password-policy';
 import {
   assertUsernameChange,
   isConfiguredSuperAdmin,
@@ -145,18 +146,19 @@ export async function logoutCurrent(token: string | null | undefined): Promise<v
 
 export async function changeOwnPassword(
   identity: UnifiedIdentity,
-  body: {currentPassword?: unknown; newPassword?: unknown; confirmPassword?: unknown},
+  body: {newPassword?: unknown; confirmPassword?: unknown},
   currentToken?: string | null,
 ): Promise<{otherSessionsRevoked: number}> {
   if (!isEnabled()) throw new UnifiedAuthError('UNIFIED_AUTH_DISABLED', 404);
-  const current = typeof body.currentPassword === 'string' ? body.currentPassword : '';
   const next = typeof body.newPassword === 'string' ? body.newPassword : '';
   const confirm = typeof body.confirmPassword === 'string' ? body.confirmPassword : '';
   const row = await userById(identity.id);
-  if (!row || !(await verifyPassword(current, row.password_hash))) {
-    throw new UnifiedAuthError('CURRENT_PASSWORD_INVALID', 400);
-  }
-  if (next.length < 12 || Buffer.byteLength(next) > 256) throw new UnifiedAuthError('PASSWORD_POLICY', 400);
+  // Authentication is the session, not a re-typed old password. Owner direction
+  // (2026-11-03) removed the current-password prompt: the caller is already an
+  // authenticated session with a CSRF token, and the change still signs every
+  // other device out below.
+  if (!row) throw new UnifiedAuthError('AUTHENTICATION_REQUIRED', 401);
+  if (!isAcceptablePassword(next)) throw new UnifiedAuthError('PASSWORD_POLICY', 400);
   if (next !== confirm) throw new UnifiedAuthError('PASSWORD_CONFIRMATION_MISMATCH', 400);
   if (await verifyPassword(next, row.password_hash)) throw new UnifiedAuthError('PASSWORD_UNCHANGED', 400);
   const encoded = await hashPassword(next);

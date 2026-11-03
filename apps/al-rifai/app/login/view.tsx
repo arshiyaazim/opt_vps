@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {MIN_PASSWORD_LENGTH} from '@/lib/password-policy';
 
 type Step = 'credentials' | 'password';
 
@@ -12,7 +13,7 @@ const messages: Record<string, string> = {
   ORIGIN_DENIED: 'This address is not allowed to sign in. Open the official workspace URL.',
   UNIFIED_AUTH_DISABLED: 'Unified sign-in is not enabled in this environment.',
   CURRENT_PASSWORD_INVALID: 'The current password is not correct.',
-  PASSWORD_POLICY: 'The new password must be at least 12 characters.',
+  PASSWORD_POLICY: 'The new password must be at least 8 characters.',
   PASSWORD_CONFIRMATION_MISMATCH: 'The new password and confirmation do not match.',
   PASSWORD_UNCHANGED: 'The new password must be different from the current one.',
   PASSWORD_CHANGE_REQUIRED: 'Change your password before opening workspace pages.',
@@ -43,8 +44,10 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 export default function LoginView({next, mode, verifiedName, forcePasswordChange = false}: {next: string; mode: 'off' | 'shadow' | 'on'; verifiedName?: string | null; forcePasswordChange?: boolean}) {
   const [step, setStep] = useState<Step>(forcePasswordChange ? 'password' : 'credentials');
   const [login, setLogin] = useState({username: '', password: ''});
-  const [change, setChange] = useState({currentPassword: '', newPassword: '', confirmPassword: ''});
-  const [needsCurrentPassword, setNeedsCurrentPassword] = useState(forcePasswordChange);
+  // A forced first-login change no longer asks for the old password: the
+  // session that reached this screen is the proof of identity (Owner direction
+  // 2026-11-03).
+  const [change, setChange] = useState({newPassword: '', confirmPassword: ''});
   const [sessionReady, setSessionReady] = useState(!forcePasswordChange);
   const [csrf, setCsrf] = useState('');
   const [target, setTarget] = useState(next);
@@ -71,7 +74,6 @@ export default function LoginView({next, mode, verifiedName, forcePasswordChange
       })
       .catch(e => {
         if (!active) return;
-        setNeedsCurrentPassword(false);
         setStep('credentials');
         setSessionReady(true);
         setError(friendly(e));
@@ -90,8 +92,6 @@ export default function LoginView({next, mode, verifiedName, forcePasswordChange
       });
       setCsrf(result.csrf);
       setTarget(result.redirect || next);
-      setChange(value => ({...value, currentPassword: login.password}));
-      setNeedsCurrentPassword(false);
       setLogin(value => ({...value, password: ''}));
       if (result.user.mustChangePassword) {
         setStep('password');
@@ -188,26 +188,13 @@ export default function LoginView({next, mode, verifiedName, forcePasswordChange
         ) : (
           <form className="mt-5 flex flex-col gap-3" onSubmit={submitPassword}>
             <p className="text-sm text-muted-foreground">{notice}</p>
-            {needsCurrentPassword && (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="currentPassword">Current password</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={change.currentPassword}
-                  onChange={e => setChange({...change, currentPassword: e.target.value})}
-                />
-              </div>
-            )}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newPassword">New password (12+ characters)</Label>
+              <Label htmlFor="newPassword">New password ({MIN_PASSWORD_LENGTH}+ characters)</Label>
               <Input
                 id="newPassword"
                 type="password"
                 autoComplete="new-password"
-                minLength={12}
+                minLength={MIN_PASSWORD_LENGTH}
                 required
                 value={change.newPassword}
                 onChange={e => setChange({...change, newPassword: e.target.value})}
@@ -219,7 +206,7 @@ export default function LoginView({next, mode, verifiedName, forcePasswordChange
                 id="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                minLength={12}
+                minLength={MIN_PASSWORD_LENGTH}
                 required
                 value={change.confirmPassword}
                 onChange={e => setChange({...change, confirmPassword: e.target.value})}

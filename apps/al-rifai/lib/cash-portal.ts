@@ -2,6 +2,7 @@ import pg from "pg";
 import {readFileSync} from "node:fs";
 import {createHash,pbkdf2,randomBytes,timingSafeEqual} from "node:crypto";
 import {promisify} from "node:util";
+import {isAcceptablePassword} from "./password-policy.ts";
 
 const derive=promisify(pbkdf2);
 const SESSION_MS=8*60*60*1000;
@@ -23,7 +24,9 @@ const digest=(value:string)=>createHash("sha256").update(value).digest("hex");
 export const sessionCookie=COOKIE;
 export function hashToken(value:string){return digest(value);}
 export async function hashPassword(password:string){
- if(typeof password!=="string"||password.length<12||Buffer.byteLength(password)>256)throw new Error("PASSWORD_POLICY");
+ // The single length rule (lib/password-policy.ts) applies here so no caller can
+ // store a credential that the forms would have refused.
+ if(!isAcceptablePassword(password))throw new Error("PASSWORD_POLICY");
  const salt=randomBytes(16).toString("hex");
  const key=await derive(password,salt,600000,32,"sha256");
  return `pbkdf2-sha256:600000:${salt}:${key.toString("hex")}`;

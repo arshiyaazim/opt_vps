@@ -20,6 +20,8 @@ test('static: USER lifecycle guards are present in the Cash route and portal', (
   assert.match(route, /state:"PENDING_REVIEW",duplicate,postingAuthorized:false/);
   assert.match(route, /SUBMISSION_SCHEMA_DEPENDENCY/);
   assert.match(portal, /"SUPER_ADMIN_REQUIRED",403/);
+  // One length rule (lib/password-policy.ts) guards every credential write.
+  assert.match(route, /if\(!isAcceptablePassword\(next\)\)return reply\(\{error:"PASSWORD_POLICY"\},400\)/);
   assert.match(portal, /HttpOnly; Secure; SameSite=Strict/);
 });
 
@@ -83,11 +85,19 @@ live('USER lifecycle: create, login, scope, forced change, submission, revocatio
     assert.equal(summary.status, 403);
     assert.equal(summary.json.error, 'SUPER_ADMIN_REQUIRED');
 
-    // d. forced change blocks submissions until the password is changed
+    // d. forced change blocks submissions until the password is changed. The
+    //    change needs no current-password field (Owner direction 2026-11-03) but
+    //    still enforces the shared 8-character minimum.
     const blocked = await call('POST', '/api/cash/submissions', {body: {}, cookie: s1.cookie, csrf: me.json.csrf});
     assert.equal(blocked.json.error, 'PASSWORD_CHANGE_REQUIRED');
+    const tooShort = await call('POST', '/api/cash/password', {
+      body: {newPassword: 'Short12', confirmPassword: 'Short12'},
+      cookie: s1.cookie, csrf: me.json.csrf,
+    });
+    assert.equal(tooShort.status, 400);
+    assert.equal(tooShort.json.error, 'PASSWORD_POLICY');
     const changed = await call('POST', '/api/cash/password', {
-      body: {currentPassword: tempPassword, newPassword: chosen, confirmPassword: chosen},
+      body: {newPassword: chosen, confirmPassword: chosen},
       cookie: s1.cookie, csrf: me.json.csrf,
     });
     assert.equal(changed.status, 200);
@@ -115,7 +125,7 @@ live('USER lifecycle: create, login, scope, forced change, submission, revocatio
     const c = await login(username, chosen);
     const cMe = await call('GET', '/api/cash/me', {cookie: c.cookie});
     const rev = await call('POST', '/api/cash/password', {
-      body: {currentPassword: chosen, newPassword: 'FinalPass123456', confirmPassword: 'FinalPass123456'},
+      body: {newPassword: 'FinalPass123456', confirmPassword: 'FinalPass123456'},
       cookie: c.cookie, csrf: cMe.json.csrf,
     });
     assert.equal(rev.status, 200);
