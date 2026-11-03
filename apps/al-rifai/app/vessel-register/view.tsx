@@ -252,14 +252,14 @@ export default function VesselRegisterView(){
     {register.loading&&<LoadingLines/>}
     {register.data&&<div className="overflow-x-auto rounded-md border">
       <Table>
-        <TableHeader><TableRow><TableHead>Mother</TableHead><TableHead>Lighter</TableHead><TableHead>Escort</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Open</span></TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Mother Vessel</TableHead><TableHead>Lighter Vessel</TableHead><TableHead>Escort Name</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead className="text-right">Days</TableHead><TableHead className="text-right">Salary</TableHead><TableHead className="text-right">Conv.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Open</span></TableHead></TableRow></TableHeader>
         <TableBody>{visible.map(program=><TableRow key={program.id}>
-          <TableCell className="w-[120px] max-w-[120px] truncate" title={program.motherVessel||undefined}>{program.motherVessel||'—'}</TableCell>
-          <TableCell className="w-[120px] max-w-[120px]">
+          <TableCell className="w-[132px] max-w-[132px] truncate" title={program.motherVessel||undefined}>{program.motherVessel||'—'}</TableCell>
+          <TableCell className="w-[132px] max-w-[132px]">
             <span className="block truncate" title={program.lighterVessel||undefined}>{program.lighterVessel||'—'}</span>
             <span className="block truncate text-[11px] text-muted-foreground" title={program.masterMobile||undefined}>{program.masterMobile||'—'}</span>
           </TableCell>
-          <TableCell className="w-[136px] max-w-[136px]">
+          <TableCell className="w-[150px] max-w-[150px]">
             <span className="block truncate" title={program.escortName||undefined}>{program.escortName||'—'}</span>
             <span className="block truncate text-[11px] text-muted-foreground" title={program.escortMobile||undefined}>{program.escortMobile||'—'}</span>
           </TableCell>
