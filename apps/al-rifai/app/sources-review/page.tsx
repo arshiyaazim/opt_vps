@@ -6,7 +6,7 @@ export const dynamic='force-dynamic';
 export const metadata:Metadata={title:'Review Queue · AL-RIFA’I'};
 
 export default function Page(){
-  return <PlatformPage pathname="/sources-review" label="Review Queue">
+  return <PlatformPage pathname="/sources-review" label="Review Queue" access="admin">
     <SourcesReviewView/>
   </PlatformPage>;
 }

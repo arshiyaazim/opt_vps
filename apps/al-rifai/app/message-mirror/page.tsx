@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {redirect} from "next/navigation";
 import {requireChatGPTUser} from "@/app/chatgpt-auth";
 import {database} from "@/db/raw";
 
@@ -32,7 +33,9 @@ export default async function MessageMirrorPage({
 }: {
   searchParams: Promise<{ bridge?: string }>;
 }) {
-  await requireChatGPTUser("/message-mirror");
+  const mirrorUser = await requireChatGPTUser("/message-mirror");
+  // Admin-only surface (RBAC-2): the mirror exposes raw ingestion evidence.
+  if (!(mirrorUser.role === "ADMIN" || mirrorUser.source === "validation" || mirrorUser.superAdmin === true)) redirect("/dashboard");
   const params = await searchParams;
   const bridge = params.bridge && ["wa-01", "wa-02", "wa-03"].includes(params.bridge)
     ? params.bridge

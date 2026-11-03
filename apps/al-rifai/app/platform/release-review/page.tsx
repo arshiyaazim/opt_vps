@@ -7,7 +7,7 @@ export const metadata:Metadata={title:'Release review · AL-RIFA’I'};
 
 /** Admin review queue for release candidates parsed from the Release Slip group. */
 export default function Page(){
-  return <PlatformPage pathname="/platform/release-review" label="Release review">
+  return <PlatformPage pathname="/platform/release-review" label="Release review" access="admin">
     <ReleaseReviewView/>
   </PlatformPage>;
 }

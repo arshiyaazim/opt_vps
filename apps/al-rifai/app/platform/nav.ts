@@ -25,11 +25,13 @@ export const NAV_GROUPS:NavGroup[]=[
     {href:"/vessel-register",label:"Vessel Register",labelBn:"ভেসেল রেজিস্টার",icon:"Ship",description:"Programs, assignments, release, void and audit history"},
     {href:"/vessel",label:"Programs & Assignments",icon:"ClipboardList",description:"Vessel program workflow and assignments"},
   ]},
-  {items:[
+  {label:"Workforce",items:[
     {href:"/employees",label:"Employees",labelBn:"কর্মচারী",icon:"Users",description:"Employee master records and payment statements"},
   ]},
   {items:[
-    {href:"/sources-review",label:"Review Queue",labelBn:"পর্যালোচনা",icon:"ClipboardCheck",description:"Vessel and WhatsApp source review; Cash submissions stay separate"},
+    {href:"/review",label:"Review Queue",labelBn:"পর্যালোচনা",icon:"ClipboardCheck",description:"Approve, edit or reject submissions staged by staff",adminOnly:true},
+    {href:"/sources-review",label:"Source Review",labelBn:"উৎস পর্যালোচনা",icon:"ClipboardCheck",description:"Vessel and WhatsApp source review; Cash submissions stay separate",adminOnly:true},
+    {href:"/platform/release-review",label:"Release Review",labelBn:"রিলিজ পর্যালোচনা",icon:"ListChecks",description:"Review and apply parsed release candidates",adminOnly:true},
   ]},
   {items:[
     {href:"/assistant",label:"Assistant",icon:"Sparkles",description:"Ask anything about verified records"},
@@ -45,7 +47,7 @@ export const NAV_GROUPS:NavGroup[]=[
 
 export const NAV_ITEMS= NAV_GROUPS.flatMap((group)=>group.items);
 
-import {LayoutDashboard,Ship,ArrowLeftRight,Users,ChartLine,Wallet,Archive,ClipboardCheck,ClipboardList,Sparkles,ShieldCheck,type LucideIcon} from 'lucide-react';
+import {LayoutDashboard,Ship,ArrowLeftRight,Users,ChartLine,Wallet,Archive,ClipboardCheck,ClipboardList,Sparkles,ShieldCheck,ListChecks,type LucideIcon} from 'lucide-react';
 
 export const NAV_ICONS:Record<string,LucideIcon>={
   LayoutDashboard,
@@ -59,6 +61,7 @@ export const NAV_ICONS:Record<string,LucideIcon>={
   ClipboardList,
   Sparkles,
   ShieldCheck,
+  ListChecks,
 };
 
 const DEFAULT_NAV_ITEM:NavItem={
