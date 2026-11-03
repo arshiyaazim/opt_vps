@@ -4,7 +4,7 @@
 import type {ChatGPTUser} from '@/app/chatgpt-auth';
 
 export type CommandActor = {ref: string};
-export type VesselCommandUser = Pick<ChatGPTUser,'userId'>;
+export type VesselCommandUser = Pick<ChatGPTUser,'userId'> & Partial<Pick<ChatGPTUser,'role'|'capabilities'>>;
 export type VesselReadUser = Pick<ChatGPTUser,'userId'|'role'|'capabilities'>;
 
 export class VesselCommandError extends Error {
@@ -31,9 +31,22 @@ export function assertCanReadVessel(user: VesselReadUser | null | undefined): vo
   if (!canReadVessel(user)) throw new VesselCommandError('VESSEL_READ_FORBIDDEN', 403);
 }
 
-/** Application-level role gate. The validation identity is the Owner/admin. */
+/**
+ * Application-level role gate. Two identities may command:
+ *
+ *  * the legacy validation credential (the Owner signing in with Basic), and
+ *  * a unified session whose stored role is ADMIN and whose resolved capabilities
+ *    include vessel.command.
+ *
+ * The second arm is not a widening for convenience: RBAC-2 made ADMIN the role that
+ * writes directly (vessel.command) while USER stages through review (vessel.submit).
+ * Before this, an ADMIN signed in with the unified session was refused with
+ * VESSEL_COMMAND_FORBIDDEN — the button worked, the API did not.
+ */
 export function canCommandVessel(user: VesselCommandUser | null | undefined): boolean {
-  return !!user && user.userId === 'local-validator';
+  if (!user) return false;
+  if (user.userId === 'local-validator') return true;
+  return user.role === 'ADMIN' && (user.capabilities ?? []).includes('vessel.command');
 }
 
 export function assertCanCommandVessel(user: VesselCommandUser | null | undefined): void {

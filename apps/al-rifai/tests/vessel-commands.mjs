@@ -37,10 +37,16 @@ test('command keys must be present and well formed', () => {
   assert.ok(invalid({...base, commandKey: 'bad key with spaces', action: 'void', programId: 'p1', expectedRevision: 0, reason: 'duplicate confirmed'}));
 });
 
-test('only the Owner/admin validation identity may command', () => {
+test('only the Owner identity or an ADMIN with vessel.command may command', () => {
   assert.equal(canCommandVessel({userId: 'local-validator'}), true);
   assert.equal(canCommandVessel({userId: 'someone-else'}), false);
   assert.equal(canCommandVessel(null), false);
+  // Unified-session ADMIN (RBAC-2): the Owner signed in through /login, not Basic.
+  assert.equal(canCommandVessel({userId: 'admin-1', role: 'ADMIN', capabilities: ['vessel.command']}), true);
+  assert.equal(canCommandVessel({userId: 'admin-2', role: 'ADMIN', capabilities: []}), false,
+    'an ADMIN without the capability is refused');
+  assert.equal(canCommandVessel({userId: 'user-4', role: 'USER', capabilities: ['vessel.submit']}), false,
+    'vessel.submit stages work, it does not command');
   assert.throws(() => assertCanCommandVessel(null), (error) => error instanceof VesselCommandError && error.code === 'AUTHENTICATION_REQUIRED');
   assert.throws(() => assertCanCommandVessel({userId: 'x'}), (error) => error instanceof VesselCommandError && error.code === 'VESSEL_COMMAND_FORBIDDEN');
 });
