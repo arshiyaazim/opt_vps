@@ -181,7 +181,11 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
     finally{setBusy(false);}
   };
 
-  const canWrite=available===true;
+  // Direct commands are admin-only. A USER may submit a new program for review, but
+  // Edit/Release/Assign/Void remain owner commands and would answer 403, so they are
+  // hidden rather than offered and refused.
+  const commandsAvailable=available===true;
+  const canWrite=commandsAvailable&&admin;
   // Row-level availability, per Owner decision 2026-11-02:
   //   View/History  any status; Edit: Confirmed + Draft; Cancel: Confirmed only.
   // Voided programs are terminal — void() itself rejects a second void.
@@ -266,7 +270,9 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
       <div className="ml-auto flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={()=>void refreshAvailability()}>Check command layer</Button>
         <Button size="sm" disabled={!canWrite} onClick={()=>{setForm({});setDrawer('add');}}>+ Add program</Button>
-        {!canWrite&&<ActionButtonDisabled label="Commands locked" reason="Vessel command functions (migration 0032) are prepared and rehearsed but not applied. The register stays read-only."/>}
+        {!canWrite&&(commandsAvailable
+          ? <ActionButtonDisabled label="Admin only" reason="Editing, releasing, assigning and voiding a program are owner commands. You can still submit a new program for review."/>
+          : <ActionButtonDisabled label="Commands locked" reason="Vessel command functions (migration 0032) are prepared and rehearsed but not applied. The register stays read-only."/>)}
       </div>
     </div>
     {available===false&&<Unavailable title="Command layer awaiting approval" reason="Migration 0032 is prepared and rehearsed in isolation but not applied in this deployment. All program views remain available; Add/Edit/Release/Assign/Void stay disabled."/>}
