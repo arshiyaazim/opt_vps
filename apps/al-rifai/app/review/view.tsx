@@ -91,6 +91,22 @@ export default function ReviewQueueView() {
   const decide = async (item: Item, decision: 'APPROVE' | 'REJECT', extra?: {note?: string; editedPayload?: Record<string, unknown>}) => {
     setBusy(item.id); setError(''); setNotice('');
     try {
+      // Cash keeps its own authority: the decision is recorded by the cash endpoint
+      // (which enforces the two-step policy and the poster rules), and that endpoint
+      // closes this mirror row. Sending it to workflow_decide would either duplicate
+      // the posting logic or silently mark it done without deciding anything.
+      if (item.domain === 'CASH') {
+        const submissionId = String(item.payload?.submission_id ?? item.target_ref ?? '');
+        if (!submissionId) throw new Error('This cash item has no submission reference.');
+        await writeJson(`/api/cash/submissions/${encodeURIComponent(submissionId)}/decision`, {
+          decision: decision === 'APPROVE' ? 'APPROVED' : 'REJECTED',
+          note: extra?.note ?? '',
+        });
+        setNotice(decision === 'APPROVE' ? 'Cash submission approved.' : 'Cash submission rejected.');
+        setAsking(null); setCurrent(null); setNote(''); setDraft('');
+        await load();
+        return;
+      }
       await writeJson('/api/review/decide', {
         id: item.id,
         decision,

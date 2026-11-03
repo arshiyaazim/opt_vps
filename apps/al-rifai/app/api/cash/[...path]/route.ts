@@ -288,7 +288,16 @@ async function handle(request:NextRequest,segments:string[]){
     [id,result.user.id,result.user.role,payload.employeeName,cashMobile(payload.employeeMobile),cashMobile(payload.payoutMobile),payload.method,payload.amountMinor,payload.purpose,payload.date,payload.note,payload.evidenceRef,JSON.stringify({...payload,state:undefined,payloadHash:undefined}),payload.payloadHash]);
    const duplicate=!inserted.rows.length;
    const submissionId=duplicate?(await database().query<{id:string}>("SELECT id FROM public.cash_submissions WHERE payload_hash=$1",[payload.payloadHash])).rows[0]?.id??id:id;
-   await audit(result.user.id,submissionId,"SUBMISSION_CREATED",{scopeAccount:"wa-01",payloadHash:payload.payloadHash,duplicate});
+   await audit(result.user.id,submissionId,"SUBMISSION_CREATED",{scopeAccount:"wa-01",payloadHash:payload.payloadHash,duplicate})
+
+   // Mirror into the unified queue so an admin sees cash in /review. Non-fatal on
+   // purpose: the submission is already recorded and must not be lost because the
+   // mirror is unavailable. The cash tables remain the authority for the decision.
+   try{
+    await database().query("SELECT public.workflow_submit('CASH','CREATE',$1,$2::jsonb,$3)",[submissionId,JSON.stringify({submission_id:submissionId,employee_name:payload.employeeName,employee_mobile:payload.employeeMobile??null,amount_minor:payload.amountMinor,method:payload.method,purpose:payload.purpose,transaction_date:payload.date}),result.user.id])
+   }catch(mirrorError){
+    await audit(result.user.id,submissionId,"SUBMISSION_MIRROR_FAILED",{message:mirrorError instanceof Error?mirrorError.message.slice(0,200):"unknown"})
+   };
    return reply({ok:true,id:submissionId,state:"PENDING_REVIEW",duplicate,postingAuthorized:false},duplicate?200:201);
   }catch(error){if(schemaUnavailable(error))return schemaReply();throw error;}
  }
@@ -338,7 +347,15 @@ async function handle(request:NextRequest,segments:string[]){
     `INSERT INTO public.cash_submission_reviews(id,submission_id,decision,actor_user_ref,actor_role,submitted_by_user_ref,note,payload_hash)
      VALUES($1,$2,$3,$4,'ADMIN',$5,$6,$7)`,
     [decisionId,submissionId,decision.decision,result.user.id,String(submission.submitted_by_user_ref),decision.note,hashToken(`decision-payload:${submissionId}:${decisionId}`)]);
-   await audit(result.user.id,submissionId,"SUBMISSION_DECISION",{decision:decision.decision,postingAuthorized:false});
+   await audit(result.user.id,submissionId,"SUBMISSION_DECISION",{decision:decision.decision,postingAuthorized:false})
+
+   // Keep /review truthful: the queue row for this submission follows the cash
+   // decision. Non-fatal for the same reason as the mirror itself.
+   try{
+    await database().query("SELECT public.cash_review_mirror_close($1,$2,$3,$4)",[submissionId,decision.decision,result.user.id,decision.note])
+   }catch(mirrorError){
+    await audit(result.user.id,submissionId,"DECISION_MIRROR_FAILED",{message:mirrorError instanceof Error?mirrorError.message.slice(0,200):"unknown"})
+   };
    const projected=(await database().query<Row>("SELECT review_state,decision,decided_at FROM public.cash_submission_review_state WHERE submission_id=$1",[submissionId])).rows[0];
    return reply({ok:true,id:decisionId,reviewState:projected?.review_state??null,postingAuthorized:false},201);
   }catch(error){if(schemaUnavailable(error))return schemaReply();throw error;}

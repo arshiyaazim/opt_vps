@@ -2,6 +2,7 @@
 import "../cash.css";
 import "../cash-dashboard.css";
 import {useCallback,useEffect,useState} from "react";
+import {EmployeeLookup} from "@/app/platform/employee-lookup";
 
 type User={id:string;username:string;role:"ADMIN"|"USER";displayName:string;mustChangePassword:boolean};
 type Submission={id:string;submitted_by_user_ref:string;submitted_by_username:string|null;employee_name:string;employee_mobile:string|null;payout_mobile:string|null;method:string;amount_minor:number;purpose:string;transaction_date:string;review_state:string;decided_at?:string|null};
@@ -121,8 +122,15 @@ export default function CashSubmissionsPage(){
    <h2>Submit a cash record</h2>
    <p className="cash-muted">The record becomes PENDING_REVIEW. Employee ID and payout number stay separate. Saving never posts to the ledger.</p>
    <form onSubmit={submitRecord} className="cash-admin-form">
-    <input placeholder="Employee name" required value={form.employeeName} onChange={e=>setForm({...form,employeeName:e.target.value})}/>
-    <input placeholder="Employee mobile (01…)" required value={form.employeeMobile} onChange={e=>setForm({...form,employeeMobile:e.target.value})}/>
+    <div className="cash-lookup-field">
+     <EmployeeLookup
+      value={form.employeeMobile}
+      onChange={(mobile,name)=>setForm(prev=>({...prev,employeeMobile:mobile,employeeName:name}))}
+      label="Employee"
+      required
+      placeholder="Search employee by mobile or name…"
+     />
+    </div>
     <input placeholder="Payout mobile (01…)" required value={form.payoutMobile} onChange={e=>setForm({...form,payoutMobile:e.target.value})}/>
     <select value={form.method} onChange={e=>setForm({...form,method:e.target.value})}>{['bkash','nagad','cash','rocket','bank'].map(method=><option key={method} value={method}>{method}</option>)}</select>
     <input placeholder="Amount (BDT)" required value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})}/>
