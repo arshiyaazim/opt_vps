@@ -17,5 +17,6 @@ export async function PlatformPage(
   const user=await requireChatGPTUser(pathname);
   const superAdmin=user.superAdmin===true;
   const shellUser:ShellUser={...user,admin:superAdmin||user.source==='validation',superAdmin};
-  return <AppShell user={shellUser} label={label} title={title} actions={actions}>{children}</AppShell>;
+  // Dark sidebar for every /platform/* route (Owner-approved global effect, Phase 5.2).
+  return <AppShell user={shellUser} label={label} title={title} actions={actions} variant="dark">{children}</AppShell>;
 }

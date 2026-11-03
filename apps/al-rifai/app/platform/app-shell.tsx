@@ -16,6 +16,12 @@ import {cn} from '@/lib/utils';
 import type {ChatGPTUser} from '@/app/chatgpt-auth';
 
 export type ShellUser=ChatGPTUser&{admin:boolean;superAdmin?:boolean};
+/**
+ * Sidebar colour variant. Default 'light' keeps the previous appearance, so the
+ * dark treatment is opted into in one place (PlatformPage) and can be reviewed or
+ * reverted without touching every route.
+ */
+export type ShellVariant='light'|'dark';
 
 function iconFor(name:string):LucideIcon{
   return NAV_ICONS[name]??Icons.Menu;
@@ -40,7 +46,7 @@ function SignOutButton({className}:{className?:string}){
   </Button>;
 }
 
-function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;collapsed:boolean;onToggle:()=>void;navigateAway?:()=>void}){
+function SidebarContent({user,collapsed,onToggle,navigateAway,variant='light'}:{user:ShellUser;collapsed:boolean;onToggle:()=>void;navigateAway?:()=>void;variant?:ShellVariant}){
   const pathname=usePathname();
   const [query,setQuery]=useState('');
   const current=navItemForPath(pathname);
@@ -61,7 +67,7 @@ function SidebarContent({user,collapsed,onToggle,navigateAway}:{user:ShellUser;c
     );
   };
   return (
-    <div className="flex h-full flex-col gap-3 p-3">
+    <div className="flex h-full flex-col gap-3 p-3" data-sidebar-variant={variant}>
       <div className="flex items-center justify-between gap-2">
         {!collapsed&&<div className="min-w-0">
           <p className="truncate text-base font-semibold">AL-RIFA’I</p>
@@ -111,7 +117,7 @@ function Breadcrumbs({label}:{label:string}){
   );
 }
 
-export function AppShell({user,label,title,actions,children}:{user:ShellUser;label?:string;title?:string;actions?:ReactNode;children:ReactNode}){
+export function AppShell({user,label,title,actions,children,variant='light'}:{user:ShellUser;label?:string;title?:string;actions?:ReactNode;children:ReactNode;variant?:ShellVariant}){
   const [collapsed,setCollapsed]=useState(false);
   const [mobileOpen,setMobileOpen]=useState(false);
   const pathname=usePathname();
@@ -119,9 +125,9 @@ export function AppShell({user,label,title,actions,children}:{user:ShellUser;lab
   const closeMobile=()=>setMobileOpen(false);
   return (
     <div className="wx-shell flex min-h-dvh bg-background text-foreground">
-      <aside data-collapsed={collapsed}
+      <aside data-collapsed={collapsed} data-sidebar-variant={variant}
         className={cn('sticky top-0 hidden h-dvh shrink-0 border-r transition-[width] md:block',collapsed?'w-16':'w-64')}>
-        <SidebarContent user={user} collapsed={collapsed} onToggle={()=>setCollapsed(v=>!v)}/>
+        <SidebarContent user={user} collapsed={collapsed} onToggle={()=>setCollapsed(v=>!v)} variant={variant}/>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex flex-wrap items-center gap-2 border-b bg-background/95 px-3 py-2 backdrop-blur">
@@ -131,10 +137,10 @@ export function AppShell({user,label,title,actions,children}:{user:ShellUser;lab
                 <Icons.Menu className="size-4"/>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
+            <SheetContent side="left" className={cn('w-72 p-0',variant==='dark'&&'wx-sheet-dark')}>
               <SheetHeader className="sr-only"><SheetTitle>Navigation</SheetTitle></SheetHeader>
               <div className="h-full overflow-y-auto">
-                <SidebarContent user={user} collapsed={false} onToggle={closeMobile} navigateAway={closeMobile}/>
+                <SidebarContent user={user} collapsed={false} onToggle={closeMobile} navigateAway={closeMobile} variant={variant}/>
               </div>
             </SheetContent>
           </Sheet>

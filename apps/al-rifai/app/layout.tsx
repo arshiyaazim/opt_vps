@@ -5,6 +5,7 @@ import "./globals.css";
 import "./workspace.css";
 import "./vessel-register.css";
 import "./register-skin.css";
+import "./sidebar-dark.css";
 import "./conversation-inspector.css";
 
 export const metadata: Metadata = {

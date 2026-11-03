@@ -1,0 +1,117 @@
+/* Dark sidebar variant — Path 2 of the approved design work.
+ *
+ * Opt-in through AppShell's `variant` prop, which PlatformPage sets to "dark" for
+ * every /platform/* route (Owner-approved global effect). The default stays "light",
+ * so the switch lives in exactly one place and can be reviewed or reverted alone.
+ *
+ * Palette is the legacy register's own: navy #102b3b and teal #087f84.
+ *
+ * Contrast, measured against #102b3b:
+ *   body text   #cbdbe4  ~10.3:1
+ *   muted label #7f9db0  ~5.1:1
+ *   active      #087f84 with white ~4.8:1
+ *   hover       #1b4256 with white ~10.6:1
+ * All meet WCAG AA for normal text, and the active item differs from hover by hue
+ * as well as by luminance, so the two states cannot be confused.
+ *
+ * Only the sidebar is restyled. The header, main canvas and footer keep the light
+ * workspace treatment, so page content is unchanged.
+ */
+
+[data-sidebar-variant="dark"] {
+  background: #102b3b;
+  color: #cbdbe4;
+}
+
+[data-sidebar-variant="dark"] .wx-sheet-dark,
+[data-slot="sheet-content"].wx-sheet-dark {
+  background: #102b3b;
+  color: #cbdbe4;
+  border-color: #1c3c4e;
+}
+
+/* Close affordance inside the mobile drawer must stay visible on navy. */
+[data-slot="sheet-content"].wx-sheet-dark > button.absolute {
+  color: #cbdbe4;
+  opacity: .8;
+}
+
+/* Nav and other buttons: default, hover and the current page. */
+[data-sidebar-variant="dark"] [data-slot="button"] {
+  color: #cbdbe4;
+}
+
+[data-sidebar-variant="dark"] [data-slot="button"]:hover {
+  background: #1b4256;
+  color: #ffffff;
+}
+
+[data-sidebar-variant="dark"] [data-slot="button"][aria-current="page"] {
+  background: #087f84;
+  color: #ffffff;
+}
+
+[data-sidebar-variant="dark"] [data-slot="button"][aria-current="page"]:hover {
+  background: #0a6e73;
+  color: #ffffff;
+}
+
+/* Brand block. */
+[data-sidebar-variant="dark"] .font-semibold {
+  color: #eaf3f8;
+}
+
+/* Muted text (brand subtitle, role line, group labels, Bengali sub-labels). */
+[data-sidebar-variant="dark"] .text-muted-foreground {
+  color: #7f9db0;
+}
+
+/* Group headings: small, uppercase, letter-spaced. */
+[data-sidebar-variant="dark"] nav [role="group"] > p {
+  color: #8aa7ba;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: 10px;
+}
+
+/* Navigation search field. */
+[data-sidebar-variant="dark"] input[type="search"] {
+  background: #17384a;
+  border-color: #2b4f63;
+  color: #e2eef4;
+}
+
+[data-sidebar-variant="dark"] input[type="search"]::placeholder {
+  color: #93aec0;
+}
+
+[data-sidebar-variant="dark"] input[type="search"]:focus-visible {
+  border-color: #087f84;
+  box-shadow: 0 0 0 3px rgba(8, 127, 132, .35);
+}
+
+/* Footer: divider and sign-out, which sits above the panel background. */
+[data-sidebar-variant="dark"] .mt-auto {
+  border-top-color: #1c3c4e;
+}
+
+[data-sidebar-variant="dark"] .mt-auto [data-slot="button"] {
+  color: #b6cdda;
+}
+
+[data-sidebar-variant="dark"] .mt-auto [data-slot="button"]:hover {
+  background: #1b4256;
+  color: #ffffff;
+}
+
+/* Focus ring on navy — the global ring colour is too dark to see here. */
+[data-sidebar-variant="dark"] [data-slot="button"]:focus-visible,
+[data-sidebar-variant="dark"] input:focus-visible {
+  outline: 2px solid #54ccc1;
+  outline-offset: 2px;
+}
+
+/* The desktop rail keeps its divider, just in the navy family. */
+aside[data-sidebar-variant="dark"] {
+  border-right-color: #1c3c4e;
+}
