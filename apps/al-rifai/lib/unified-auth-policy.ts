@@ -39,6 +39,9 @@ export const CAPABILITIES = [
   'cash.submit',
   'cash.review',
   'vessel.read',
+  'vessel.submit',
+  'employee.submit',
+  'attendance.submit',
   'vessel.command',
   'audit.read',
   'workspace.admin',
@@ -56,8 +59,10 @@ export const ADMIN_ONLY_CAPABILITIES: readonly Capability[] = ['cash.review'];
 export const SUPER_ADMIN_ONLY_CAPABILITIES: readonly Capability[] = ['workspace.admin'];
 
 const ROLE_CAPABILITIES: Record<AuthRole, readonly Capability[]> = {
-  ADMIN: ['cash.read', 'cash.submit', 'cash.review', 'vessel.read', 'vessel.command', 'audit.read'],
-  USER: ['cash.read', 'cash.submit', 'vessel.read'],
+  ADMIN: ['cash.read', 'cash.submit', 'cash.review', 'vessel.read', 'vessel.command', 'vessel.submit', 'employee.submit', 'attendance.submit', 'audit.read'],
+  // USER may stage work for review but never write it directly: vessel.command and
+  // cash.review stay admin-only, and cash.post is absent entirely.
+  USER: ['cash.read', 'cash.submit', 'vessel.read', 'vessel.submit', 'employee.submit', 'attendance.submit'],
 };
 
 export class UnifiedAuthError extends Error {
