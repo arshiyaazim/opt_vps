@@ -29,7 +29,7 @@ function FacetMenu({def, selected, onChange}:{def:FacetDef;selected:string[];onC
   return (
     <details className="relative">
       <summary className="flex h-9 cursor-pointer list-none items-center gap-1 rounded-md border bg-background px-3 text-sm">
-        {def.label}{selected.length ? ` (${selected.length})` : ''}
+        {selected.length ? `${selected.length} selected` : 'All'}
       </summary>
       <div className="absolute left-0 z-30 mt-1 w-56 rounded-md border bg-background p-2 shadow-md">
         <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder={`Filter ${def.label.toLowerCase()}…`} className="mb-2 h-8"/>
@@ -93,49 +93,69 @@ export function DataToolbar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
-      <div className="relative">
-        <Input
-          value={search}
-          onChange={(e) => changeSearch(e.target.value)}
-          placeholder="Search vessel, escort or mobile…"
-          className="h-9 w-64 pr-8"
-          aria-label="Search programs"
-        />
-        {search && (
-          <button type="button" onClick={() => { setSearch(''); window.clearTimeout(debounce.current); onChange({...filters, search: ''}); }} aria-label="Clear search"
-            className="absolute right-1 top-1 h-7 w-7 text-muted-foreground">×</button>
-        )}
+    <div className="rls-toolbar">
+      <div className="rls-fields">
+        <label className="rls-field" data-wide="true">
+          <span className="rls-label">Search</span>
+          <div className="relative">
+            <Input
+              value={search}
+              onChange={(e) => changeSearch(e.target.value)}
+              placeholder="Search vessel, escort or mobile…"
+              className="h-9 w-full pr-8"
+              aria-label="Search programs"
+            />
+            {search && (
+              <button type="button" onClick={() => { setSearch(''); window.clearTimeout(debounce.current); onChange({...filters, search: ''}); }} aria-label="Clear search"
+                className="absolute right-1 top-1 h-7 w-7 text-muted-foreground">×</button>
+            )}
+          </div>
+        </label>
+
+        {facets.map((facet) => (
+          <div className="rls-field" key={facet.key}>
+            <span className="rls-label">{facet.label}</span>
+            <FacetMenu def={facet} selected={filters.facets[facet.key] ?? []}
+              onChange={(values) => setFacet(facet.key, values)}/>
+          </div>
+        ))}
+
+        <label className="rls-field">
+          <span className="rls-label">Start from</span>
+          <Input type="date" value={filters.from} onChange={(e) => onChange({...filters, from: e.target.value})}
+            className="h-9 w-full" aria-label="From date"/>
+        </label>
+        <label className="rls-field">
+          <span className="rls-label">Start to</span>
+          <Input type="date" value={filters.to} onChange={(e) => onChange({...filters, to: e.target.value})}
+            className="h-9 w-full" aria-label="To date"/>
+        </label>
+
+        <div className="rls-field" data-wide="true">
+          <span className="rls-label">Quick range</span>
+          <div className="rls-quick">
+            <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: daysAgo(7), to: ''})}>7d</Button>
+            <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: daysAgo(30), to: ''})}>30d</Button>
+            <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: monthStart(), to: ''})}>This month</Button>
+            <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: '', to: ''})}>All</Button>
+          </div>
+        </div>
+
+        <div className="rls-field">
+          <span className="rls-label">Sort</span>
+          <Select value={filters.sort} onValueChange={(sort) => onChange({...filters, sort})}>
+            <SelectTrigger className="h-9 w-full" aria-label="Sort"><SelectValue/></SelectTrigger>
+            <SelectContent>
+              {sorts.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {facets.map((facet) => (
-        <FacetMenu key={facet.key} def={facet} selected={filters.facets[facet.key] ?? []}
-          onChange={(values) => setFacet(facet.key, values)}/>
-      ))}
-
-      <div className="flex items-center gap-1">
-        <Input type="date" value={filters.from} onChange={(e) => onChange({...filters, from: e.target.value})}
-          className="h-9 w-36" aria-label="From date"/>
-        <span className="text-xs text-muted-foreground">to</span>
-        <Input type="date" value={filters.to} onChange={(e) => onChange({...filters, to: e.target.value})}
-          className="h-9 w-36" aria-label="To date"/>
+      <div className="rls-toolbar-foot">
+        <span>{resultLabel}</span>
+        <Button size="sm" variant="outline" onClick={clearAll}>Clear filters</Button>
       </div>
-      <div className="flex gap-1">
-        <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: daysAgo(7), to: ''})}>7d</Button>
-        <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: daysAgo(30), to: ''})}>30d</Button>
-        <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: monthStart(), to: ''})}>This month</Button>
-        <Button size="sm" variant="ghost" onClick={() => onChange({...filters, from: '', to: ''})}>All</Button>
-      </div>
-
-      <Select value={filters.sort} onValueChange={(sort) => onChange({...filters, sort})}>
-        <SelectTrigger className="h-9 w-52" aria-label="Sort"><SelectValue/></SelectTrigger>
-        <SelectContent>
-          {sorts.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
-
-      <Button size="sm" variant="outline" onClick={clearAll}>Clear</Button>
-      <span className="ml-auto text-xs text-muted-foreground">{resultLabel}</span>
     </div>
   );
 }

@@ -238,7 +238,7 @@ export default function VesselRegisterView(){
     finally{setBusy(false);}
   };
 
-  return <div className="flex flex-col gap-3">
+  return <div className="register-legacy-skin flex flex-col gap-3">
     <Toaster position="top-center" richColors/>
     {register.error&&<Unavailable title="Register unavailable" reason={register.error}/>}
     <div className="flex flex-wrap items-center gap-2">
@@ -253,15 +253,13 @@ export default function VesselRegisterView(){
     {error&&<p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-sm text-destructive">{error}</p>}
     {notice&&<p role="status" className="rounded-md border bg-muted/40 p-2 text-sm">{notice}</p>}
 
-    <div className="rounded-md border">
-      <DataToolbar
-        filters={filters}
-        onChange={setFilters}
-        facets={facets}
-        sorts={sorts}
-        resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
-      />
-    </div>
+    <DataToolbar
+      filters={filters}
+      onChange={setFilters}
+      facets={facets}
+      sorts={sorts}
+      resultLabel={`Showing ${sorted.length} of ${rows.length} programs`}
+    />
     {register.loading&&<LoadingLines/>}
     {register.data&&<div className="overflow-x-auto rounded-md border">
       <Table>

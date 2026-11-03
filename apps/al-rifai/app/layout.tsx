@@ -4,6 +4,7 @@ const bengali=localFont({src:"./fonts/NotoSansBengali.ttf",variable:"--font-beng
 import "./globals.css";
 import "./workspace.css";
 import "./vessel-register.css";
+import "./register-skin.css";
 import "./conversation-inspector.css";
 
 export const metadata: Metadata = {

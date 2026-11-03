@@ -81,7 +81,7 @@ export default function EmployeeProgramsView({phone}:{phone:string}){
   };
 
   return (
-    <div className="wx-page">
+    <div className="wx-page register-legacy-skin">
       <style>{`@media print{.wx-shell>aside,.wx-shell header,.no-print{display:none!important}.wx-shell,.wx-page{display:block!important}.wx-table{font-size:11px}.wx-table th,.wx-table td{padding:4px 6px}}`}</style>
 
       <PageHeader
