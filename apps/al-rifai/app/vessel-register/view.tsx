@@ -15,6 +15,7 @@ import {DataToolbar} from '@/app/platform/data-toolbar';
 import {applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,type SortDef} from '@/app/platform/toolbar-logic';
 import {useRouter} from 'next/navigation';
 import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle} from '@/components/ui/alert-dialog';
+import {Toaster,toast} from 'sonner';
 
 type Program={
   id:string;motherVessel:string;lighterVessel:string;masterMobile?:string;destination?:string;
@@ -28,10 +29,19 @@ type Program={
 };
 type ProgramDetail={available:boolean;program?:Program&{revision?:number};history?:{events?:HistoryEvent[]}};
 type HistoryEvent={action?:string;key?:string;at?:string;actor?:string;note?:string;reason?:string;employeeMobile?:string;endDate?:string;endShift?:string;releasePoint?:string;patch?:Record<string,unknown>};
-type CommandResponse={ok?:boolean;error?:string;available?:boolean;programId?:string;revision?:number;idempotent?:boolean;reviewState?:string};
+type CommandResponse={ok?:boolean;error?:string;available?:boolean;programId?:string;revision?:number;idempotent?:boolean;reviewState?:string;
+  employeeAction?:'created'|'exists'|'alias_added';employeeCreated?:boolean;employeeName?:string};
 type SourceResponse={available:boolean;source?:{message_id:string;chat_jid:string;direction:string;sender_jid?:string;sender_phone?:string;source_time?:string;text_content?:string}|null;error?:string};
 
 const commandKey=()=>`ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
+
+// Phase 3: a vessel command reports whether the escort it names was filed as a new
+// employee, or gained a new spelling as an alias. The program itself saves either
+// way — this is only the visible confirmation that the employee master changed.
+function notifyEmployee(data:CommandResponse){
+  if(data.employeeCreated)toast.success(`New employee created: ${data.employeeName??'unnamed'}`);
+  else if(data.employeeAction==='alias_added')toast.info(`New name recorded for an existing employee: ${data.employeeName??'unnamed'}`);
+}
 
 function PayCells({program}:{program:Program}){
   const c=payCells(program);
@@ -143,6 +153,7 @@ export default function VesselRegisterView(){
       if(response.status===503){setAvailable(false);throw new Error('Command layer is prepared but not applied (migration 0032).');}
       if(!response.ok)throw new Error(data.error??'Command failed');
       setNotice(data.idempotent?'Command already applied — no changes recorded.':`Saved. Program revision ${data.revision??'—'} recorded in the append-only audit history.`);
+      notifyEmployee(data);
       const programId=String(data.programId??body.programId??detail?.program.id??'');
       setDrawer(null);setDetail(null);
       if(programId)await openDetail({id:programId,motherVessel:String(body.motherVessel??detail?.program.motherVessel??''),lighterVessel:String(body.lighterVessel??detail?.program.lighterVessel??'')});
@@ -220,6 +231,7 @@ export default function VesselRegisterView(){
       if(response.status===503){setAvailable(false);throw new Error('Command layer is prepared but not applied (migration 0032).');}
       if(!response.ok)throw new Error(data.error??'Command failed');
       setNotice(data.idempotent?'Command already applied — no changes recorded.':`Saved. Revision ${data.revision??'—'} recorded in the append-only audit history.`);
+      notifyEmployee(data);
       setEditing(false);setEditForm({});
       await openDetail(detail.program);
     }catch(cause){setError(cause instanceof Error?cause.message:'Command failed');}
@@ -227,6 +239,7 @@ export default function VesselRegisterView(){
   };
 
   return <div className="flex flex-col gap-3">
+    <Toaster position="top-center" richColors/>
     {register.error&&<Unavailable title="Register unavailable" reason={register.error}/>}
     <div className="flex flex-wrap items-center gap-2">
       <h2 className="text-sm font-semibold">Programs <span className="font-normal text-muted-foreground">({sorted.length} shown)</span></h2>
