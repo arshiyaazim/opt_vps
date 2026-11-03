@@ -117,7 +117,7 @@ export default function ReviewQueueView() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="wx-page flex flex-col gap-4">
       <PageHeader
         eyebrow="Administration"
         title="Review Queue"

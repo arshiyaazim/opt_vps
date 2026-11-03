@@ -64,7 +64,7 @@ export default function AttendanceView({admin}:{admin:boolean}) {
   }, [rows, query]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="wx-page flex flex-col gap-4">
       <PageHeader
         eyebrow="Workforce"
         title="Attendance"
