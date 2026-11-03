@@ -77,7 +77,9 @@ test('static: module cards use responsive equal-grid styling and visible keyboar
 });
 
 test('static: /sources-review is named Review Queue and remains separate from Cash submissions', () => {
-  assert.match(nav, /\{href:"\/sources-review",label:"Review Queue"/);
+  // RBAC-2B renamed the sidebar entry to "Source Review" so it is not confused
+  // with the new /review workflow queue. The page itself still says Review Queue.
+  assert.match(nav, /\{href:"\/sources-review",label:"Source Review"/);
   assert.match(nav, /description:"Vessel and WhatsApp source review; Cash submissions stay separate"/);
   assert.match(sourcesReviewPage, /label="Review Queue"/);
   assert.match(sourcesReviewPage, /title:'Review Queue/);

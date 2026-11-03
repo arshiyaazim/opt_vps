@@ -192,7 +192,12 @@ test('the entry allowlists expose only the new sign-in and admin surfaces', () =
   // Previously exposed surfaces stay as they were.
   assert.equal(isPathAllowed('/review', 'main'), true);
   assert.equal(isPathAllowed('/cash', 'cash'), true);
-  assert.equal(isPathAllowed('/review', 'cash'), false);
+  // RBAC-2B placed the interactive review surfaces on BOTH hosts: the review
+  // queue is reached from either workspace, so /review is no longer
+  // cash-host-exclusive. The boundary stays exact.
+  assert.equal(isPathAllowed('/review', 'cash'), true);
+  assert.equal(isPathAllowed('/reviewx', 'cash'), false);
+  assert.equal(isPathAllowed('/attendanc', 'cash'), false);
 });
 
 test('the sign-in page cannot render while unified auth is off, and cannot loop', () => {

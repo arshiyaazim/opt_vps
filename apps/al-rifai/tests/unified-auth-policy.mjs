@@ -91,7 +91,10 @@ test('the Cash portal keeps its own session boundary', () => {
 });
 
 test('role defaults never imply workspace administration', () => {
-  assert.deepEqual(resolveCapabilities('USER', []), ['cash.read', 'cash.submit', 'vessel.read']);
+  // RBAC-2B gave USER the staging capabilities: a USER may create or edit and
+  // send the work to review, while the command capabilities stay Admin-only.
+  assert.deepEqual(resolveCapabilities('USER', []),
+    ['attendance.submit', 'cash.read', 'cash.submit', 'employee.submit', 'vessel.read', 'vessel.submit']);
   assert.equal(hasCapability({role: 'ADMIN'}, 'workspace.admin'), false);
   assert.equal(hasCapability({role: 'USER'}, 'workspace.admin'), false);
   assert.equal(hasCapability({role: 'USER'}, 'cash.review'), false);
