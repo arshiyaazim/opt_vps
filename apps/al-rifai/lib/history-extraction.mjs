@@ -5,6 +5,33 @@ import {parseEscortOrder} from './escort-intake-candidate.mjs';
 export const HISTORY_PARSER_VERSION='stored-history-extraction-v2';
 export const sha=value=>createHash('sha256').update(typeof value==='string'?value:JSON.stringify(value)).digest('hex');
 const digits=s=>String(s).normalize('NFC').replace(/[০-৯]/g,c=>String(c.charCodeAt(0)-0x09e6));
+export function reconcileCashSourceCopies(rows,signatureOf){
+ const groups=new Map();
+ for(const row of rows){
+  const key=`${row.account_id}\u0000${row.message_id}`;
+  const group=groups.get(key)??[];
+  group.push(row);
+  groups.set(key,group);
+ }
+ const unique=[],unresolvedGroups=[];
+ let duplicateCopies=0,resolvedConflictGroups=0,ambiguousCopies=0;
+ for(const group of groups.values()){
+  const originals=group.filter(row=>row.source_store==='original');
+  const signatures=new Set(group.map(signatureOf).map(value=>JSON.stringify(value)));
+  if(originals.length===1){
+   unique.push(originals[0]);
+   duplicateCopies+=group.length-1;
+   if(signatures.size>1)resolvedConflictGroups+=1;
+  }else if(signatures.size===1){
+   unique.push(originals[0]??group[0]);
+   duplicateCopies+=group.length-1;
+  }else{
+   unresolvedGroups.push(group);
+   ambiguousCopies+=group.length;
+  }
+ }
+ return {unique,duplicateCopies,resolvedConflictGroups,unresolvedGroups,ambiguousCopies};
+}
 export function employeeMobile(value){
  const v=digits(value).replace(/[\s().-]/g,'');
  const national=v.replace(/^(?:\+?880|00880)/,'0');
@@ -22,33 +49,42 @@ const isPhoneStart=(s,i)=>i===0||!/[0-9]/.test(s[i-1]);
 
 // Explicit ID/name/payout blocks are deliberately stricter than the archive parser.
 // A history row alone cannot establish author, forwarding state or send success.
+/**
+ * @param {string} text
+ * @returns {Array<{blockKey:string;blockOrder:number;kind:string;fields:Record<string,string>;reasons:string[]}>}
+ */
 export function parsePaymentBlocks(text){
  const lines=digits(text).split(/\r?\n/),out=[];
  for(let i=0;i<lines.length;i++){
-  if(!/^\s*(?:ID|Employee\s*ID|আইডি)\s*[:=-]/iu.test(lines[i]))continue;
+  if(!/^\s*(?:ID|Employee\s*ID|আইডি)(?=\s|:|$)\s*:?\s*/iu.test(lines[i]))continue;
   let block=lines[i].trim(),end=i;
-  while(end+1<lines.length&&end-i<4&&!/^\s*(?:ID|Employee\s*ID|আইডি)\s*[:=-]/iu.test(lines[end+1])){
+  while(end+1<lines.length&&end-i<4&&!/^\s*(?:ID|Employee\s*ID|আইডি)(?=\s|:|$)\s*:?\s*/iu.test(lines[end+1])){
    if(/\d\s*\/-/.test(block))break;
    block+=' '+lines[++end].trim();
   }
   const issues=[],phones=[...block.matchAll(phonePattern)].filter(m=>isPhoneStart(block,m.index));
   const fields={};
   const first=phones[0],second=phones[1];
-  if(first&&/^\s*(?:ID|Employee\s*ID|আইডি)\s*[:=-]\s*$/iu.test(block.slice(0,first.index))){
+  if(first&&/^\s*(?:ID|Employee\s*ID|আইডি)(?=\s|:|$)\s*:?\s*$/iu.test(block.slice(0,first.index))){
+   fields.employeeId=first[0];
    fields.employeeMobile=employeeMobile(first[0]);
   }else issues.push('EMPLOYEE_ID_UNRESOLVED');
   if(phones.length!==2)issues.push('PAYOUT_DESTINATION_UNRESOLVED');
   if(first&&second&&phones.length===2){
    const name=block.slice(first.index+first[0].length,second.index).trim().replace(/^[\s,:;*-]+|[\s,:;*-]+$/g,'');
-   if(/^[\p{L}\p{M} .'-]{2,100}$/u.test(name))fields.employeeName=name;
+   if(/^[\p{L}\p{M} .,'’()-]{2,100}$/u.test(name))fields.employeeName=name;
    else issues.push('EMPLOYEE_NAME_UNRESOLVED');
+   fields.payoutNumber=second[0];
    fields.payoutMobile=employeeMobile(second[0]);
    const tail=block.slice(second.index+second[0].length);
-   const method=/^\s*\(\s*(B|N|C|R|BKASH|NAGAD|CASH|ROCKET|BANK)\s*\)\s*[-:=]?\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*\/-\s*$/i.exec(tail);
+   const method=/^\s*\(\s*(B|N)\s*\)\s*[:=]?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*\/-(?:\s+(.*?))?\s*$/i.exec(tail);
    if(method){
-    fields.method=({B:'bkash',BKASH:'bkash',N:'nagad',NAGAD:'nagad',C:'cash',CASH:'cash',R:'rocket',ROCKET:'rocket',BANK:'bank'})[method[1].toUpperCase()];
+    fields.methodMarker=method[1];
+    fields.method=({B:'bkash',N:'nagad'})[method[1].toUpperCase()];
+    fields.amount=method[2];
     const minor=exactMinor(method[2]);
     if(minor)fields.amountMinor=minor;else issues.push('AMOUNT_INVALID');
+    fields.purpose=method[3]?.trim().slice(0,500)||'Owner direct payment instruction';
    }else issues.push('PAYMENT_FORMAT_REQUIRES_REVIEW');
   }
   if(end+1<lines.length&&/^\s*(?:purpose|উদ্দেশ্য)\s*[:=]/iu.test(lines[end+1])){fields.purpose=lines[++end].replace(/^\s*(?:purpose|উদ্দেশ্য)\s*[:=]\s*/iu,'').trim().slice(0,500);}

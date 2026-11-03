@@ -1,52 +1,74 @@
-import {employeeMobile,exactMinor} from '../../lib/history-extraction.mjs';
+import {parsePaymentBlocks} from '../../lib/history-extraction.mjs';
 import {digest} from './contracts.ts';
 import type {NativeLivePage,NativeLiveReader} from '../../lib/native-live-reader.ts';
 import type pg from 'pg';
-import {CASH_SCOPE_ACCOUNT as ACCOUNT,CASH_SCOPE_ACCOUNTANT,CASH_SCOPE_CHAT as CHAT,CASH_SCOPE_NAME as CASH_ACCOUNT,isCashScopeChat,isCashScopeOwner} from '../../lib/cash-scope.ts';
+import {CASH_SCOPE_ACCOUNT as ACCOUNT,CASH_SCOPE_ACCOUNTANT,CASH_SCOPE_CHAT as CHAT,CASH_SCOPE_NAME as CASH_ACCOUNT,isCashScopeChat} from '../../lib/cash-scope.ts';
+import {cashSourceEligibility} from '../../lib/cash-source-eligibility.ts';
 import {publishCashBlock,CASH_EPOCH_CURRENT} from '../../lib/cash-publish.ts';
 
-const phonePattern=/(?:\+?880|00880|0)1[3-9][0-9]{8}(?![0-9])/g;
-const digits=(s:string)=>s.normalize('NFC').replace(/[০-৯]/g,c=>String(c.charCodeAt(0)-0x09e6));
-const phoneAtStart=(s:string,i:number)=>i===0||!/[0-9]/.test(s[i-1]);
-
-type PaymentFields={employeeMobile:string;employeeName:string;payoutMobile:string;method:'cash'|'bkash'|'nagad'|'bank'|'rocket';amountMinor:string;purpose:string};
+type PaymentFields={employeeId:string;employeeMobile:string;employeeName:string;payoutNumber:string;payoutMobile:string;methodMarker:string;method:'cash'|'bkash'|'nagad'|'bank'|'rocket';amount:string;amountMinor:string;purpose:string};
 type PaymentBlock={blockKey:string;blockOrder:number;fields:PaymentFields};
 
-// Live parser is deliberately narrower than the general review parser: it
-// requires employee mobile + name + separate payout mobile + method + amount.
-// A missing employee mobile (name-only) is ignored, never treated as a person.
+// Keep the source ID as text for evidence while normalizing the existing
+// employee_mobile key used by employee_master and cash_instructions.
 export function parseLivePaymentBlocks(input:string):PaymentBlock[]{
- const text=digits(input),lines=text.split(/\r?\n/),out:PaymentBlock[]=[];
- for(const line of lines){
-  const source=line.trim();
-  if(!/^\s*(?:ID|Employee\s*ID|আইডি)\s*[:=-]/iu.test(source))continue;
-  const phones=[...source.matchAll(phonePattern)].filter(m=>phoneAtStart(source,m.index??0));
-  if(phones.length!==2)continue;
-  const first=phones[0],second=phones[1];
-  const employee=employeeMobile(first[0]),payout=employeeMobile(second[0]);
-  if(!employee||!payout)continue;
-  const name=source.slice((first.index??0)+first[0].length,second.index??0).trim().replace(/^[\s,:;*-]+|[\s,:;*-]+$/g,'');
-  if(!/^[\p{L}\p{M} .'-]{2,100}$/u.test(name))continue;
-  const tail=source.slice((second.index??0)+second[0].length);
-  const method=/^\s*\(\s*(B|N|C|R|BKASH|NAGAD|CASH|ROCKET|BANK)\s*\)\s*[-:=]?\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*\/-?(?:\s+(.*?))?\s*$/i.exec(tail);
-  if(!method)continue;
-  const amountMinor=exactMinor(method[2]);
-  if(!amountMinor)continue;
-  const code=method[1].toUpperCase();
-  const methodName=({B:'bkash',BKASH:'bkash',N:'nagad',NAGAD:'nagad',C:'cash',CASH:'cash',R:'rocket',ROCKET:'rocket',BANK:'bank'} as const)[code];
-  if(!methodName)continue;
-  out.push({blockKey:`payment-block-${out.length}`,blockOrder:out.length,fields:{employeeMobile:employee,employeeName:name,payoutMobile:payout,method:methodName,amountMinor,purpose:(method[3]?.trim()||'Owner direct payment instruction').slice(0,500)}});
- }
- return out;
+ return parsePaymentBlocks(input).filter(block=>
+  block.kind==='PAYMENT'&&block.reasons.length===0
+  &&typeof block.fields.employeeId==='string'
+  &&typeof block.fields.employeeMobile==='string'
+  &&typeof block.fields.employeeName==='string'
+  &&typeof block.fields.payoutNumber==='string'
+  &&typeof block.fields.payoutMobile==='string'
+  &&typeof block.fields.methodMarker==='string'
+  &&typeof block.fields.method==='string'
+  &&typeof block.fields.amount==='string'
+  &&typeof block.fields.amountMinor==='string',
+ ).map(block=>({
+  blockKey:block.blockKey,
+  blockOrder:block.blockOrder,
+  fields:{
+   employeeId:block.fields.employeeId,
+   employeeMobile:block.fields.employeeMobile,
+   employeeName:block.fields.employeeName,
+   payoutNumber:block.fields.payoutNumber,
+   payoutMobile:block.fields.payoutMobile,
+   methodMarker:block.fields.methodMarker,
+   method:block.fields.method as PaymentFields['method'],
+   amount:block.fields.amount,
+   amountMinor:block.fields.amountMinor,
+   purpose:block.fields.purpose??'Owner direct payment instruction',
+  },
+ }));
 }
 
-// A record is eligible only when the bridge marked it CONTENT, it carries an
-// envelope, the conversation is the approved Accountant chat and the sender is
-// the verified Owner/Admin. Group and system rows can never qualify.
+export function employeeNameMatches(name:string,knownNames:unknown):boolean{
+ const normalize=(value:string)=>value.normalize('NFKC').toLowerCase()
+  .replace(/[\p{P}\p{S}]/gu,' ').replace(/\s+/g,' ').trim();
+ const key=normalize(name);
+ const names=Array.isArray(knownNames)?knownNames.filter((value):value is string=>typeof value==='string'):[];
+ return !!key&&names.some(value=>normalize(value)===key);
+}
+
+export function employeeReviewReasons(
+ employee:{state:string;preferred_name:string;name_aliases:string[]}|undefined,
+ employeeName:string,
+):string[]{
+ if(!employee)return ['EMPLOYEE_ID_UNMATCHED'];
+ if(employee.state!=='CONFIRMED')return ['EMPLOYEE_ID_NOT_CONFIRMED'];
+ return employeeNameMatches(employeeName,[employee.preferred_name,...employee.name_aliases])
+  ?[]:['EMPLOYEE_ID_NAME_CONFLICT'];
+}
+
+// Forwarding and quotation metadata do not change Cash eligibility: the verified
+// account, direct chat, direction and endpoint identities are authoritative.
 export function ownerOutgoing(record:{status:string;envelope:NativeLivePage['records'][number]['envelope']}):LiveMessage|null{
  const e=record.envelope;
  if(record.status!=='CONTENT'||!e)return null;
- if(e.accountId!==ACCOUNT||!isCashScopeChat(e.chatJid)||e.direction!=='OUTGOING'||!isCashScopeOwner(e.senderJid))return null;
+ if(e.version!=='native-message-envelope-v1'||e.provider!=='WHATSAPP'
+  ||cashSourceEligibility({
+    accountId:e.accountId,chatJid:e.chatJid,direct:e.chatType==='direct',direction:e.direction,
+    senderJid:e.senderJid,recipientJid:e.chatJid,
+   })!=='ELIGIBLE')return null;
  return {id:e.nativeMessageId,chatJid:e.chatJid,sender:e.senderJid,sourceTime:e.sourceTimestamp,text:e.payload?.text??'',direction:e.direction};
 }
 
@@ -54,6 +76,7 @@ export const isLiveCashOwnerOutgoing=(record:{status:string;envelope:NativeLiveP
 
 export function liveSourceIdentity(messageId:string,blockKey:string,chatJid:string=CHAT){
  void chatJid;
+ if(!messageId.trim()||messageId.length>200||!/^payment-block-\d+$/.test(blockKey))throw new Error('LIVE_CASH_SOURCE_IDENTITY_UNRESOLVED');
  // Canonical: the Accountant's PN and LID chats are ONE logical conversation, so
  // the source identity deliberately excludes chatJid. A message replayed through
  // the other addressing form collapses onto the same record instead of creating a
@@ -82,6 +105,12 @@ async function writeBlock(pool:pg.Pool,message:LiveMessage,sourceHash:string,blo
     AND b.payload->'data'->>'direction'='INCOMING'
     AND b.payload->'data'->>'purpose'='SENDER') AS allowed`,[ACCOUNT,message.chatJid])).rows[0]?.allowed;
  if(accountantBinding!==true)throw new Error('LIVE_CASH_ACCOUNTANT_BINDING_REQUIRED');
+ const employee=(await pool.query<{state:string;preferred_name:string;name_aliases:string[]}>(
+  `SELECT state,preferred_name,name_aliases FROM public.employee_master
+    WHERE scope_account=$1 AND employee_mobile=$2`,
+  [ACCOUNT,block.fields.employeeMobile],
+ )).rows[0];
+ const reviewReasons=employeeReviewReasons(employee,block.fields.employeeName);
  return publishCashBlock(pool,{
   account:ACCOUNT,
   chatJid:message.chatJid,
@@ -92,6 +121,7 @@ async function writeBlock(pool:pg.Pool,message:LiveMessage,sourceHash:string,blo
   cashAccount:CASH_ACCOUNT,
   epoch:CASH_EPOCH_CURRENT,
   block,
+  reviewReasons,
   command:{
    action:'CASH_OWNER_ACCOUNTANT_INTENT_CAPTURE',
    actorRef:process.env.ALRIFAI_CASH_OWNER_PERSON_REF||'unbound-owner',

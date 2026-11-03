@@ -1,6 +1,7 @@
 import {createPool} from "../db/postgres.mjs";
 import {parseLivePaymentBlocks} from "../candidates/identity-review/live-cash.ts";
-import {CASH_SCOPE_ACCOUNT,CASH_SCOPE_CHATS,isCashScopeOwner} from "../lib/cash-scope.ts";
+import {CASH_SCOPE_ACCOUNT,CASH_SCOPE_CHATS} from "../lib/cash-scope.ts";
+import {cashSourceEligibility} from "../lib/cash-source-eligibility.ts";
 
 const BATCH_SIZE=50;
 const scopeChats=new Set<string>(CASH_SCOPE_CHATS);
@@ -19,9 +20,11 @@ type PendingRow={
   original_id:number;
   wa_account:string;
   chat_jid:string;
+  chat_type:string;
   message_id:string;
   direction:string;
   sender_jid:string|null;
+  receiver_jid:string|null;
   timestamp:Date|string;
   text_content:string|null;
   raw_content:Record<string,unknown>;
@@ -31,11 +34,16 @@ function classify(row:PendingRow):Record<string,unknown>{
   if(row.wa_account!==CASH_SCOPE_ACCOUNT||!scopeChats.has(row.chat_jid)){
     return {classification:"NOT_CASH_SCOPE",reviewStatus:"NOT_REQUIRED",financialAction:"NONE"};
   }
-  if(row.direction!=="outgoing"){
-    return {classification:"NOT_OWNER_OUTGOING",reviewStatus:"NOT_REQUIRED",financialAction:"NONE"};
-  }
-  if(!row.sender_jid||!isCashScopeOwner(row.sender_jid)){
-    return {classification:"OWNER_IDENTITY_UNRESOLVED",reviewStatus:"REVIEW",financialAction:"NONE"};
+  const eligibility=cashSourceEligibility({
+    accountId:row.wa_account,chatJid:row.chat_jid,direct:row.chat_type==="individual",
+    direction:row.direction==="outgoing"?"OUTGOING":row.direction.toUpperCase(),
+    senderJid:row.sender_jid,recipientJid:row.receiver_jid??row.chat_jid,
+  });
+  if(eligibility!=="ELIGIBLE"){
+    const review=eligibility==="OWNER_IDENTITY_UNRESOLVED"
+      ||eligibility==="CASH_RECIPIENT_IDENTITY_UNRESOLVED"
+      ||eligibility==="SOURCE_PROVENANCE_UNRESOLVED";
+    return {classification:eligibility,reviewStatus:review?"REVIEW":"NOT_REQUIRED",financialAction:"NONE"};
   }
   if(!row.text_content){
     return {classification:"OWNER_MESSAGE_WITHOUT_TEXT",reviewStatus:"REVIEW",financialAction:"NONE"};
@@ -60,8 +68,8 @@ async function processBatch():Promise<number>{
   try{
     await client.query("BEGIN");
     const rows=(await client.query(
-      `SELECT p.id,p.original_id,o.wa_account,o.chat_jid,o.message_id,o.direction,
-              o.sender_jid,o."timestamp",o.text_content,o.raw_content
+      `SELECT p.id,p.original_id,o.wa_account,o.chat_jid,o.chat_type,o.message_id,o.direction,
+              o.sender_jid,o.receiver_jid,o."timestamp",o.text_content,o.raw_content
        FROM public.whatsapp_messages_processing p
        JOIN public.whatsapp_messages_original o ON o.id=p.original_id
        WHERE p.domain='cash' AND p.status='pending' AND o.wa_account='wa-01'
