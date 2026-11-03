@@ -24,6 +24,49 @@ function commandWriter() {
   return writer;
 }
 
+// Phase 3: a vessel command that names an escort is also the moment that escort
+// becomes an employee. create_employee_if_new (migration 0062) is the only approved
+// write path into employee_master, and it is called BEFORE the program is written, so
+// a malformed mobile aborts the command instead of creating a program whose escort
+// cannot be identified. The call is a side effect: the program logic is untouched.
+//
+// Deliberately not wrapped in try/catch, per the approved phase 3 scope: if the
+// employee cannot be filed, the command fails rather than leaving a program pointing
+// at an unknown person. The one exposure is a filed employee whose program write then
+// fails; an employee without a program is a harmless superset record.
+type EmployeeOutcome = {
+  employeeAction?: 'created' | 'exists' | 'alias_added';
+  employeeCreated?: boolean;
+  employeeName?: string;
+};
+
+async function fileEscortEmployee(
+  pool: ReturnType<typeof createPool>,
+  mobile: string | undefined,
+  name: string | undefined,
+): Promise<EmployeeOutcome> {
+  const value = (mobile ?? '').trim();
+  if (!value) return {};
+  const label = (name ?? '').trim();
+  const result = await pool.query<{result: string}>(
+    'SELECT public.create_employee_if_new($1,$2,$3,$4) AS result',
+    [value, label, 'vessel_auto', 'escort'],
+  );
+  const action = result.rows[0]?.result;
+  if (action !== 'created' && action !== 'exists' && action !== 'alias_added') return {};
+  return {employeeAction: action, employeeCreated: action === 'created', employeeName: label || undefined};
+}
+
+// An edit that only changes the mobile must not file the employee under a placeholder
+// name, so the program's current escort name is read when the patch omits it.
+async function escortNameFor(pool: ReturnType<typeof createPool>, programId: string): Promise<string | undefined> {
+  const result = await pool.query<{name: string | null}>(
+    'SELECT "escortName" AS name FROM public.programs WHERE id=$1',
+    [programId],
+  );
+  return (result.rows[0]?.name ?? '').trim() || undefined;
+}
+
 function errorReply(error: unknown) {
   if (error instanceof VesselCommandError) return reply({error: error.code, available: error.code !== MIGRATION_DEPENDENCY ? undefined : false}, error.status);
   const mapped = mapCommandError(error);
@@ -101,18 +144,26 @@ export async function POST(request: NextRequest) {
           mother: command.motherVessel, lighter: command.lighterVessel,
           startDate: command.startDate, shift: command.shift,
         });
+        const employee = await fileEscortEmployee(pool, command.escortMobile, command.escortName);
         const result = await pool.query<{result: Row}>(
           'SELECT public.alrifai_vessel_program_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) AS result',
           [programId, command.motherVessel, command.lighterVessel, command.masterMobile ?? '',
             command.destination ?? '', command.escortName ?? '', command.escortMobile ?? '',
             command.startDate, command.shift, actor, command.commandKey, command.note ?? '']);
-        return reply({ok: true, programId, ...result.rows[0]?.result}, 201);
+        return reply({ok: true, programId, ...result.rows[0]?.result, ...employee}, 201);
       }
       case 'edit': {
+        const employee = command.patch.escortMobile
+          ? await fileEscortEmployee(
+              pool,
+              command.patch.escortMobile,
+              command.patch.escortName ?? await escortNameFor(pool, command.programId),
+            )
+          : {};
         const result = await pool.query<{result: Row}>(
           'SELECT public.alrifai_vessel_program_update($1,$2::jsonb,$3,$4,$5,$6) AS result',
           [command.programId, JSON.stringify(command.patch), actor, command.expectedRevision, command.commandKey, command.note ?? '']);
-        return reply({ok: true, programId: command.programId, ...result.rows[0]?.result});
+        return reply({ok: true, programId: command.programId, ...result.rows[0]?.result, ...employee});
       }
       case 'release': {
         const result = await pool.query<{result: Row}>(

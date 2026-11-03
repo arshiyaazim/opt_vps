@@ -62,6 +62,13 @@ export function mapCommandError(error: unknown): VesselCommandError {
   }
   if (code === '42501') return new VesselCommandError('VESSEL_COMMAND_FORBIDDEN', 403);
   const message = error instanceof Error ? error.message : '';
+  // Phase 3: create_employee_if_new rejects an unusable mobile (and an unknown duty
+  // type) with a prefixed message, e.g. INVALID_MOBILE:12345. Those are caller errors,
+  // not server faults, so they must map to 400 rather than the 500 fallback.
+  const invalid = /^(INVALID_MOBILE|INVALID_DUTY_TYPE)(?::|$)/.exec(message);
+  if (invalid) {
+    return new VesselCommandError(invalid[1] === 'INVALID_MOBILE' ? 'MOBILE_INVALID' : 'DUTY_TYPE_INVALID', 400);
+  }
   const known = /^(VERIFIED_ACTOR_REQUIRED|REVISION_CONFLICT|PROGRAM_NOT_FOUND|PROGRAM_ALREADY_VOIDED|ASSIGNMENT_EXISTS_USE_REPLACE|COMMAND_KEY_REQUIRED|FIELD_NOT_EDITABLE|PATCH_REQUIRED|RELEASE_FIELDS_REQUIRED|EMPLOYEE_MOBILE_INVALID|SHIFT_REQUIRED|VOID_REASON_REQUIRED|VESSEL_PAIR_REQUIRED|PROGRAM_ID_REQUIRED|SHIFT_INVALID)$/.exec(message);
   if (known) {
     const status = message === 'PROGRAM_NOT_FOUND' ? 404
