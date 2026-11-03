@@ -16,6 +16,8 @@ import {applyFilters,sortRows,defaultFilters,type ToolbarFilters,type FacetDef,t
 import {useRouter} from 'next/navigation';
 import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle} from '@/components/ui/alert-dialog';
 import {Toaster,toast} from 'sonner';
+import {EmployeeLookup} from '@/app/platform/employee-lookup';
+import {writeJson} from '@/app/platform/csrf';
 
 type Program={
   id:string;motherVessel:string;lighterVessel:string;masterMobile?:string;destination?:string;
@@ -50,7 +52,7 @@ function PayCells({program}:{program:Program}){
   return <><TableCell className="vr-num"><PayValue cell={c.days} plain/></TableCell><TableCell className="vr-num"><PayValue cell={c.salary} plain/></TableCell><TableCell className="vr-num"><PayValue cell={c.conveyance} plain/></TableCell><TableCell className="vr-num"><PayValue cell={c.total} plain/></TableCell></>;
 }
 
-export default function VesselRegisterView(){
+export default function VesselRegisterView({admin=false}:{admin?:boolean}){
   const register=useApi<{rows:Program[];total:number}>('/api/register?export=1');
   const [detail,setDetail]=useState<{program:Program;data:ProgramDetail}|null>(null);
   const [source,setSource]=useState<SourceResponse|null>(null);
@@ -147,6 +149,24 @@ export default function VesselRegisterView(){
 
   const send=async(body:Record<string,unknown>)=>{
     setBusy(true);setError('');setNotice('');
+    // A USER never writes a program: the create is staged in review_items and an
+    // admin decides. Everything else (edit/release/assign/void) stays owner-only and
+    // is refused by the command API before it reaches the database.
+    if(!admin&&body.action==='add'){
+      try{
+        await writeJson('/api/review/submit',{domain:'VESSEL_PROGRAM',action:'CREATE',payload:{
+          motherVessel:String(body.motherVessel??'').trim(),lighterVessel:String(body.lighterVessel??'').trim(),
+          masterMobile:String(body.masterMobile??'').trim(),destination:String(body.destination??'').trim(),
+          escortName:String(body.escortName??'').trim(),escortMobile:String(body.escortMobile??'').trim(),
+          startDate:String(body.startDate??'').trim(),shift:String(body.shift??'D'),
+        }});
+        toast.success('Program submitted for review.');
+        setNotice('Program submitted for review. An admin will approve or reject it.');
+        setDrawer(null);
+      }catch(cause){setError(cause instanceof Error?cause.message:'Submission failed.');}
+      finally{setBusy(false);}
+      return;
+    }
     try{
       const response=await fetch('/api/vessel-programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,commandKey:commandKey()})});
       const data=await response.json() as CommandResponse;
@@ -470,12 +490,17 @@ export default function VesselRegisterView(){
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader><SheetTitle>Add program</SheetTitle><SheetDescription>New programs are created as Draft and recorded with one audit event.</SheetDescription></SheetHeader>
         <div className="grid gap-3 px-4 pb-4">
-          {[['motherVessel','Mother vessel'],['lighterVessel','Lighter vessel'],['masterMobile','Master mobile'],['destination','Destination'],['escortName','Escort name'],['escortMobile','Escort mobile']].map(([key,label])=><div key={key} className="grid gap-1"><Label htmlFor={`new-${key}`}>{label}</Label><Input id={`new-${key}`} value={form[key]??''} onChange={e=>setForm({...form,[key]:e.target.value})}/></div>)}
+          {[['motherVessel','Mother vessel'],['lighterVessel','Lighter vessel'],['masterMobile','Master mobile'],['destination','Destination']].map(([key,label])=><div key={key} className="grid gap-1"><Label htmlFor={`new-${key}`}>{label}</Label><Input id={`new-${key}`} value={form[key]??''} onChange={e=>setForm({...form,[key]:e.target.value})}/></div>)}
+          <EmployeeLookup
+            value={form.escortMobile??''}
+            onChange={(mobile,name)=>setForm(prev=>({...prev,escortMobile:mobile,escortName:name}))}
+            label="Escort"
+          />
           <div className="grid gap-1"><Label htmlFor="new-start">Start date</Label><Input id="new-start" type="date" value={form.startDate??''} onChange={e=>setForm({...form,startDate:e.target.value})}/></div>
           <div className="grid gap-1"><Label htmlFor="new-shift">Shift</Label><Select value={form.shift??'D'} onValueChange={value=>setForm({...form,shift:value})}><SelectTrigger id="new-shift"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="D">Day (D)</SelectItem><SelectItem value="N">Night (N)</SelectItem></SelectContent></Select></div>
           <SheetFooter className="flex-row justify-end gap-2">
             <Button variant="outline" onClick={()=>setDrawer(null)} disabled={busy}>Cancel</Button>
-            <Button disabled={busy||!canWrite} onClick={()=>void send({action:'add',programId:undefined,motherVessel:form.motherVessel,lighterVessel:form.lighterVessel,masterMobile:form.masterMobile,destination:form.destination,escortName:form.escortName,escortMobile:form.escortMobile,startDate:form.startDate,shift:form.shift??'D'})}>{busy?'Saving…':'Add program'}</Button>
+            <Button disabled={busy||(!canWrite&&admin)} onClick={()=>void send({action:'add',programId:undefined,motherVessel:form.motherVessel,lighterVessel:form.lighterVessel,masterMobile:form.masterMobile,destination:form.destination,escortName:form.escortName,escortMobile:form.escortMobile,startDate:form.startDate,shift:form.shift??'D'})}>{busy?'Saving…':'Add program'}</Button>
           </SheetFooter>
         </div>
       </SheetContent>
