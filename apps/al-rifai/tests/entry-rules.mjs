@@ -45,7 +45,12 @@ test('existing routes and asset/API prefixes keep working', () => {
 test('cash host does not inherit the main host API subtree', () => {
   assert.equal(isPathAllowed('/api/unknown', 'cash'), false);
   assert.equal(isPathAllowed('/candidate-api/anything', 'cash'), false);
-  assert.equal(isPathAllowed('/review', 'cash'), false);
+  // /review is a workspace admin page since RBAC-2B (it was the identity-review panel
+  // when this assertion was written). It now sits beside /admin, which the cash host
+  // has always served, and the workspace sidebar is rendered on both hosts — so a 404
+  // here was a dead navigation entry, not a protected boundary. Access still requires
+  // a session (proxy) and the ADMIN role (PlatformPage).
+  assert.equal(isPathAllowed('/review', 'cash'), true);
   assert.equal(isPathAllowed('/cash', 'main'), false);
 });
 

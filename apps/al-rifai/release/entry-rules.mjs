@@ -16,6 +16,13 @@ export const WORKSPACE_PATHS = [
   '/archive',
   '/assistant',
   '/admin',
+  // RBAC-2B surfaces. Kept in the shared list so both hosts agree: the review
+  // queue, attendance and the submitter's own queue were reachable in Next but the
+  // TLS entry answered 404 before the request ever reached it.
+  '/review',
+  '/attendance',
+  '/submissions',
+  '/platform/release-review',
 ];
 
 const CASH_RULES = [
@@ -33,6 +40,9 @@ const CASH_RULES = [
   '/api/operations',
   '/api/assistant',
   '/api/vessel-programs',
+  '/api/review/',
+  '/api/attendance/',
+  '/api/employees/',
   '/api/health',
   '/_next/',
   '/favicon.',
@@ -43,7 +53,6 @@ const MAIN_RULES = [
   ...WORKSPACE_PATHS,
   '/login',
   '/api/auth/',
-  '/review',
   '/vessel',
   '/register',
   '/api/',
