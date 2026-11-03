@@ -27,6 +27,8 @@ export const NAV_GROUPS:NavGroup[]=[
   ]},
   {label:"Workforce",items:[
     {href:"/employees",label:"Employees",labelBn:"কর্মচারী",icon:"Users",description:"Employee master records and payment statements"},
+    {href:"/attendance",label:"Attendance",labelBn:"হাজিরা",icon:"CalendarCheck",description:"Daily attendance, monthly days and cash received per employee"},
+    {href:"/submissions",label:"My Submissions",labelBn:"আমার জমা",icon:"Send",description:"Your submissions awaiting an admin decision"},
   ]},
   {items:[
     {href:"/review",label:"Review Queue",labelBn:"পর্যালোচনা",icon:"ClipboardCheck",description:"Approve, edit or reject submissions staged by staff",adminOnly:true},
@@ -47,7 +49,7 @@ export const NAV_GROUPS:NavGroup[]=[
 
 export const NAV_ITEMS= NAV_GROUPS.flatMap((group)=>group.items);
 
-import {LayoutDashboard,Ship,ArrowLeftRight,Users,ChartLine,Wallet,Archive,ClipboardCheck,ClipboardList,Sparkles,ShieldCheck,ListChecks,type LucideIcon} from 'lucide-react';
+import {LayoutDashboard,Ship,ArrowLeftRight,Users,ChartLine,Wallet,Archive,ClipboardCheck,ClipboardList,Sparkles,ShieldCheck,ListChecks,CalendarCheck,Send,type LucideIcon} from 'lucide-react';
 
 export const NAV_ICONS:Record<string,LucideIcon>={
   LayoutDashboard,
@@ -62,6 +64,8 @@ export const NAV_ICONS:Record<string,LucideIcon>={
   Sparkles,
   ShieldCheck,
   ListChecks,
+  CalendarCheck,
+  Send,
 };
 
 const DEFAULT_NAV_ITEM:NavItem={
