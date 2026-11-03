@@ -1,18 +1,19 @@
-import IdentityReviewPanel from '@/candidates/identity-review/ui/IdentityReviewPanel';
+import type {Metadata} from 'next';
 import {PlatformPage} from '@/app/platform/protected';
+import ReviewQueueView from './view';
 
-export const dynamic='force-dynamic';
+export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {title: 'Review Queue · AL-RIFA’I', robots: {index: false, follow: false}};
 
 /**
- * Review Queue — admin only (RBAC-2).
+ * Review Queue — admin only (RBAC-2B step 13).
  *
- * The page is gated server-side by PlatformPage access='admin', so a USER typing the
- * URL is redirected to /dashboard. The queue itself is rebuilt in RBAC-2B on top of
- * review_items; until then this keeps the existing identity panel reachable only by an
- * admin instead of leaving the route protected by the proxy alone.
+ * PlatformPage access='admin' is the gate: a USER who types the URL is redirected to
+ * /dashboard before any queue data is fetched. Every action then re-checks the role
+ * inside workflow_decide(), so the page is a convenience, not the security boundary.
  */
-export default function ReviewPage(){
+export default function ReviewPage() {
   return <PlatformPage pathname="/review" label="Review Queue" access="admin">
-    <IdentityReviewPanel/>
+    <ReviewQueueView/>
   </PlatformPage>;
 }
