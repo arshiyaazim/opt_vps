@@ -163,7 +163,10 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
         toast.success('Program submitted for review.');
         setNotice('Program submitted for review. An admin will approve or reject it.');
         setDrawer(null);
-      }catch(cause){setError(cause instanceof Error?cause.message:'Submission failed.');}
+      }catch(cause){
+        const message=cause instanceof Error?cause.message:'Submission failed.';
+        setError(message);toast.error(message);
+      }
       finally{setBusy(false);}
       return;
     }
@@ -177,7 +180,10 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
       const programId=String(data.programId??body.programId??detail?.program.id??'');
       setDrawer(null);setDetail(null);
       if(programId)await openDetail({id:programId,motherVessel:String(body.motherVessel??detail?.program.motherVessel??''),lighterVessel:String(body.lighterVessel??detail?.program.lighterVessel??'')});
-    }catch(cause){setError(cause instanceof Error?cause.message:'Command failed');}
+    }catch(cause){
+      const message=cause instanceof Error?cause.message:'Command failed';
+      setError(message);toast.error(message);
+    }
     finally{setBusy(false);}
   };
 
@@ -185,7 +191,12 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
   // Edit/Release/Assign/Void remain owner commands and would answer 403, so they are
   // hidden rather than offered and refused.
   const commandsAvailable=available===true;
+  // Direct edit/release/assign/void stay owner commands.
   const canWrite=commandsAvailable&&admin;
+  // Adding is different: an ADMIN needs the command layer, a USER needs nothing but a
+  // session — their program is staged through the review API. Tying this to canWrite
+  // is what left a USER's "+ Add program" button permanently disabled.
+  const canAdd=admin?commandsAvailable:true;
   // Row-level availability, per Owner decision 2026-11-02:
   //   View/History  any status; Edit: Confirmed + Draft; Cancel: Confirmed only.
   // Voided programs are terminal — void() itself rejects a second void.
@@ -216,7 +227,10 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
       setNotice('Program marked Fleed A. The reason is recorded in the append-only audit history.');
       setFleeTarget(null);setFleeReason('');
       if(detail?.program.id===target.id)await openDetail(target);
-    }catch(cause){setError(cause instanceof Error?cause.message:'Command failed');}
+    }catch(cause){
+      const message=cause instanceof Error?cause.message:'Command failed';
+      setError(message);toast.error(message);
+    }
     finally{setBusy(false);}
   };
   // `??` would not fall through an empty string, and the 5 archive-epoch rows
@@ -258,7 +272,10 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
       notifyEmployee(data);
       setEditing(false);setEditForm({});
       await openDetail(detail.program);
-    }catch(cause){setError(cause instanceof Error?cause.message:'Command failed');}
+    }catch(cause){
+      const message=cause instanceof Error?cause.message:'Command failed';
+      setError(message);toast.error(message);
+    }
     finally{setBusy(false);}
   };
 
@@ -269,7 +286,7 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
       <h2 className="text-sm font-semibold">Programs <span className="font-normal text-muted-foreground">({sorted.length} shown)</span></h2>
       <div className="ml-auto flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={()=>void refreshAvailability()}>Check command layer</Button>
-        <Button size="sm" disabled={!canWrite} onClick={()=>{setForm({});setDrawer('add');}}>+ Add program</Button>
+        <Button size="sm" disabled={!canAdd} onClick={()=>{setForm({});setDrawer('add');}}>+ Add program</Button>
         {!canWrite&&(commandsAvailable
           ? <ActionButtonDisabled label="Admin only" reason="Editing, releasing, assigning and voiding a program are owner commands. You can still submit a new program for review."/>
           : <ActionButtonDisabled label="Commands locked" reason="Vessel command functions (migration 0032) are prepared and rehearsed but not applied. The register stays read-only."/>)}
@@ -506,7 +523,7 @@ export default function VesselRegisterView({admin=false}:{admin?:boolean}){
           <div className="grid gap-1"><Label htmlFor="new-shift">Shift</Label><Select value={form.shift??'D'} onValueChange={value=>setForm({...form,shift:value})}><SelectTrigger id="new-shift"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="D">Day (D)</SelectItem><SelectItem value="N">Night (N)</SelectItem></SelectContent></Select></div>
           <SheetFooter className="flex-row justify-end gap-2">
             <Button variant="outline" onClick={()=>setDrawer(null)} disabled={busy}>Cancel</Button>
-            <Button disabled={busy||(!canWrite&&admin)} onClick={()=>void send({action:'add',programId:undefined,motherVessel:form.motherVessel,lighterVessel:form.lighterVessel,masterMobile:form.masterMobile,destination:form.destination,escortName:form.escortName,escortMobile:form.escortMobile,startDate:form.startDate,shift:form.shift??'D'})}>{busy?'Saving…':'Add program'}</Button>
+            <Button disabled={busy} onClick={()=>void send({action:'add',programId:undefined,motherVessel:form.motherVessel,lighterVessel:form.lighterVessel,masterMobile:form.masterMobile,destination:form.destination,escortName:form.escortName,escortMobile:form.escortMobile,startDate:form.startDate,shift:form.shift??'D'})}>{busy?'Saving…':'Add program'}</Button>
           </SheetFooter>
         </div>
       </SheetContent>
