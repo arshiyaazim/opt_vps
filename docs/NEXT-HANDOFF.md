@@ -6,11 +6,44 @@
 > and §12). Where the two disagree, `AGENTS.md` §0 and this file describe the
 > running system; the older file is an evidence archive, not a status page.
 
+## Cash parser release — deployed 2026-11-03
+
+Source commit `38ce0da8c9623b4b099b5bad87003b9c257e88c8` was pushed to
+`cash-parser-release-20261103`; compose pin commit
+`81f385f36fbf00b8abc0770ed4c1adeb8e2314cb` pins image
+`sha256:103f59f27321a93cb59fb72a1b3dce20ac176da5dd5bb046a68366f8c00a24a5`
+(tag `local/al-rifai:20261103-cash-parser-38ce0da`). The release contains only
+the 10 reviewed parser, source-gate, live processor/publisher, Docker packaging,
+backfill-safety and regression-test files; unrelated Cash USER permission/UI
+changes were excluded.
+
+Verification on committed source: 42 focused tests passed / 2 skipped;
+typecheck, lint (0 errors/warnings), production build and the 29-module runtime
+import check passed. The deployed container passed all 11 Owner parser examples
+(BDT 6,800), Employee ID/payout separation and source-gate assertions
+(authorized WA-01 Admin → Accountant eligible; WA-02 and incoming rejected).
+Cash continuation started in review-only mode; 13,905 Cash processing rows had
+no errors, and all 11 native cursors were error-free. No new authorized message
+arrived, so genuine message-to-instruction completion remains **PENDING**.
+`/login` and `/api/health` returned 200; unauthenticated `/vessel`,
+`/api/vessel-programs` and `/api/cash/summary` returned 401. No new error
+signature appeared; app healthy, `RestartCount=0`.
+
+Post-deploy counts: Current **2,094 REVIEW instructions / 0 postings**; Legacy
+**1,610 instructions / 1,586 postings**. Backfill remains `PUBLISHED`, 90
+inserted. Fresh backup
+`/var/lib/vps/al-rifai/backups/pre-cash-parser-20261103-2353.dump` is
+64,371,520 bytes, mode `600 root:root`, SHA-256
+`0da75c439af5a224a2ecf5f9e45af0d2d027a9831069d52ceff71505fd5e533d`; checksum
+and 765-entry PostgreSQL archive catalog verified. Rollback images
+`sha256:a3e53997…` and `sha256:69ccb8f6…` are present. No migration, financial
+posting, bridge restart, permission change, or Cash Freeze change occurred.
+
 ## Production State
 
 | Field | Value |
 |---|---|
-| App image | `sha256:c2759c80e712439be80ae8e38f08f9b19fe275bcd8021e3f38614dfeac44f3a1` (tag `20261102-b4-cash-page`, source `dd21806`, compose pin `d9168aa`) |
+| App image | `sha256:103f59f27321a93cb59fb72a1b3dce20ac176da5dd5bb046a68366f8c00a24a5` (tag `local/al-rifai:20261103-cash-parser-38ce0da`, source `38ce0da`, compose pin `81f385f`) |
 | App mode | `on` |
 | SHADOW | **PROMOTED 2026-11-02** — `mode=DB`, `cycles_completed=60`, `diffs_found=0`, `auto_promote_blocked=false` |
 | SHADOW started | `2026-10-31T15:47:18Z` |
