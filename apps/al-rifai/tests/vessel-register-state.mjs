@@ -129,3 +129,48 @@ test('the API already counts CONFIRMED separately from REVIEW', () => {
   assert.match(route, /count\(\*\) FILTER \(WHERE status='CONFIRMED'\)/);
   assert.match(route, /count\(\*\) FILTER \(WHERE status='REVIEW'\)/);
 });
+
+// ── fail-closed register link ────────────────────────────────────────────────
+
+function clientReturning(rowsUpdated) {
+  const calls = [];
+  return {
+    calls,
+    async query(sql, params = []) {
+      calls.push({sql, params});
+      if (/INSERT INTO public\.programs/.test(sql)) return {rows: [{id: params[0]}], rowCount: 1};
+      if (/UPDATE public\.escort_order_register/.test(sql)) return {rows: [], rowCount: rowsUpdated};
+      return {rows: [], rowCount: 1};
+    },
+  };
+}
+
+test('a missing register row aborts the caller transaction', async () => {
+  const client = clientReturning(0);
+  await assert.rejects(() => persistConfirmedProgram(client, input), /REGISTER_ROW_NOT_MATCHED/);
+});
+
+test('a register row that matches more than once aborts the caller transaction', async () => {
+  const client = clientReturning(2);
+  await assert.rejects(() => persistConfirmedProgram(client, input), /REGISTER_ROW_NOT_MATCHED/);
+});
+
+test('the link is verified against the expected order and confirmation', async () => {
+  const client = clientReturning(1);
+  await persistConfirmedProgram(client, input);
+  const [update] = registerUpdate(client.calls);
+  assert.match(update.sql, /confirmation_message_id IS NULL OR confirmation_message_id=\$4/);
+  assert.match(update.sql, /source_message_id IS NULL OR source_message_id=\$4 OR source_message_id=\$5/);
+  assert.match(update.sql, /RETURNING id/);
+  assert.equal(update.params[3], input.confirmationMessageId);
+  assert.equal(update.params[4], input.orderMessageId);
+});
+
+test('a caller without a register row is unaffected', async () => {
+  const client = clientReturning(0);
+  const result = await persistConfirmedProgram(client, {...input, reviewRowId: ''});
+  assert.equal(result.programId, programIdFor(input));
+  assert.equal(registerUpdate(client.calls).length, 0, 'no register link is attempted');
+  assert.equal(programInsert(client.calls).length, 1);
+  assert.equal(assignmentInsert(client.calls).length, 1);
+});

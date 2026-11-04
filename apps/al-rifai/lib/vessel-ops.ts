@@ -165,15 +165,26 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
   // status and no migration are introduced. Parsed evidence, reasons, source
   // text and the original Draft fields are preserved; only status advances.
   // `programCreatedAt` is written once, so re-processing is idempotent.
-  await client.query(
-    `UPDATE public.escort_order_register
-        SET status='CONFIRMED',
-            parsed=parsed||$2::jsonb||CASE WHEN parsed ? 'programCreatedAt' THEN '{}'::jsonb
-                                           ELSE jsonb_build_object('programCreatedAt',now()) END,
-            updated_at=now()
-      WHERE id=$1 AND account_id=$3 AND dataset_epoch='CANONICAL_BACKFILL_20261026'`,
-    [input.reviewRowId, JSON.stringify({programId, confirmationMatch: {state: input.matchState, mobileEvidence: input.mobileEvidence}}), input.account],
-  );
+  //
+  // The link is fail-closed: when a review row is named it must be exactly one
+  // row belonging to this order and confirmation, otherwise the caller's
+  // transaction aborts instead of leaving a Program without its evidence row.
+  // Callers that legitimately have no register row pass an empty reviewRowId.
+  if (input.reviewRowId) {
+    const linked = await client.query(
+      `UPDATE public.escort_order_register
+          SET status='CONFIRMED',
+              parsed=parsed||$2::jsonb||CASE WHEN parsed ? 'programCreatedAt' THEN '{}'::jsonb
+                                             ELSE jsonb_build_object('programCreatedAt',now()) END,
+              updated_at=now()
+        WHERE id=$1 AND account_id=$3 AND dataset_epoch='CANONICAL_BACKFILL_20261026'
+          AND (confirmation_message_id IS NULL OR confirmation_message_id=$4)
+          AND (source_message_id IS NULL OR source_message_id=$4 OR source_message_id=$5)
+        RETURNING id`,
+      [input.reviewRowId, JSON.stringify({programId, confirmationMatch: {state: input.matchState, mobileEvidence: input.mobileEvidence}}), input.account, input.confirmationMessageId, input.orderMessageId],
+    );
+    if ((linked.rowCount ?? 0) !== 1) throw new Error('REGISTER_ROW_NOT_MATCHED');
+  }
   return {programId, created};
 }
 
