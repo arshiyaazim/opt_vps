@@ -34,9 +34,11 @@ test('candidate numbering is unique and never collides with an applied migration
   // The old candidates (0006…0036) are historical. Anything in the current
   // series must sit above the highest applied migration (0070).
   const highestApplied = Math.max(...applied.map((name) => Number(name.slice(0, 4))));
-  const current = numbers.filter((n) => Number(n) >= 71);
-  assert.deepEqual(current, ['0071', '0072', '0073', '0074', '0075']);
-  assert.ok(current.every((n) => Number(n) > highestApplied), 'candidates must follow the applied ledger');
+  const current = numbers.filter((n) => Number(n) >= 71).map(Number).sort((a, b) => a - b);
+  assert.ok(current.length >= 5, 'the release series must be present');
+  assert.equal(current[0], 71, 'the candidate series starts at 0071');
+  assert.ok(current.every((n, i) => i === 0 || n === current[i - 1] + 1), 'no gaps in the candidate series');
+  assert.ok(current.every((n) => n > highestApplied), 'candidates must follow the applied ledger');
 });
 
 test('every column the writer needs is created by a candidate migration', () => {

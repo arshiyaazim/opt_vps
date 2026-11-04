@@ -277,3 +277,41 @@ Fresh PostgreSQL 16 with the minimal fixture schema, candidates applied in order
 The audit proof is the important one: because the release command, the pay
 recalculation, the candidate update and the audit insert live in one function
 body, a missing or conflicting audit record cannot be committed without the rest.
+
+---
+
+# Food Bill → backward Program search (finishing task, 2026-11-04)
+
+The existing parser already performs the backward calculation for any message
+that carries an escort mobile (`calc_start = message date − amount/150`, ±2-day
+roster match, Steps A–D). That path is unchanged and keeps priority.
+
+The remaining gap was measured, not assumed: **34 of 67** food-bill messages in
+the authorized release group carry no ASCII mobile, so the parser produced no
+payment and the message was silently dropped. `lib/food-bill-match.ts` covers
+exactly that case:
+
+```
+Food Bill text → amount (ASCII or Bengali digits) → estimated days (BDT 150)
+              → estimated start = message date − days
+              → backward window ±2 days over open Programs
+              → identity signals: mobile, name, lighter, mother, master
+              → unique winner (MATCHED, confidence medium) | tie (PENDING_REVIEW)
+```
+
+Rules: the duration is a hint; one exact mobile is enough, a name or vessel needs
+corroboration; equal candidates stay for review; an already released Program is
+never a candidate; nothing is invented when no signal exists.
+
+The result is persisted in the same `release_candidates` table with
+`confidence = 'medium'` (or NULL), so the high-confidence auto-apply gate can
+never pick it up — a human applies it through the existing atomic
+`apply_release_candidate()` path. Release date = explicit stated date if present,
+else the verified food-bill event date. Conveyance stays NULL: this path never
+invents an amount, and a missing conveyance never blocks the release.
+
+Disabled by default (`ALRIFAI_RELEASE_FOOD_BILL_SEARCH=1` to enable) so a full
+group rescan cannot retroactively reinterpret historical messages. Candidate
+`0076` relaxes the `escort_phone` CHECK to allow the empty string for a phone-less
+match; until it is applied such a row is reported
+(`phone-less candidate needs migration 0076`) instead of being hidden.

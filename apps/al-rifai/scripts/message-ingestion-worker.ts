@@ -9,7 +9,7 @@ import {OWNER_ESCORT_CLIENTS} from "../lib/escort-register.mjs";
 import {loadConversationScopeWithShadow,type ConversationScope} from "../lib/conversation-scope.ts";
 import {NativeLiveReader,advanceNativeCursor,ensureNativeCursor,recordNativeError} from "../lib/native-live-reader.ts";
 import {ingestNativePage} from "../lib/native-ingest.ts";
-import {scanReleaseGroup,persistRows,persistEvidence,autoApplyHigh,RELEASE_GROUP_JID} from "../lib/release-scan.ts";
+import {scanReleaseGroup,persistRows,persistEvidence,persistBackwardMatches,autoApplyHigh,RELEASE_GROUP_JID} from "../lib/release-scan.ts";
 import {commandActorFromEnv} from "../lib/vessel-command-policy.ts";
 import {initialReleaseRetry,recordReleaseScanFailure,recordReleaseScanSuccess,shouldAttemptReleaseScan} from "../lib/release-retry.ts";
 import type {ArchivePool,CompatibilityMessage} from "../lib/whatsapp-archive.ts";
@@ -289,6 +289,15 @@ async function processReleaseGroup(pool:ReturnType<typeof createIngestionDbPool>
     }
   }catch(error){
     console.error(`Release evidence write failed; will retry (${safeError(error)}).`);
+    throw error;
+  }
+  // Food Bill without an ASCII mobile: backward Program search. Off unless the
+  // Owner enables ALRIFAI_RELEASE_FOOD_BILL_SEARCH.
+  try{
+    const backward=await persistBackwardMatches(db,scan.backward);
+    if(backward.inserted)console.error(`Release backward search: ${backward.inserted} candidate(s) from Food Bill messages without a mobile`);
+  }catch(error){
+    console.error(`Release backward search failed; will retry (${safeError(error)}).`);
     throw error;
   }
   // Auto-apply only high-confidence Step A/C matches whose program is still

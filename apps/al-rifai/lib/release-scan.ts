@@ -12,6 +12,7 @@
 import {createHash} from 'node:crypto';
 import {parseMessage, assignReleases, normalisePhone, type RosterProgram, type Assignment} from './release-parser.ts';
 import {analyseReleaseBundle, type ReleaseBundle} from './release-evidence.ts';
+import {backwardSearch, extractFoodBillHint, type BackwardMatch, type FoodBillHint} from './food-bill-match.ts';
 
 export const RELEASE_GROUP_JID = '120363408741101070@g.us';
 export const RELEASE_ACCOUNT = 'wa-01';
@@ -31,6 +32,12 @@ export type ScanResult = {
   phoneLess: number;
   payments: number;
   rows: ScanRow[];
+  /**
+   * Food Bill messages the parser could not turn into a payment (no ASCII
+   * mobile) together with their backward Program search result. Computed always,
+   * persisted only when the Owner enables the path.
+   */
+  backward: Array<{hint: FoodBillHint; match: BackwardMatch}>;
 };
 
 export type Queryable = {
@@ -45,18 +52,22 @@ export async function loadRoster(client: Queryable): Promise<RosterProgram[]> {
             "escortMobile" AS "escortPhone",
             "escortName"   AS "escortName",
             "lighterVessel" AS "lighterVessel",
+            "motherVessel" AS "motherVessel",
+            "masterMobile" AS "masterMobile",
             "startDate"    AS "startDate",
             nullif(btrim("endDate"), '') AS "endDate"
        FROM public.programs
       WHERE dataset_epoch = 'CANONICAL_BACKFILL_20261026'`,
   ) as {rows: Array<{id: string; escortPhone: string | null; escortName: string | null; startDate: string; endDate: string | null}>};
-  return (rows as Array<{id: string; escortPhone: string | null; escortName: string | null; lighterVessel?: string | null; startDate: string; endDate: string | null}>).map((r) => ({
+  return (rows as Array<{id: string; escortPhone: string | null; escortName: string | null; lighterVessel?: string | null; motherVessel?: string | null; masterMobile?: string | null; startDate: string; endDate: string | null}>).map((r) => ({
     id: r.id,
     escortPhone: r.escortPhone,
     escortName: r.escortName,
     startDate: String(r.startDate ?? '').slice(0, 10),
     endDate: r.endDate ? String(r.endDate).slice(0, 10) : null,
     lighterVessel: r.lighterVessel ?? null,
+    motherVessel: r.motherVessel ?? null,
+    masterMobile: r.masterMobile ?? null,
   }));
 }
 
@@ -95,6 +106,23 @@ export async function scanReleaseGroup(client: Queryable, roster?: RosterProgram
     }
   }
 
+  // Messages the parser produced nothing for. A Food Bill without an ASCII
+  // mobile lands here; it is searched backwards against the same roster.
+  const backward: Array<{hint: FoodBillHint; match: BackwardMatch}> = [];
+  const seen = new Set<string>();
+  for (const msg of messages) {
+    if (seen.has(msg.id)) continue;
+    seen.add(msg.id);
+    const body = msg.text ?? '';
+    if (!body) continue;
+    if (parseMessage(body, msg.timestamp).length > 0) continue;
+    const hint = extractFoodBillHint(body, msg.timestamp, msg.id);
+    if (!hint) continue;
+    const match = backwardSearch(hint, effectiveRoster);
+    if (match.status === 'NO_MATCH') continue;
+    backward.push({hint, match});
+  }
+
   const assignments = assignReleases(payments, effectiveRoster);
   const rosterById = new Map(effectiveRoster.map((program) => [program.id, program]));
   const rows: ScanRow[] = assignments.map((assignment, i) => ({
@@ -106,7 +134,7 @@ export async function scanReleaseGroup(client: Queryable, roster?: RosterProgram
       : undefined,
   }));
 
-  return {messages: messages.length, withPhone, phoneLess, payments: payments.length, rows};
+  return {messages: messages.length, withPhone, phoneLess, payments: payments.length, rows, backward};
 }
 
 /** Insert rows, ignoring ones already present (dedupe index on message/escort/day/amount). */
@@ -472,4 +500,72 @@ export async function persistEvidence(
     events += (result as unknown as {rowCount?: number}).rowCount ?? 0;
   }
   return {updated, events, skipped: false};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Food Bill → backward search → candidate (Owner finishing task).
+//
+// Disabled by default. When enabled, a Food Bill that carries no ASCII mobile
+// becomes a review-grade candidate: MATCHED + confidence 'medium' (so the
+// high-confidence auto-apply gate can never pick it up) or PENDING_REVIEW when
+// the evidence is ambiguous. The release date is the explicit stated date when
+// present, otherwise the verified Food Bill event date.
+//
+// Nothing here creates a Program, applies a release or touches Cash.
+// ════════════════════════════════════════════════════════════════════════════
+
+export function backwardSearchEnabled(env: Record<string, string | undefined>): boolean {
+  const raw = (env.ALRIFAI_RELEASE_FOOD_BILL_SEARCH ?? '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'on';
+}
+
+export type BackwardPersistResult = {inserted: number; blocked: number; skipped: boolean};
+
+/**
+ * Persist the backward-search candidates. Idempotent through the existing
+ * candidate dedupe index (source message + phone + date + amount).
+ */
+export async function persistBackwardMatches(
+  client: Queryable,
+  backward: ScanResult['backward'],
+  options: {enabled?: boolean} = {},
+): Promise<BackwardPersistResult> {
+  const enabled = options.enabled ?? backwardSearchEnabled(process.env as Record<string, string | undefined>);
+  if (!enabled || !backward.length) return {inserted: 0, blocked: 0, skipped: !enabled};
+
+  let inserted = 0;
+  let blocked = 0;
+  for (const {hint, match} of backward) {
+    const releaseDate = hint.explicitReleaseDate ?? hint.messageDate;
+    const phone = hint.escortMobile ?? '';
+    try {
+      const result = await client.query(
+        `INSERT INTO public.release_candidates
+           (escort_phone, escort_name, program_id, end_date, end_shift,
+            amount_bdt, duty_days, calc_start, conveyance, match_status,
+            match_pass, mismatch_kind, confidence, notes, source_msg_id, source_date, source_text)
+         VALUES ($1,$2,$3,$4::date,$5,$6,$7,$8::date,NULL,$9,NULL,NULL,$10,$11,$12,$13::timestamptz,$14)
+         ON CONFLICT DO NOTHING`,
+        [
+          phone, hint.escortName ?? '', match.programId, releaseDate, hint.shift,
+          hint.amountBdt, hint.estimatedDays, hint.estimatedStart,
+          match.status === 'MATCHED' ? 'MATCHED' : 'PENDING_REVIEW',
+          match.confidence, `backward-search:${match.signals.join('+') || match.reasons.join('+')}`,
+          hint.messageId, hint.messageDate, hint.messageId,
+        ],
+      );
+      inserted += (result as unknown as {rowCount?: number}).rowCount ?? 0;
+    } catch (error) {
+      // The candidate table requires a valid mobile. A phone-less ambiguous match
+      // needs candidate migration 0076; report it instead of hiding it.
+      const code = (error as {code?: string})?.code;
+      if (code === '23514') {
+        blocked += 1;
+        console.error('Release backward search: phone-less candidate needs migration 0076 (escort_phone CHECK); held out.');
+        continue;
+      }
+      throw error;
+    }
+  }
+  return {inserted, blocked, skipped: false};
 }
