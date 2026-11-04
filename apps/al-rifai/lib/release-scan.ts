@@ -180,29 +180,33 @@ export function messageTriggersParse(body: string | null | undefined, mediaType?
  *   - program has no endDate yet, so an already-released duty is never rewritten
  * Any failure is collected and returned; it never throws into the worker.
  */
-export type AtomicApplyMode = 'auto' | 'required' | 'off';
+export type AtomicApplyMode = 'required' | 'off';
 export type AutoApplyResult = {
   applied: number;
   skipped: number;
   failed: number;
   /** Which apply path ran. */
-  path: 'atomic' | 'legacy' | 'blocked';
-  /** Set when the operator demanded atomic apply and the function is absent. */
-  blocked?: 'ATOMIC_APPLY_REQUIRED_BUT_MISSING';
+  path: 'atomic' | 'blocked';
+  /** Why nothing was applied. */
+  blocked?: 'ATOMIC_APPLY_REQUIRED_BUT_MISSING' | 'AUTO_APPLY_DISABLED';
 };
 
 /**
  * `ALRIFAI_RELEASE_APPLY_ATOMIC`:
- *   auto (default) — use the atomic function when it exists, otherwise the legacy
- *                    path with an explicit diagnostic;
- *   required        — refuse to apply unless the atomic function exists;
- *   off             — never use the atomic function.
+ *   required (default) — apply only through apply_release_candidate(); refuse and
+ *                        hold the candidates when it is absent;
+ *   off                — do not apply automatically at all.
+ *
+ * There is deliberately no non-atomic mode. The old legacy path released the
+ * program on one connection, updated the candidate on another and only then
+ * inserted the audit row, so a failure in the audit insert left an applied
+ * candidate without a record (candidate 2093, 2026-11-04). 'auto' is accepted as
+ * a synonym for 'required' so an existing environment cannot re-enable it.
  */
 export function atomicApplyMode(env: Record<string, string | undefined>): AtomicApplyMode {
   const raw = (env.ALRIFAI_RELEASE_APPLY_ATOMIC ?? '').trim().toLowerCase();
-  if (raw === 'required' || raw === '1' || raw === 'true') return 'required';
   if (raw === 'off' || raw === '0' || raw === 'false') return 'off';
-  return 'auto';
+  return 'required';
 }
 
 /**
@@ -268,55 +272,29 @@ export async function autoApplyHigh(
     source_msg_id: string | null; revision: number;
   }>;
 
-  if (!probe.atomic && mode !== 'auto') {
-    // `required`: the operator expects the atomic function; refuse and keep the
-    // candidates. `off`: the operator explicitly wants the legacy path.
-    if (mode === 'off') {
-      console.error('Release apply: atomic path disabled by configuration (ALRIFAI_RELEASE_APPLY_ATOMIC=off).');
-    } else {
-      console.error(`Release apply: ATOMIC_APPLY_REQUIRED_BUT_MISSING — ${rows.length} candidate(s) held for review.`);
-      return {applied: 0, skipped: rows.length, failed: 0, path: 'blocked', blocked: 'ATOMIC_APPLY_REQUIRED_BUT_MISSING'};
-    }
+  if (!probe.atomic) {
+    // Without the function an apply cannot be audited atomically, so nothing is
+    // applied. This is the fail-closed replacement for the removed legacy path.
+    console.error(`Release apply: ATOMIC_APPLY_REQUIRED_BUT_MISSING — ${rows.length} candidate(s) held for review.`);
+    return {applied: 0, skipped: rows.length, failed: 0, path: 'blocked', blocked: 'ATOMIC_APPLY_REQUIRED_BUT_MISSING'};
   }
-
-  const atomic = probe.atomic && mode !== 'off';
-  if (!atomic) {
-    // Loud, once per pass: a legacy apply that writes the audit row after the
-    // candidate update cannot be atomic.
-    console.error(`Release apply: legacy (non-atomic) path active — apply_release_candidate() is not installed; ${rows.length} candidate(s) eligible.`);
+  if (mode === 'off') {
+    console.error(`Release apply: automatic application disabled by configuration (ALRIFAI_RELEASE_APPLY_ATOMIC=off); ${rows.length} candidate(s) held for review.`);
+    return {applied: 0, skipped: rows.length, failed: 0, path: 'blocked', blocked: 'AUTO_APPLY_DISABLED'};
   }
 
   for (const row of rows) {
     try {
-      if (atomic) {
-        await command.query(
-          'SELECT public.apply_release_candidate($1::bigint,$2,$3,$4) AS result',
-          [row.id, actor, 'auto-apply', 'ingestion-auto-apply'],
-        );
-      } else {
-        await command.query(
-          'SELECT public.alrifai_vessel_program_release($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
-          [row.program_id, row.end_date, row.end_shift, '', actor, row.revision,
-            `auto-release-${row.id}`, JSON.stringify({source: 'ingestion-auto-apply', candidateId: row.id})],
-        );
-        await command.query('SELECT public.recalculate_program_pay($1)', [row.program_id]);
-        await client.query(
-          `UPDATE public.release_candidates
-              SET applied = true, match_status = 'APPLIED', reviewed_by = 'auto-apply', reviewed_at = now()
-            WHERE id = $1::bigint`, [row.id],
-        );
-        await client.query(
-          `INSERT INTO public.release_auto_apply_log (candidate_id, program_id, trigger_message_id, end_date, end_shift)
-           VALUES ($1::bigint,$2,$3,$4::date,$5)`,
-          [row.id, row.program_id, row.source_msg_id, row.end_date, row.end_shift],
-        );
-      }
+      await command.query(
+        'SELECT public.apply_release_candidate($1::bigint,$2,$3,$4) AS result',
+        [row.id, actor, 'auto-apply', 'ingestion-auto-apply'],
+      );
       applied += 1;
     } catch (error) {
       failed += 1;
       const code = error instanceof Error && /^[A-Z][A-Z0-9_:-]{1,80}$/.test(error.message) ? error.message : 'APPLY_FAILED';
-      // The candidate stays MATCHED (the function rolled back); the next pass
-      // retries it. Never fall back to the non-atomic path here.
+      // The function is one transaction: the candidate stays MATCHED and the next
+      // pass retries it. Never fall back to a non-atomic path here.
       console.error(`Release apply: candidate ${row.id} not applied (${code}); held for retry.`);
     }
   }
@@ -326,7 +304,7 @@ export async function autoApplyHigh(
       WHERE applied = false AND match_status = 'MATCHED' AND confidence = 'high'`,
   ) as {rows: Array<{n: string}>};
   const skipped = Number(remaining.rows[0]?.n ?? 0);
-  return {applied, skipped, failed, path: atomic ? 'atomic' : 'legacy'};
+  return {applied, skipped, failed, path: 'atomic'};
 }
 
 // ════════════════════════════════════════════════════════════════════════════

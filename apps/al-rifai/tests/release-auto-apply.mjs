@@ -35,13 +35,15 @@ const applyCalls = (calls) => calls.filter((c) => !isProbe(c) && /apply_release_
 const writes = (calls) => calls.filter((c) => !isProbe(c)
   && /INSERT |UPDATE |alrifai_vessel_program_release|recalculate_program_pay|apply_release_candidate\(/.test(c.sql));
 
-test('mode comes from ALRIFAI_RELEASE_APPLY_ATOMIC, defaulting to auto', () => {
-  assert.equal(atomicApplyMode({}), 'auto');
+test('mode defaults to required and only an explicit off disables automation', () => {
+  assert.equal(atomicApplyMode({}), 'required');
   assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: 'required'}), 'required');
   assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: '1'}), 'required');
+  assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: 'auto'}), 'required', 'auto cannot re-enable the removed legacy path');
+  assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: 'whatever'}), 'required');
   assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: 'off'}), 'off');
   assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: '0'}), 'off');
-  assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: 'whatever'}), 'auto');
+  assert.equal(atomicApplyMode({ALRIFAI_RELEASE_APPLY_ATOMIC: 'false'}), 'off');
 });
 
 test('atomic function present: one call per candidate and no legacy writes', async () => {
@@ -74,26 +76,28 @@ test('mode required with the function missing applies nothing and preserves the 
   assert.ok(h.calls.some((c) => /FROM public\.release_candidates rc/.test(c.sql)));
 });
 
-test('auto mode without the function keeps the legacy path, silently only in SQL terms', async () => {
-  const h = harness({atomic: false});
-  const result = await autoApplyHigh(h.client, h.command, ACTOR, {mode: 'auto'});
-  assert.equal(result.path, 'legacy');
-  assert.equal(result.applied, 2);
-
-  const release = h.calls.filter((c) => /alrifai_vessel_program_release\(/.test(c.sql));
-  assert.equal(release.length, 2);
-  assert.equal(release[0].values[6], 'auto-release-11'); // legacy command key
-  assert.equal(h.calls.filter((c) => /recalculate_program_pay/.test(c.sql)).length, 2);
-  assert.equal(h.calls.filter((c) => /UPDATE public\.release_candidates/.test(c.sql)).length, 2);
-  assert.equal(h.calls.filter((c) => /INSERT INTO public\.release_auto_apply_log/.test(c.sql)).length, 2);
+test('without the function every mode applies nothing: the legacy path no longer exists', async () => {
+  for (const mode of ['required', 'off']) {
+    const h = harness({atomic: false});
+    const result = await autoApplyHigh(h.client, h.command, ACTOR, {mode});
+    assert.equal(result.path, 'blocked', mode);
+    assert.equal(result.applied, 0, mode);
+    assert.equal(result.skipped, 2, mode);
+    assert.equal(writes(h.calls).length, 0, `no write may happen without the atomic function (${mode})`);
+    assert.equal(h.calls.some((c) => /alrifai_vessel_program_release\(/.test(c.sql)), false);
+    assert.equal(h.calls.some((c) => /UPDATE public\.release_candidates/.test(c.sql)), false);
+    assert.equal(h.calls.some((c) => /INSERT INTO public\.release_auto_apply_log/.test(c.sql)), false);
+  }
 });
 
-test('mode off never calls the atomic function even when it exists', async () => {
+test('mode off applies nothing even when the atomic function exists', async () => {
   const h = harness({atomic: true});
   const result = await autoApplyHigh(h.client, h.command, ACTOR, {mode: 'off'});
-  assert.equal(result.path, 'legacy');
+  assert.deepEqual(result, {
+    applied: 0, skipped: 2, failed: 0, path: 'blocked', blocked: 'AUTO_APPLY_DISABLED',
+  });
   assert.equal(applyCalls(h.calls).length, 0);
-  assert.equal(h.calls.filter((c) => /alrifai_vessel_program_release\(/.test(c.sql)).length, 2);
+  assert.equal(writes(h.calls).length, 0);
 });
 
 test('a per-candidate atomic failure is reported and never retried on the legacy path', async () => {
@@ -129,4 +133,22 @@ test('an empty eligible set touches nothing', async () => {
   const result = await autoApplyHigh(h.client, h.command, ACTOR, {mode: 'auto'});
   assert.deepEqual(result, {applied: 0, skipped: 0, failed: 0, path: 'atomic'});
   assert.equal(writes(h.calls).length, 0);
+});
+
+test('the atomic function is the only write path; no candidate is touched without it', async () => {
+  // Every non-probe write in a successful pass must be the function call itself.
+  const h = harness({atomic: true});
+  await autoApplyHigh(h.client, h.command, ACTOR, {mode: 'required'});
+  const extra = h.calls.filter((c) => !isProbe(c) && !/apply_release_candidate\(/.test(c.sql)
+    && /INSERT |UPDATE |DELETE |alrifai_vessel_program_release|recalculate_program_pay/.test(c.sql));
+  assert.deepEqual(extra, [], 'the caller must not write release state outside the function');
+});
+
+test('an atomic failure leaves the candidate alone and is retried next pass', async () => {
+  const h = harness({atomic: true, failIds: ['11']});
+  const result = await autoApplyHigh(h.client, h.command, ACTOR, {mode: 'required'});
+  assert.equal(result.failed, 1);
+  assert.equal(result.applied, 1);
+  assert.equal(h.calls.some((c) => /UPDATE public\.release_candidates/.test(c.sql)), false);
+  assert.equal(h.calls.some((c) => /INSERT INTO public\.release_auto_apply_log/.test(c.sql)), false);
 });
