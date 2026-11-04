@@ -67,11 +67,75 @@ function nativeTime(timestamp){
  return {messageDate:local.slice(0,10),messageTimestamp:local.slice(0,19)+'+06:00',timezone:'Asia/Dhaka'};
 }
 
+/**
+ * The Owner-authorized free-text order carries no numbered list and no
+ * "Lighter Vessel:" label, so the numbered/labelled grammar never opens a block:
+ *
+ *   Mother vessel Mv Beltokyo, yellow corn to Amram feed
+ *   Mv Ritaj
+ *   Capacity 2000mt
+ *   K/a to rupshi
+ *   master
+ *   +880 1921-155548
+ *   driver
+ *   +880 1992-783176
+ *
+ * Detection is deliberately narrow — a "Mother vessel" line carrying prose after
+ * a comma, a bare "Mv <name>" line, and a bare "master" line followed by a phone.
+ * A message that does not match all three keeps the existing behaviour exactly.
+ * No date or shift is invented; a value that is not written stays empty.
+ */
+function freeTextOrder(lines){
+ const phoneLine=/^(?:\+?880|0)[\s-]?1[3-9](?:[\s-]?\d){8}$/;
+ const motherLine=lines.find(l=>/^mother\s+vessel\b/i.test(l.value)&&l.value.includes(','));
+ if(!motherLine)return null;
+ const bareVessel=lines.find(l=>l!==motherLine
+  &&/^m\.?\s*v\.?\s*\S.*$/i.test(l.value)&&l.value.split(/\s+/).length<=4
+  &&!l.value.includes(',')&&![...digits(l.value).matchAll(mobilePattern)].length);
+ if(!bareVessel)return null;
+ const masterAt=lines.findIndex(l=>/^(?:master|mst)\s*$/i.test(l.value));
+ if(masterAt<0)return null;
+ const masterPhone=lines.slice(masterAt+1,masterAt+3).find(l=>phoneLine.test(l.value.trim()));
+ if(!masterPhone)return null;
+
+ const motherText=clean(clean(motherLine.value).replace(/^mother\s+vessel\b/i,'').replace(/^[\s:=.-]+/,''));
+ const motherHead=clean(motherText.split(',')[0]);
+ if(!vesselName(motherHead))return null;
+
+ const fields={},fieldEvidence={},reasons=[];
+ fields.motherVessel=motherHead;
+ fieldEvidence.motherVessel={raw:motherText,bodyLine:motherLine.line};
+ fields.lighterVessel=bareVessel.value;
+ fieldEvidence.lighterVessel={raw:bareVessel.value,bodyLine:bareVessel.line};
+ fields.masterMobile=masterPhone.value.trim();
+ fieldEvidence.masterMobile={raw:masterPhone.value.trim(),bodyLine:masterPhone.line};
+
+ // Reuse the labelled grammar for every other field it already understands.
+ for(const l of lines){
+  if(l===motherLine||l===bareVessel||l===masterPhone)continue;
+  const f=labeled(l.value);
+  if(!f||!['capacity','destination','cargo','importer','bookingDate','assignmentDate','shift'].includes(f.field))continue;
+  if(fields[f.field]||!f.value)continue;
+  fields[f.field]=f.value;fieldEvidence[f.field]={raw:l.value,bodyLine:l.line};
+ }
+ // "K/a to <place>" is the client's destination shorthand in this format.
+ const ka=lines.find(l=>/^k\s*\/?\s*a\s+to\s+\S/i.test(l.value));
+ if(ka&&!fields.destination){
+  const value=clean(clean(ka.value).replace(/^k\s*\/?\s*a\s+to\s+/i,''));
+  if(value){fields.destination=value;fieldEvidence.destination={raw:ka.value,bodyLine:ka.line};}
+ }
+ return {startLine:bareVessel.line,fields,fieldEvidence,reasons};
+}
+
 /** Text parsing establishes field evidence only, never source authority. */
 /** @param {string} text @param {{messageDate?:string|null}} [options] */
 export function parseEscortOrder(text,{messageDate=null}={}){
  if(typeof text!=='string'||text.length>64000)throw Error('ESCORT_TEXT_INVALID_OR_TOO_LARGE');
  const lines=text.split(/\r?\n/).map((raw,i)=>({raw,value:clean(raw),line:i+1}));
+ // Free-text form (line-separated or pipe-separated). Gated so an ordinary
+ // message can never enter it; a null result leaves the existing path untouched.
+ const free=freeTextOrder(lines)
+  ??(text.includes('|')?freeTextOrder(text.split('|').map((raw,i)=>({raw,value:clean(raw),line:i+1}))):null);
  const vesselLine=s=>/^(?:\(?\d{1,2}\)?[.)]\s*)?(?:m\.?\s*v\.?\s*|এমভি)/i.test(s)||/^\(?\d{1,2}\)?[.)]\s*\S/.test(s);
  const groupedPhone=i=>{
   for(let j=i;j<Math.min(i+5,lines.length);j++){
@@ -107,6 +171,9 @@ export function parseEscortOrder(text,{messageDate=null}={}){
  const motherKeys=[...new Set(mothers.map(m=>vesselKey(m.raw.split('/')[0])).filter(Boolean))];
  const mother=motherKeys.length===1?mothers[0]:null;
  const context={},contextEvidence={};const blocks=[];let current=null;
+ // The free-text block is already complete; the line loop would only add
+ // conflicting evidence (the driver's phone, a repeated capacity).
+ if(free){blocks.push(free);current=free;}
  // A DESTINATION line belongs to the whole message, so a Lighter listed before
  // the line must still receive it. A block-level or inline value always wins.
  let messageDestination=null;
@@ -125,7 +192,7 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   if(mother){current.fields.motherVessel=mother.raw.split('/')[0];current.fieldEvidence.motherVessel={raw:mother.raw,bodyLine:mother.line};}
   blocks.push(current);
  }
- for(let i=0;i<lines.length;i++){
+ for(let i=0;!free&&i<lines.length;i++){
   const {value,line}=lines[i];if(!value)continue;const f=labeled(value);
   if(f?.field==='motherVessel')continue;
   if(f?.field==='lighterVessel'){
@@ -193,7 +260,7 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   if(parseEscortDate(value,messageDate).date)set(current,'assignmentDate',value,line);
  }
  return blocks.map(b=>{
-  const fields={...b.fields,motherVessel:mother?vesselName(b.fields.motherVessel):'',lighterVessel:vesselName(b.fields.lighterVessel)};
+  const fields={...b.fields,motherVessel:(mother||b.fields.motherVessel!==undefined)?vesselName(b.fields.motherVessel??''):'',lighterVessel:vesselName(b.fields.lighterVessel)};
   if(!fields.destination&&messageDestination)fields.destination=messageDestination.replace(/[,\s]+$/,'');
   // Bengali digits in a numeric field (e.g. "ক্যাপাসিটি:১৭০০ mts") become ASCII;
   // the raw text stays in fieldEvidence and in the source message.
@@ -204,9 +271,9 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   const shiftText=(fields.shift??'').replace(/[.,]+$/,'');
   const explicitShift=/^(D|N|Day|Night)$/i.test(shiftText)?shiftText[0].toUpperCase():null;
   const reasons=[...b.reasons];
-  if(motherMobileConflict)reasons.push('MOTHER_VESSEL_HAS_GROUPED_MOBILE');
-  if(atOaMotherMissing)reasons.push('AT_OA_MOTHER_MISSING');
-  if(motherKeys.length>1)reasons.push('MOTHER_VESSEL_AMBIGUOUS');
+  if(!free&&motherMobileConflict)reasons.push('MOTHER_VESSEL_HAS_GROUPED_MOBILE');
+  if(!free&&atOaMotherMissing)reasons.push('AT_OA_MOTHER_MISSING');
+  if(!free&&motherKeys.length>1)reasons.push('MOTHER_VESSEL_AMBIGUOUS');
   const masterState=analyzeMobile(fields.masterMobile??'').kind;
   if(fields.masterMobile&&!masterMobile)reasons.push(masterState==='SHORT'?'MASTER_MOBILE_MISSING_DIGIT':masterState==='LONG'?'MASTER_MOBILE_EXTRA_DIGIT':'MASTER_MOBILE_INVALID_OR_AMBIGUOUS');
   if((fields.employeeMobile||fields.escortMobile)&&!employeeMobile)reasons.push('EMPLOYEE_MOBILE_INVALID_OR_AMBIGUOUS');

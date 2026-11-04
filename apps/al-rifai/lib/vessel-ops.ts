@@ -158,11 +158,19 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
       hash(['vessel-confirmation', programId, input.confirmationMessageId]),
       JSON.stringify([input.orderMessageId, input.confirmationMessageId])],
   );
-  // Link the intake evidence row to the program it produced. Additive metadata
-  // only: status and source text are never rewritten.
+  // Link the intake evidence row to the program it produced and close its
+  // review state in the SAME statement, so the row can never be left as an
+  // actionable review item after a Program exists. 'CONFIRMED' is the terminal
+  // value the schema CHECK already allows and the API/UI already render; no new
+  // status and no migration are introduced. Parsed evidence, reasons, source
+  // text and the original Draft fields are preserved; only status advances.
+  // `programCreatedAt` is written once, so re-processing is idempotent.
   await client.query(
     `UPDATE public.escort_order_register
-        SET parsed=parsed||$2::jsonb,updated_at=now()
+        SET status='CONFIRMED',
+            parsed=parsed||$2::jsonb||CASE WHEN parsed ? 'programCreatedAt' THEN '{}'::jsonb
+                                           ELSE jsonb_build_object('programCreatedAt',now()) END,
+            updated_at=now()
       WHERE id=$1 AND account_id=$3 AND dataset_epoch='CANONICAL_BACKFILL_20261026'`,
     [input.reviewRowId, JSON.stringify({programId, confirmationMatch: {state: input.matchState, mobileEvidence: input.mobileEvidence}}), input.account],
   );
