@@ -330,12 +330,116 @@ test('20. no path produces a Cash posting, settlement or approval', () => {
         assert.equal(b.cashPosting, false);
         assert.deepEqual(Object.keys(b).sort(), [
           'additionalAmount', 'cashPosting', 'classification', 'conveyanceMonth', 'conveyancePurpose',
-          'conveyanceStatus', 'employeeIdentitySource', 'employeeMobile', 'evidenceMessageIds',
-          'foodBillAmount', 'foodBillDate', 'lighterVessel', 'paymentInstructionDate', 'programId',
+          'conveyanceStatus', 'employeeIdentitySource', 'employeeMobile', 'evidenceFlags',
+          'evidenceMessageIds', 'foodBillAmount', 'foodBillDate', 'foodBillDutyDays',
+          'foodBillStatedDays', 'lighterVessel', 'paymentInstructionDate', 'programId',
           'releaseDate', 'releaseDateSource', 'releaseEligible', 'reviewReasons', 'ruleTrace',
           'signals', 'sukaniMentioned', 'travelDate', 'travelDateSource',
         ]);
       }
     }
   }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Day-count corrective regression — Owner rule, 2026-11-04.
+// An agreeing day count is supporting evidence, never an eligibility condition.
+// ════════════════════════════════════════════════════════════════════════════
+
+test('C1. matching day count is recorded as positive evidence', () => {
+  const b = one([msg(`ID: ${M1} Name ${M2}(B) 900/- food bill 6-day`, '2026-01-28T09:00:00Z', 'm1')]);
+  assert.equal(b.foodBillAmount, 900);
+  assert.equal(b.foodBillDutyDays, 6); // 900 / 150
+  assert.equal(b.foodBillStatedDays, 6); // "6-day"
+  assert.ok(b.ruleTrace.includes('R-DAY-COUNT-AGREES'));
+  assert.deepEqual(b.evidenceFlags, []);
+  assert.equal(b.releaseDateSource, 'FOOD_BILL_EVENT');
+  assert.equal(b.releaseEligible, true);
+  assert.deepEqual(b.reviewReasons, []);
+});
+
+test('C2. a mismatching day count never blocks an otherwise reliable food bill', () => {
+  const b = one([msg(`ID: ${M1} Name ${M2}(B) 900/- food bill 10-day`, '2026-01-28T09:00:00Z', 'm1')]);
+  assert.equal(b.foodBillDutyDays, 6);
+  assert.equal(b.foodBillStatedDays, 10);
+  assert.deepEqual(b.evidenceFlags, ['DAY_COUNT_MISMATCH']); // audit only
+  assert.equal(b.ruleTrace.includes('R-DAY-COUNT-AGREES'), false);
+  // Still a release, and still eligible: the mismatch is not a review reason.
+  assert.equal(b.releaseDateSource, 'FOOD_BILL_EVENT');
+  assert.equal(b.classification, 'FOOD_BILL_RELEASE_EVIDENCE');
+  assert.equal(b.releaseEligible, true);
+  assert.deepEqual(b.reviewReasons, []);
+  assert.equal(b.reviewReasons.includes('DAY_COUNT_MISMATCH'), false);
+});
+
+test('C3. a Food Bill with no stated day count is still valid evidence', () => {
+  const b = one([msg(`ID: ${M1} Name ${M2}(B) 900/- food bill`, '2026-01-28T09:00:00Z', 'm1')]);
+  assert.equal(b.foodBillStatedDays, null);
+  assert.equal(b.foodBillDutyDays, 6);
+  assert.deepEqual(b.evidenceFlags, []);
+  assert.equal(b.ruleTrace.includes('R-DAY-COUNT-AGREES'), false);
+  assert.equal(b.releaseDateSource, 'FOOD_BILL_EVENT');
+  assert.equal(b.releaseEligible, true);
+});
+
+test('C4. an amount that is not divisible by BDT 150 still works', () => {
+  // 1000 / 150 = 6.67 → floor 6; no stated count, no flag.
+  const bare = one([msg(`ID: ${M1} Name ${M2}(B) 1000/- food bill`, '2026-01-28T09:00:00Z', 'm1')]);
+  assert.equal(bare.foodBillDutyDays, 6);
+  assert.equal(bare.foodBillStatedDays, null);
+  assert.deepEqual(bare.evidenceFlags, []);
+  assert.equal(bare.releaseEligible, true);
+
+  // With a stated count that disagrees: audited, still eligible.
+  const stated = one([msg(`ID: ${M1} Name ${M2}(B) 1000/- food bill 7-day`, '2026-01-28T09:00:00Z', 'm1')]);
+  assert.equal(stated.foodBillDutyDays, 6);
+  assert.equal(stated.foodBillStatedDays, 7);
+  assert.deepEqual(stated.evidenceFlags, ['DAY_COUNT_MISMATCH']);
+  assert.equal(stated.releaseEligible, true);
+});
+
+test('C5. a wrong Program match is still an independent review reason', () => {
+  const b = one(
+    [msg(`ID: ${M1} Name ${M2}(B) 900/- food bill 6-day`, '2026-01-28T09:00:00Z', 'm1')],
+    {status: 'ROSTER_MISMATCH', programId: null, confidence: null},
+  );
+  assert.equal(b.releaseEligible, false);
+  assert.equal(b.classification, 'NEEDS_REVIEW');
+  assert.ok(b.reviewReasons.includes('NO_PROGRAM_MATCH'));
+  assert.deepEqual(b.evidenceFlags, []); // day count agreed; the block is the match
+});
+
+test('C6. multiple Program candidates are still an independent review reason', () => {
+  const b = one(
+    [msg(`ID: ${M1} Name ${M2}(B) 900/- food bill 6-day`, '2026-01-28T09:00:00Z', 'm1')],
+    {status: 'PENDING_REVIEW', programId: null, confidence: null, candidateIds: ['p1', 'p2']},
+  );
+  assert.equal(b.releaseEligible, false);
+  assert.ok(b.reviewReasons.includes('MULTIPLE_PROGRAM_CANDIDATES'));
+  assert.equal(b.programId, null);
+});
+
+test('C7. a conflicting explicit Release Date still wins and still requires review', () => {
+  const b = one([
+    msg(`ID: ${M1} Name ${M2}(B) 900/- food bill 6-day`, '2026-01-30T09:00:00Z', 'm1'),
+    msg('End date:-28-01-26-(D)', '2026-01-30T09:05:00Z', 'm2'),
+  ]);
+  assert.equal(b.releaseDate, '2026-01-28'); // explicit date preserved
+  assert.equal(b.releaseDateSource, 'STATED_END_DATE');
+  assert.equal(b.releaseEligible, false);
+  assert.ok(b.reviewReasons.includes('FOOD_BILL_CONFLICTS_WITH_EXPLICIT_RELEASE'));
+  assert.deepEqual(b.evidenceFlags, []); // day count agreed; the conflict is the block
+});
+
+test('C8. a duplicate Food Bill message does not duplicate the evidence', () => {
+  const text = `ID: ${M1} Name ${M2}(B) 900/- food bill 6-day`;
+  const b = one([
+    msg(text, '2026-01-28T09:00:00Z', 'm1'),
+    msg(text, '2026-01-28T09:00:00Z', 'm1'),
+  ]);
+  assert.equal(b.foodBillAmount, 900); // not 1800
+  assert.equal(b.foodBillDutyDays, 6);
+  assert.deepEqual(b.evidenceMessageIds, ['m1']);
+  assert.deepEqual(b.evidenceFlags, []);
+  assert.equal(b.releaseEligible, true);
 });

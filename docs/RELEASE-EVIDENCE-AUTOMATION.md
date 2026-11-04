@@ -77,6 +77,7 @@ rescanned on new records, which is cheaper and safer than a second parser.
 | `R-OFFICE-RETURN-DATE` | `Office return date:`, `office back`, `অফিসে আসার/ফেরার`, `ফির`, `ফেরত` + date | return date → month source |
 | `R-INVALID-STATED-DATE` | a labelled date that does not parse (`28-0-26`) | `INVALID_DATES`, review |
 | `R-CORRECTION` | later message from the same escort | supersedes, keeps both message ids |
+| `DAY_COUNT_MISMATCH` (flag) | `amount / 150` differs from the stated `N-day` | audit only — never a review reason |
 
 Dates are parsed by the **existing** `parseEscortDate()` (dd/mm/yy, dd-mm-yyyy,
 `(D)/(N)`, trailing clock `(9:40AM)`, Bengali digits). Mobile identity, food-bill
@@ -167,7 +168,10 @@ A food bill establishes the release date only when all of these hold:
 2. the message does not label it Salary or Advance;
 3. it is not described as an old/previous bill or a future one;
 4. the date is not before the matched Program's start (it would be another duty);
-5. the stated day count agrees with `amount / BDT 150` when both exist;
+5. the day count is **supporting evidence only** (Owner rule, 2026-11-04): an
+   agreeing count adds `R-DAY-COUNT-AGREES`; a mismatch is recorded as
+   `DAY_COUNT_MISMATCH` in `evidence_flags` and never blocks on its own. A
+   message does not need to state a day count at all;
 6. the Program match is unique.
 
 If an explicit Release Date exists, it always wins; the food-bill date never

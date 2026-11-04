@@ -284,6 +284,12 @@ export type ReleaseBundle = {
   lighterVessel: string | null;
   foodBillDate: string | null;
   foodBillAmount: number | null;
+  /** floor(foodBillAmount / BDT 150) — the day count the amount implies. */
+  foodBillDutyDays: number | null;
+  /** The day count the message states ("6-day", "To duty:-6"), when present. */
+  foodBillStatedDays: number | null;
+  /** Non-blocking evidence notes (e.g. DAY_COUNT_MISMATCH). Never a gate. */
+  evidenceFlags: string[];
   /** How the escort number was taken from the message (audit only). */
   employeeIdentitySource: 'ID_LABEL' | 'ESCORT_LABEL' | 'FIRST_MOBILE' | null;
   /** The message named a Sukani/Master number; never an escort identity. */
@@ -404,6 +410,8 @@ function buildBundle(
   const reviewReasons: string[] = [];
   const evidenceMessageIds: string[] = [];
   const addRule = (rule: string) => { if (!ruleTrace.includes(rule)) ruleTrace.push(rule); };
+  const evidenceFlags: string[] = [];
+  const addFlag = (flag: string) => { if (!evidenceFlags.includes(flag)) evidenceFlags.push(flag); };
 
   const entries = items.map((item) => {
     const payment = item.payments.find((p) => p.escortPhone === employeeMobile);
@@ -526,7 +534,7 @@ function buildBundle(
   } else if (foodEntry && foodBillAmount !== null) {
     const dayCount = foodEntry.payment.dutyDays;
     const statedDays = foodEntry.payment.explicitDayCount;
-    const daysAgree = statedDays === null || dayCount === null || statedDays === dayCount;
+    const dayCountMismatch = statedDays !== null && dayCount !== null && statedDays !== dayCount;
     const beforeProgramStart = !!(match.programStartDate && foodDate && foodDate < match.programStartDate);
     if (salaryLabeled || advanceLabeled) {
       reviewReasons.push(salaryLabeled ? 'FOOD_BILL_LABELED_SALARY' : 'FOOD_BILL_LABELED_ADVANCE');
@@ -536,13 +544,18 @@ function buildBundle(
       reviewReasons.push('FOOD_BILL_FOR_FUTURE_DUTY');
     } else if (beforeProgramStart) {
       reviewReasons.push('FOOD_BILL_PRECEDES_PROGRAM');
-    } else if (!daysAgree) {
-      reviewReasons.push('FOOD_BILL_DAY_COUNT_CONFLICT');
     } else {
+      // Owner rule (2026-11-04): an agreeing day count is supporting evidence,
+      // never a requirement. A mismatch is recorded for audit and never blocks
+      // on its own — only independent contradictions (Program identity, invalid
+      // Release Date, Salary/Advance label, old/future bill) send it to review.
       releaseDate = foodDate;
       releaseDateSource = 'FOOD_BILL_EVENT';
       addRule('R-FOOD-BILL-RELEASE-DATE');
-      if (statedDays !== null && dayCount !== null) addRule('R-DAY-COUNT-AGREES');
+      if (statedDays !== null && dayCount !== null) {
+        if (dayCountMismatch) addFlag('DAY_COUNT_MISMATCH');
+        else addRule('R-DAY-COUNT-AGREES');
+      }
     }
   }
 
@@ -596,6 +609,9 @@ function buildBundle(
     lighterVessel: match.lighterVessel ?? null,
     foodBillDate: foodDate,
     foodBillAmount,
+    foodBillDutyDays: foodEntry?.payment.dutyDays ?? null,
+    foodBillStatedDays: foodEntry?.payment.explicitDayCount ?? null,
+    evidenceFlags,
     employeeIdentitySource: foodEntry?.payment.identitySource ?? null,
     sukaniMentioned: entries.some((entry) => entry.payment.sukaniMentioned),
     releaseDate,
