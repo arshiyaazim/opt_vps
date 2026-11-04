@@ -42,6 +42,14 @@ export type Payment = {
   officeReturnDate: string | null;
   /** Deterministic rules that produced the evidence above. */
   rules: string[];
+  /** The message calls this amount a food bill (English, Bangla or transliterated). */
+  foodBillWords: boolean;
+  /** A day count the message states, e.g. "6-day", "4-Day", "To duty:-6". */
+  explicitDayCount: number | null;
+  /** How the escort number was taken from the message. */
+  identitySource: 'ID_LABEL' | 'ESCORT_LABEL' | 'FIRST_MOBILE';
+  /** The message mentions a Sukani / Master number (never the escort). */
+  sukaniMentioned: boolean;
 };
 
 export type StatedDate = {date: string | null; shift: 'D' | 'N' | null; kind: 'release' | 'start' | null; invalid: boolean};
@@ -79,6 +87,10 @@ const DATE_RE = /\b\d{1,2}\s*[-./]\s*\d{1,2}\s*[-./]\s*\d{2,4}\b/g;
 //   "End date:-28-01-26-(D)" + "Office return date:-02-02-26"
 //   "Ship to Office back---Convance bill" (conveyance, no date)
 const OFFICE_RETURN_RE = /office\s*(?:back|return)|ফির|ফেরত|অফিসে\s*(?:আসার|ফেরার|ফির)/i;
+// "ghat duty man" is a transport event even though it never says conveyance.
+// It affects DATE attachment only, never the amount classification, so the
+// existing candidate amounts cannot change.
+const GHAT_LINE_RE = /ghat|ঘাট/i;
 const END_LABEL_RE = /(?:end|release)\s*(?:date|dte|dt)\b/i;
 const START_LABEL_RE = /start\s*(?:date|dte|dt)\b/i;
 const DATE_TOKEN_RE = /(\d{1,2}\s*[-/.]\s*\d{1,2}\s*[-/.]\s*(?:\d{4}|\d{2}))/;
@@ -86,6 +98,17 @@ const SHIFT_TOKEN_RE = /\(+\s*(D|N|Day|Night)\s*\)+/i;
 
 /** Bengali digits are the same character class everywhere; no business rule here. */
 const asciiDigits = (value: string) => String(value).replace(/[০-৯]/g, (c) => String('০১২৩৪৫৬৭৮৯'.indexOf(c)));
+
+// Food-bill wording actually found in the authorized traffic:
+//   "food bill", "Fooding Bill", "food bill 6-day", "kabar bill",
+//   "কাবার বিলের টাকা", "খাবার বিল", "খাওয়ার বিল".
+const FOOD_BILL_RE = /food\s*(?:bill|ing)|\bfood\b|খাবার|খাওয়ার|খাওয়ার|কাবার|kabar\s*bill|khabar\s*bill|khawar/i;
+// "Sukani" and "Master" numbers are payment destinations, never the escort.
+const SUKANI_RE = /sukani|সুকানি|সুকানী|master\s*(?:mobile|no\b|number|bhai|vai)|মাস্টার/i;
+const DAYCOUNT_RE = /(\d{1,2})\s*[- ]?\s*(?:day|days|dsy|din)\b/i;
+const DUTYCOUNT_RE = /(?:to\s*duty|duty\s*(?:day|days)?)\s*[:=-]?\s*(\d{1,2})\b/i;
+const ID_LABEL_RE = /\bID\s*[:=]/i;
+const ESCORT_LABEL_RE = /escort\s*(?:mobile|name|number)?\s*[:=-]/i;
 
 /**
  * The date a line states, if any. `invalid` marks a labelled date that looks like
@@ -112,7 +135,7 @@ export function statedDateOnLine(line: string, messageDate: string): StatedDate 
 function attachDateEvidence(
   payment: Payment,
   stated: StatedDate,
-  isConveyance: boolean,
+  isTransport: boolean,
   isOfficeReturn: boolean,
 ): void {
   const add = (rule: string) => {
@@ -132,7 +155,7 @@ function attachDateEvidence(
     payment.statedStartDate = date;
     add('R-STATED-START-DATE');
   }
-  if (isConveyance && !payment.conveyanceDate) {
+  if (isTransport && !payment.conveyanceDate) {
     payment.conveyanceDate = date;
     add('R-CONVEYANCE-DATE');
   }
@@ -214,6 +237,11 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
   const found = new Map<string, Payment>();
   let currentPhone: string | null = null;
   let currentName: string | null = null;
+  // Evidence carried by the current escort section (reset at each escort line).
+  let currentFoodBill = false;
+  let currentDayCount: number | null = null;
+  let currentSukani = false;
+  let currentIdentity: Payment['identitySource'] = 'FIRST_MOBILE';
 
   for (const rawLine of String(body ?? '').split(/\r?\n/)) {
     const line = rawLine.trim();
@@ -223,26 +251,36 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
       .map((m) => normalisePhone(m[0]))
       .filter((v): v is string => Boolean(v));
 
+    const lineDay = DAYCOUNT_RE.exec(line) ?? DUTYCOUNT_RE.exec(line);
     if (mobiles.length) {
       currentPhone = mobiles[0];
       // Name heuristic: text after the phone on the same line, trimmed of markers.
       const after = line.slice(line.indexOf(String(mobiles[0]).slice(-4)) + 4);
       const nameMatch = after.replace(/^[\s:,-]+/, '').match(/^([A-Za-z][A-Za-z .'-]{2,40})/);
       currentName = nameMatch ? nameMatch[1].trim() : null;
-    } else if (!currentPhone) {
-      continue; // no escort in context yet
+      currentFoodBill = FOOD_BILL_RE.test(line);
+      currentSukani = SUKANI_RE.test(line);
+      currentDayCount = lineDay ? Number(lineDay[1]) : null;
+      currentIdentity = ID_LABEL_RE.test(line) ? 'ID_LABEL' : ESCORT_LABEL_RE.test(line) ? 'ESCORT_LABEL' : 'FIRST_MOBILE';
+    } else {
+      // Evidence can arrive on a continuation line, e.g. "food bill master bkah no".
+      if (FOOD_BILL_RE.test(line)) currentFoodBill = true;
+      if (SUKANI_RE.test(line)) currentSukani = true;
+      if (lineDay && currentDayCount === null) currentDayCount = Number(lineDay[1]);
     }
+    if (!currentPhone) continue; // no escort in context yet
 
     const amounts = amountsOnLine(line);
     const isConveyance = CONVEYANCE_RE.test(line);
     const isOfficeReturn = OFFICE_RETURN_RE.test(line);
+    const isTransport = isConveyance || isOfficeReturn || GHAT_LINE_RE.test(line);
     const stated = statedDateOnLine(line, when.date);
 
     if (!amounts.length) {
       // A date-only follow-up line belongs to the escort already in context. No
       // payment is created here, so the existing set of payments is unchanged.
       const known = found.get(currentPhone);
-      if (known && stated) attachDateEvidence(known, stated, isConveyance, isOfficeReturn);
+      if (known && stated) attachDateEvidence(known, stated, isTransport, isOfficeReturn);
       continue;
     }
 
@@ -262,7 +300,15 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
       conveyanceDate: null,
       officeReturnDate: null,
       rules: [],
+      foodBillWords: false,
+      explicitDayCount: null,
+      identitySource: currentIdentity,
+      sukaniMentioned: false,
     };
+    // Evidence accumulates across the whole escort section.
+    existing.foodBillWords = existing.foodBillWords || currentFoodBill;
+    if (existing.explicitDayCount === null && currentDayCount !== null) existing.explicitDayCount = currentDayCount;
+    existing.sukaniMentioned = existing.sukaniMentioned || currentSukani;
 
     const total = amounts.reduce((a, b) => a + b, 0);
     if (isConveyance) {
@@ -281,7 +327,7 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
       }
     }
     found.set(currentPhone, existing);
-    if (stated) attachDateEvidence(existing, stated, isConveyance, isOfficeReturn);
+    if (stated) attachDateEvidence(existing, stated, isTransport, isOfficeReturn);
   }
 
   return [...found.values()].map((p) => {

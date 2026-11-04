@@ -11,6 +11,7 @@ import {NativeLiveReader,advanceNativeCursor,ensureNativeCursor,recordNativeErro
 import {ingestNativePage} from "../lib/native-ingest.ts";
 import {scanReleaseGroup,persistRows,autoApplyHigh,RELEASE_GROUP_JID} from "../lib/release-scan.ts";
 import {commandActorFromEnv} from "../lib/vessel-command-policy.ts";
+import {initialReleaseRetry,recordReleaseScanFailure,recordReleaseScanSuccess,shouldAttemptReleaseScan} from "../lib/release-retry.ts";
 import type {ArchivePool,CompatibilityMessage} from "../lib/whatsapp-archive.ts";
 
 type JsonObject=Record<string,unknown>;
@@ -264,9 +265,31 @@ async function ensureHistoricalProcessing(pool:ArchivePool):Promise<void>{
 // available reader is list_native_messages (limit <= 10, activation cursor, then
 // CONTENT pages). History is supplied once by the approved staging backfill.
 let releaseCommandPoolInstance:ReturnType<typeof createPool>|null=null;
+// Set when the release pass fails after the ingestion checkpoint advanced; the
+// loop retries with backoff so the work cannot be lost while the group is quiet.
+let releaseRetry=initialReleaseRetry();
 function releaseCommandPool(){
   if(!releaseCommandPoolInstance)releaseCommandPoolInstance=createPool({readOnly:false,user:"ir_review_runtime"});
   return releaseCommandPoolInstance;
+}
+
+async function processReleaseGroup(pool:ReturnType<typeof createIngestionDbPool>):Promise<void>{
+  const db={query:(sql:string,values?:unknown[])=>pool.query(sql,values) as Promise<{rows:Array<Record<string,unknown>>}>};
+  const scan=await scanReleaseGroup(db);
+  const inserted=await persistRows(db,scan.rows);
+  if(inserted)console.error(`Release parser: ${inserted} new candidates from ${scan.messages} messages`);
+  if(!inserted)return;
+  // Auto-apply only high-confidence Step A/C matches whose program is still
+  // unreleased. Everything else queues for /platform/release-review.
+  try{
+    const actor=commandActorFromEnv(process.env as Record<string,string|undefined>).ref;
+    const applied=await autoApplyHigh(db,releaseCommandPool(),actor);
+    if(applied.applied)console.error(`Release parser: auto-applied ${applied.applied} release(s)`);
+    if(applied.failed)console.error(`Release parser: ${applied.failed} auto-apply failure(s), queued for review`);
+    if(applied.skipped)console.error(`Release parser: queued for review: ${applied.skipped} high-confidence candidate(s)`);
+  }catch(error){
+    console.error(`Release parser auto-apply skipped; candidates queued for review (${safeError(error)}).`);
+  }
 }
 
 async function runNativeChat(
@@ -283,29 +306,16 @@ async function runNativeChat(
     await ingestNativePage(pool as unknown as Parameters<typeof ingestNativePage>[0],scope,"wa-01",page);
     // Release parser hook (§Step 5). Only the Escort Release Slip group, only when
     // something new arrived, and never allowed to disturb ingestion: a parser
-    // failure is logged and swallowed. Candidates are queued for admin review and
-    // are never auto-applied.
+    // failure is logged, recorded for retry, and does not stop this cycle.
+    // Candidates are queued for admin review; only the high-confidence gate
+    // inside autoApplyHigh may apply a release.
     if(chatJid===RELEASE_GROUP_JID&&page.records.length){
       try{
-        const db={query:(sql:string,values?:unknown[])=>pool.query(sql,values) as Promise<{rows:Array<Record<string,unknown>>}>};
-        const scan=await scanReleaseGroup(db);
-        const inserted=await persistRows(db,scan.rows);
-        if(inserted)console.error(`Release parser: ${inserted} new candidates from ${scan.messages} messages`);
-        // Auto-apply only high-confidence Step A/C matches whose program is still
-        // unreleased. Everything else queues for /platform/release-review.
-        if(inserted){
-          try{
-            const actor=commandActorFromEnv(process.env as Record<string,string|undefined>).ref;
-            const applied=await autoApplyHigh(db,releaseCommandPool(),actor);
-            if(applied.applied)console.error(`Release parser: auto-applied ${applied.applied} release(s)`);
-            if(applied.failed)console.error(`Release parser: ${applied.failed} auto-apply failure(s), queued for review`);
-            if(applied.skipped)console.error(`Release parser: queued for review: ${applied.skipped} high-confidence candidate(s)`);
-          }catch(error){
-            console.error(`Release parser auto-apply skipped; candidates queued for review (${safeError(error)}).`);
-          }
-        }
+        await processReleaseGroup(pool);
+        releaseRetry=recordReleaseScanSuccess();
       }catch(error){
-        console.error(`Release parser hook failed; ingestion unaffected (${safeError(error)}).`);
+        releaseRetry=recordReleaseScanFailure(releaseRetry,Date.now());
+        console.error(`Release parser hook failed; ingestion unaffected, retry scheduled (${safeError(error)}).`);
       }
     }
     cursor=page.nextCursor;
@@ -414,6 +424,18 @@ async function main():Promise<void>{
       catch(error){
         failed=true;
         console.error(`WA-02 ingestion unavailable; cursors retained (${safeError(error)}).`);
+      }
+      // Retry a failed release pass even when the group is quiet: the ingestion
+      // checkpoint has already advanced, so nothing else would re-trigger it.
+      if(chatJids.includes(RELEASE_GROUP_JID)&&shouldAttemptReleaseScan(releaseRetry,Date.now())){
+        try{
+          await processReleaseGroup(pool);
+          releaseRetry=recordReleaseScanSuccess();
+          console.error('Release parser: retry succeeded');
+        }catch(error){
+          releaseRetry=recordReleaseScanFailure(releaseRetry,Date.now());
+          console.error(`Release parser retry failed; retry rescheduled (${safeError(error)}).`);
+        }
       }
       delay=failed?Math.min(delay*2,60000):1000;
       await sleep(failed?delay:15000);

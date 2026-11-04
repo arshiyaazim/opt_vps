@@ -125,3 +125,106 @@ approve or settle Cash, and it imports no Cash module.
 Not reprocessed. The 140 existing candidates keep their current columns; the new
 columns stay NULL until an approved backfill. Where a historical message has no
 travel date, the row is evidence — not a guessed month.
+
+---
+
+# Food Bill and same-day conveyance (Owner rules B and C, 2026-11-04)
+
+## What the authorized traffic actually contains
+
+Read-only inspection of the Escort Release Slip group (1,043 messages):
+
+| Pattern | Count | Example shape |
+|---|---|---|
+| English food-bill wording | 34 | `900/- food bill`, `food bill master bkah no`, `Ship to Office back---Convance bill` |
+| Bangla food-bill wording | 35 | `কাবার বিলের টাকা যাবে`, `খাবার বিল` |
+| `6-day` / `To duty:-6` day counts | in the same messages | `900/- food bill 6-day`, `End date:-28-1026-(D) | To duty:-6` |
+| Sukani / Master numbers | 64 / 32 | `sukano bkash no`, `master no food bill` |
+| Ghat wording | 88 | `ghat duty man 200/-` |
+| Salary / Advance wording | 3 / 5 | rare, and therefore usable as exclusions |
+
+The Cash instruction table shows the same-day pattern directly: many escorts
+receive two or three payments on one Dhaka date with no parsed purpose
+(`Owner direct payment instruction`), with amounts such as 20,000 / 40,000 /
+60,000 paisa (BDT 200 / 400 / 600). Three instructions carry
+`ghat duty man` at BDT 200. **Amount alone is never proof** — the same table
+also contains `Salary` at BDT 1,989.
+
+## Food Bill as release evidence (rule B)
+
+`release_date_source` may be:
+
+| Value | When |
+|---|---|
+| `STATED_END_DATE` | the message states an End/Release date (highest precedence) |
+| `FOOD_BILL_EVENT` | no stated date, and the food bill is a valid duty-ending bill |
+| `MESSAGE_TIMESTAMP` | legacy fallback only |
+
+A food bill establishes the release date only when all of these hold:
+
+1. it is a food bill (English, Bangla or transliterated wording, or an explicit
+   `N-day` / `To duty` count);
+2. the message does not label it Salary or Advance;
+3. it is not described as an old/previous bill or a future one;
+4. the date is not before the matched Program's start (it would be another duty);
+5. the stated day count agrees with `amount / BDT 150` when both exist;
+6. the Program match is unique.
+
+If an explicit Release Date exists, it always wins; the food-bill date never
+silently overwrites it. A conflict is flagged for review only when the food-bill
+message is dated later than a date stated by a **different** message.
+
+## Same-day additional money as conveyance evidence (rule C)
+
+| Evidence | Result |
+|---|---|
+| explicit transport wording (`গাড়ি ভাড়া`, `convance`, `ghat`, office return) | `conveyance_status` = `VERIFIED` or `UNRESOLVED` |
+| unlabelled second payment, same escort, same Dhaka date | `CANDIDATE` — never verified |
+| Salary / Advance label | excluded, never conveyance |
+
+Purpose is taken from the evidence: `OFFICE_RETURN_CONVEYANCE`,
+`GHAT_DUTY_CONVEYANCE`, `OTHER_VERIFIED_TRANSPORT` (default when only transport
+wording exists), `UNKNOWN_CONVEYANCE_PURPOSE` (conflicting or no purpose words).
+
+The conveyance month comes from the **actual travel date** only:
+
+| Source | Meaning |
+|---|---|
+| `EXPLICIT_TRAVEL_DATE` | a date on the transport line or an Office return date |
+| `SAME_DAY_ESTABLISHED` | transport wording in the same message as the completed duty, with no payment-routing-only wording |
+| none | `payment_instruction_date` is preserved, the month stays unresolved |
+
+`টাকা যাবে` / “will go” is money routing, not travel, and can never establish a
+travel date. A payment instruction is not proof of payment.
+
+## Retry and checkpoint safety
+
+The ingestion checkpoint advances when a page is read, so a failure inside the
+release pass would otherwise wait for the next new message. The worker now keeps
+a small backoff state (`lib/release-retry.ts`: 1, 2, 4 … min, capped at 30) and
+retries the pass on its own timer while the group is quiet. The pass is
+idempotent (`ON CONFLICT DO NOTHING` + the candidate dedupe index), so a retry
+never duplicates a candidate.
+
+## Isolated PostgreSQL rehearsal (2026-11-04)
+
+Throwaway PostgreSQL 16 container, minimal fixture schema, candidates applied in
+order 0073 → 0072 → 0074 → 0075 → 0071:
+
+| Check | Result |
+|---|---|
+| 0073 | `kacpur` row inserted, resolves to `kachpur` |
+| 0072 | duty-shift view counted 27 shifts for a 2025-12-20 D → 2026-01-02 D program; monthly split `2025-12:24, 2026-01:3` |
+| 0072 | conveyance event on 2026-02-05 attributed to `2026-02`; reconciliation `true` once the event existed, `false` before (fail closed) |
+| 0074 | second event for the same candidate rejected by the unique index |
+| 0075 | invalid `conveyance_purpose` rejected; `release_evidence_review` returned the open row |
+| 0071 | apply once → endDate set, revision 1, pay recalculated, candidate APPLIED, 1 audit row; replay → `alreadyApplied`, still 1 audit row; candidate without shift → rejected, no partial state |
+
+The container was removed afterwards; production was never touched.
+
+## Still not applied
+
+`0071`, `0072`, `0073`, `0074`, `0075` are candidates under
+`db/migration-candidates/`. The orchestrator is not yet wired into
+`release-scan`, so no new column is written in production and no historical
+candidate was reprocessed.
