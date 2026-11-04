@@ -232,3 +232,48 @@ The container was removed afterwards; production was never touched.
 `db/migration-candidates/`. The orchestrator is not yet wired into
 `release-scan`, so no new column is written in production and no historical
 candidate was reprocessed.
+
+---
+
+# Pipeline integration (2026-11-04)
+
+`analyseReleaseBundle()` is now called by the existing release pass:
+
+```
+ingestion worker → scanReleaseGroup() → persistRows() → persistEvidence()
+                                                        ↘ (same try) autoApplyHigh()
+```
+
+* `persistEvidence()` probes `information_schema` once per pass. If migrations
+  0074/0075 are absent it writes nothing and returns `skipped` — the deployed
+  behaviour is unchanged and an image can ship before the migrations.
+* When the columns exist it updates the candidate by its **own dedupe key**
+  (`source_msg_id + escort_phone + end_date + amount`), so no new identity is
+  introduced, and writes one `vessel_conveyance_event` per candidate
+  (`ON CONFLICT DO NOTHING`, deterministic id, amount converted BDT → paisa,
+  `verified` true only for VERIFIED evidence).
+* A failure throws, so the worker's retry state machine re-runs the pass. Both
+  writes are idempotent, so a retry cannot duplicate a candidate or an event.
+* `office_return_date`, `food_bill_*`, `additional_*`, `travel_date`,
+  `payment_instruction_date`, `employee_identity_source`, `rule_trace`,
+  `review_reasons` and `evidence_message_ids` stay separate columns.
+
+## Full-chain rehearsal (second run, same day)
+
+Fresh PostgreSQL 16 with the minimal fixture schema, candidates applied in order
+0073 → 0072 → 0074 → 0075 → 0071, then the whole chain executed:
+
+| Step | Result |
+|---|---|
+| candidate insert + evidence update | `COMPLETE`, food bill 2026-01-20 / BDT 900, travel 2026-02-05, BDT 500 |
+| conveyance event | 1 row, 50,000 paisa, verified |
+| replay of candidate + event | still 1 candidate, 1 event |
+| `apply_release_candidate` | endDate 2026-01-20, revision 1, candidate APPLIED, **1** audit row, pay 62 shifts / 1,240,000 + 50,000 |
+| monthly split | salary `2025-12:23`, `2026-01:39`; conveyance `2026-02` only |
+| reconciliation | `reconciles = true`, 62 = 62 shifts, 0 unresolved |
+| replay apply | `alreadyApplied`, still **1** audit row |
+| **audit atomicity** | a pre-existing conflicting audit row aborted the apply: program revision/endDate unchanged, candidate not applied, no pay row written |
+
+The audit proof is the important one: because the release command, the pay
+recalculation, the candidate update and the audit insert live in one function
+body, a missing or conflicting audit record cannot be committed without the rest.

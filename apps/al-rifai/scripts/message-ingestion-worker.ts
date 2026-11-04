@@ -9,7 +9,7 @@ import {OWNER_ESCORT_CLIENTS} from "../lib/escort-register.mjs";
 import {loadConversationScopeWithShadow,type ConversationScope} from "../lib/conversation-scope.ts";
 import {NativeLiveReader,advanceNativeCursor,ensureNativeCursor,recordNativeError} from "../lib/native-live-reader.ts";
 import {ingestNativePage} from "../lib/native-ingest.ts";
-import {scanReleaseGroup,persistRows,autoApplyHigh,RELEASE_GROUP_JID} from "../lib/release-scan.ts";
+import {scanReleaseGroup,persistRows,persistEvidence,autoApplyHigh,RELEASE_GROUP_JID} from "../lib/release-scan.ts";
 import {commandActorFromEnv} from "../lib/vessel-command-policy.ts";
 import {initialReleaseRetry,recordReleaseScanFailure,recordReleaseScanSuccess,shouldAttemptReleaseScan} from "../lib/release-retry.ts";
 import type {ArchivePool,CompatibilityMessage} from "../lib/whatsapp-archive.ts";
@@ -279,6 +279,18 @@ async function processReleaseGroup(pool:ReturnType<typeof createIngestionDbPool>
   const inserted=await persistRows(db,scan.rows);
   if(inserted)console.error(`Release parser: ${inserted} new candidates from ${scan.messages} messages`);
   if(!inserted)return;
+  // Evidence enrichment (Owner rules B/C). Deploy-safe: with migrations 0074/0075
+  // absent this writes nothing and returns skipped. A failure here is retried by
+  // the caller, and the write is idempotent, so nothing is lost.
+  try{
+    const evidence=await persistEvidence(db,scan.rows);
+    if(evidence.updated||evidence.events){
+      console.error(`Release evidence: ${evidence.updated} candidate(s) enriched, ${evidence.events} conveyance event(s)`);
+    }
+  }catch(error){
+    console.error(`Release evidence write failed; will retry (${safeError(error)}).`);
+    throw error;
+  }
   // Auto-apply only high-confidence Step A/C matches whose program is still
   // unreleased. Everything else queues for /platform/release-review.
   try{

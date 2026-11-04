@@ -23,7 +23,9 @@ BEGIN;
 
 ALTER TABLE public.release_candidates
   ADD COLUMN IF NOT EXISTS release_date_source text
-    CHECK (release_date_source IN ('STATED_END_DATE', 'MESSAGE_TIMESTAMP')),
+    -- FOOD_BILL_EVENT is the Owner rule B source (2026-11-04): a duty-ending food
+    -- bill can establish the release date. Migration 0075 carries its evidence.
+    CHECK (release_date_source IN ('STATED_END_DATE', 'FOOD_BILL_EVENT', 'MESSAGE_TIMESTAMP')),
   ADD COLUMN IF NOT EXISTS stated_release_date date,
   ADD COLUMN IF NOT EXISTS conveyance_date date,
   ADD COLUMN IF NOT EXISTS office_return_date date,

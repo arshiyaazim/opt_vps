@@ -16,6 +16,8 @@ export type RosterProgram = {
   id: string;
   escortPhone: string | null;
   escortName: string | null;
+  /** Carried for evidence enrichment only; never used by the matcher. */
+  lighterVessel?: string | null;
   startDate: string; // YYYY-MM-DD
   /** Released on, when already known. Empty/absent means the duty is open. */
   endDate?: string | null;

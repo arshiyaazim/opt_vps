@@ -9,7 +9,9 @@
 // escort to decide which payment is a lump-sum release. The group is ~1,000
 // messages, so this is cheap, and the dedupe index makes persistence idempotent.
 
-import {parseMessage, assignReleases, type RosterProgram, type Assignment} from './release-parser.ts';
+import {createHash} from 'node:crypto';
+import {parseMessage, assignReleases, normalisePhone, type RosterProgram, type Assignment} from './release-parser.ts';
+import {analyseReleaseBundle, type ReleaseBundle} from './release-evidence.ts';
 
 export const RELEASE_GROUP_JID = '120363408741101070@g.us';
 export const RELEASE_ACCOUNT = 'wa-01';
@@ -19,6 +21,8 @@ export type ScanRow = {
   msgId: string;
   msgAt: string;
   msgText: string;
+  /** Roster context for the matched Program, used only for evidence enrichment. */
+  roster?: {lighterVessel: string | null; startDate: string | null};
 };
 
 export type ScanResult = {
@@ -40,17 +44,19 @@ export async function loadRoster(client: Queryable): Promise<RosterProgram[]> {
     `SELECT id,
             "escortMobile" AS "escortPhone",
             "escortName"   AS "escortName",
+            "lighterVessel" AS "lighterVessel",
             "startDate"    AS "startDate",
             nullif(btrim("endDate"), '') AS "endDate"
        FROM public.programs
       WHERE dataset_epoch = 'CANONICAL_BACKFILL_20261026'`,
   ) as {rows: Array<{id: string; escortPhone: string | null; escortName: string | null; startDate: string; endDate: string | null}>};
-  return rows.map((r) => ({
+  return (rows as Array<{id: string; escortPhone: string | null; escortName: string | null; lighterVessel?: string | null; startDate: string; endDate: string | null}>).map((r) => ({
     id: r.id,
     escortPhone: r.escortPhone,
     escortName: r.escortName,
     startDate: String(r.startDate ?? '').slice(0, 10),
     endDate: r.endDate ? String(r.endDate).slice(0, 10) : null,
+    lighterVessel: r.lighterVessel ?? null,
   }));
 }
 
@@ -90,9 +96,14 @@ export async function scanReleaseGroup(client: Queryable, roster?: RosterProgram
   }
 
   const assignments = assignReleases(payments, effectiveRoster);
+  const rosterById = new Map(effectiveRoster.map((program) => [program.id, program]));
   const rows: ScanRow[] = assignments.map((assignment, i) => ({
     assignment,
     ...(meta[i] ?? {msgId: '', msgAt: '', msgText: ''}),
+    roster: assignment.programId
+      ? {lighterVessel: rosterById.get(assignment.programId)?.lighterVessel ?? null,
+         startDate: rosterById.get(assignment.programId)?.startDate ?? null}
+      : undefined,
   }));
 
   return {messages: messages.length, withPhone, phoneLess, payments: payments.length, rows};
@@ -196,4 +207,177 @@ export async function autoApplyHigh(
   ) as {rows: Array<{n: string}>};
   skipped = Number(remaining.rows[0]?.n ?? 0);
   return {applied, skipped, failed};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Evidence enrichment (Owner rules B and C).
+//
+// The candidate row keeps its original columns and its dedupe identity. The
+// evidence lives in additional columns added by candidate migrations 0074/0075,
+// so this writer is deploy-safe: when those columns are not present it does
+// nothing at all and the existing behaviour is unchanged. It never applies a
+// release, never touches pay and never writes Cash.
+// ════════════════════════════════════════════════════════════════════════════
+
+/** Every column this writer needs. Missing any of them means "migrations not applied yet". */
+export const RELEASE_EVIDENCE_COLUMNS = [
+  'extraction_status', 'release_date_source', 'conveyance_date', 'office_return_date',
+  'food_bill_date', 'food_bill_amount_bdt', 'food_bill_source_msg_id',
+  'additional_amount_bdt', 'additional_source_msg_id',
+  'conveyance_purpose', 'conveyance_status', 'travel_date', 'travel_date_source',
+  'payment_instruction_date', 'employee_identity_source', 'sukani_mentioned',
+  'evidence_message_ids', 'review_reasons', 'rule_trace',
+] as const;
+
+export type EvidenceCapability = {columns: boolean; events: boolean};
+
+export async function detectEvidenceCapability(client: Queryable): Promise<EvidenceCapability> {
+  const {rows} = await client.query(
+    `SELECT (SELECT count(*)::int
+               FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'release_candidates'
+                AND column_name = ANY($1::text[])) AS cols,
+            (SELECT to_regclass('public.vessel_conveyance_event') IS NOT NULL) AS events`,
+    [[...RELEASE_EVIDENCE_COLUMNS]],
+  ) as {rows: Array<{cols: number | string; events: boolean}>};
+  const row = rows[0];
+  return {
+    columns: Number(row?.cols ?? 0) === RELEASE_EVIDENCE_COLUMNS.length,
+    events: row?.events === true,
+  };
+}
+
+export type EvidencePersistResult = {updated: number; events: number; skipped: boolean};
+
+const evidenceId = (parts: Array<string | number | null>) =>
+  createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0, 40);
+
+function extractionStatusOf(bundle: ReleaseBundle): string {
+  if (bundle.reviewReasons.includes('INVALID_STATED_DATE') || bundle.releaseDateSource === 'NONE') return 'INVALID_DATES';
+  // A known amount with no verified travel date is the actionable state: it is
+  // preserved and never allocated, so it must be visible as its own status.
+  if (bundle.conveyanceStatus === 'UNRESOLVED') return 'UNRESOLVED_CONVEYANCE';
+  return 'COMPLETE';
+}
+
+/**
+ * Write the evidence for the rows just persisted. Idempotent: the candidate is
+ * updated by its own dedupe key and the conveyance event is unique per candidate.
+ */
+export async function persistEvidence(
+  client: Queryable,
+  rows: readonly ScanRow[],
+): Promise<EvidencePersistResult> {
+  if (!rows.length) return {updated: 0, events: 0, skipped: false};
+  const capability = await detectEvidenceCapability(client);
+  if (!capability.columns) return {updated: 0, events: 0, skipped: true};
+
+  let updated = 0;
+  let events = 0;
+  for (const row of rows) {
+    const a = row.assignment;
+    const phone = normalisePhone(a.escortPhone);
+    if (!phone || !row.msgId || !row.msgAt || !row.msgText) continue;
+
+    const bundles = analyseReleaseBundle(
+      [{text: row.msgText, timestamp: row.msgAt, messageId: row.msgId}],
+      {
+        status: a.status,
+        programId: a.programId,
+        confidence: a.confidence,
+        lighterVessel: row.roster?.lighterVessel ?? null,
+        programStartDate: row.roster?.startDate ?? null,
+      },
+    );
+    const bundle = bundles.find((item) => normalisePhone(item.employeeMobile) === phone);
+    if (!bundle) continue;
+
+    const result = await client.query(
+      `UPDATE public.release_candidates SET
+         extraction_status = $1,
+         release_date_source = $2,
+         conveyance_date = $3::date,
+         office_return_date = $4::date,
+         food_bill_date = $5::date,
+         food_bill_amount_bdt = $6,
+         food_bill_source_msg_id = $7,
+         additional_amount_bdt = $8,
+         additional_source_msg_id = $9,
+         conveyance_purpose = $10,
+         conveyance_status = $11,
+         travel_date = $12::date,
+         travel_date_source = $13,
+         payment_instruction_date = $14::date,
+         employee_identity_source = $15,
+         sukani_mentioned = $16,
+         evidence_message_ids = $17::jsonb,
+         review_reasons = $18::jsonb,
+         rule_trace = $19::jsonb
+       WHERE source_msg_id = $20
+         AND escort_phone = $21
+         AND end_date = $22::date
+         AND coalesce(amount_bdt, -1) = coalesce($23, -1)`,
+      [
+        extractionStatusOf(bundle),
+        bundle.releaseDateSource === 'NONE' ? null : bundle.releaseDateSource,
+        bundle.travelDateSource === 'EXPLICIT_TRAVEL_DATE' ? bundle.travelDate : null,
+        bundle.officeReturnDate,
+        bundle.foodBillDate,
+        bundle.foodBillAmount,
+        bundle.foodBillAmount !== null ? row.msgId : null,
+        bundle.additionalAmount,
+        bundle.additionalAmount !== null ? row.msgId : null,
+        bundle.conveyancePurpose,
+        bundle.conveyanceStatus,
+        bundle.travelDate,
+        bundle.travelDateSource,
+        bundle.paymentInstructionDate,
+        bundle.employeeIdentitySource,
+        bundle.sukaniMentioned,
+        JSON.stringify(bundle.evidenceMessageIds),
+        JSON.stringify(bundle.reviewReasons),
+        JSON.stringify([...bundle.ruleTrace, ...bundle.evidenceFlags]),
+        row.msgId, a.escortPhone, a.endDate, a.amountBdt,
+      ],
+    );
+    updated += (result as unknown as {rowCount?: number}).rowCount ?? 0;
+
+    if (!capability.events || bundle.additionalAmount === null) continue;
+    // One row per candidate. `verified` is true only for VERIFIED evidence, so a
+    // candidate can never reach a payroll month.
+    await client.query(
+      `INSERT INTO public.vessel_conveyance_event
+         (id, program_id, event_date, amount_minor, verified, source_ref, evidence, candidate_id)
+       VALUES ($1,$2,$3::date,$4,$5,$6,$7::jsonb,
+               (SELECT rc.id FROM public.release_candidates rc
+                 WHERE rc.source_msg_id=$8 AND rc.escort_phone=$9
+                   AND rc.end_date=$10::date
+                   AND coalesce(rc.amount_bdt,-1)=coalesce($11,-1)))
+       ON CONFLICT DO NOTHING`,
+      [
+        `ce-${evidenceId([row.msgId, a.escortPhone, a.endDate, bundle.additionalAmount])}`,
+        a.programId,
+        bundle.travelDate,
+        bundle.additionalAmount * 100, // BDT → paisa
+        bundle.conveyanceStatus === 'VERIFIED',
+        row.msgId,
+        JSON.stringify({
+          purpose: bundle.conveyancePurpose,
+          status: bundle.conveyanceStatus,
+          travelDateSource: bundle.travelDateSource,
+          paymentInstructionDate: bundle.paymentInstructionDate,
+          foodBillDate: bundle.foodBillDate,
+          ruleTrace: bundle.ruleTrace,
+          evidenceFlags: bundle.evidenceFlags,
+          evidenceMessageIds: bundle.evidenceMessageIds,
+          reviewReasons: bundle.reviewReasons,
+          cashPosting: false,
+        }),
+        row.msgId, a.escortPhone, a.endDate, a.amountBdt,
+      ],
+    );
+    events += (result as unknown as {rowCount?: number}).rowCount ?? 0;
+  }
+  return {updated, events, skipped: false};
 }
