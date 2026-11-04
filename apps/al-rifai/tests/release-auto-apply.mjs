@@ -3,6 +3,7 @@
 // asserted without a database.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {atomicApplyMode, autoApplyHigh} from '../lib/release-scan.ts';
 
 const ROWS = [
@@ -151,4 +152,19 @@ test('an atomic failure leaves the candidate alone and is retried next pass', as
   assert.equal(result.applied, 1);
   assert.equal(h.calls.some((c) => /UPDATE public\.release_candidates/.test(c.sql)), false);
   assert.equal(h.calls.some((c) => /INSERT INTO public\.release_auto_apply_log/.test(c.sql)), false);
+});
+
+test('every manual apply path uses the same atomic function and fails closed', () => {
+  const read = (name) => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
+  const cli = read('scripts/apply-high-releases.ts');
+  const api = read('lib/release-apply.ts');
+  for (const [name, text] of [['CLI', cli], ['API', api]]) {
+    const code = text.replace(/\/\/[^\n]*/g, ''); // comments document the old shape
+    assert.match(code, /apply_release_candidate/, `${name} must use the atomic function`);
+    assert.doesNotMatch(code, /alrifai_vessel_program_release/, `${name} must not release outside the function`);
+    assert.doesNotMatch(code, /recalculate_program_pay/, `${name} must not recalculate outside the function`);
+    // A rejection may close a candidate, but only the function may release one.
+    assert.doesNotMatch(code, /match_status\s*=\s*'APPLIED'/i, `${name} must not mark a candidate released itself`);
+    assert.match(code, /ATOMIC_APPLY_REQUIRED_BUT_MISSING/, `${name} must fail closed without the function`);
+  }
 });

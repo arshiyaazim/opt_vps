@@ -1,13 +1,14 @@
 // Apply / reject a release candidate (R1 Step 4).
 //
-// Applying a release does NOT write to programs directly. It goes through the
-// existing vessel command layer (alrifai_vessel_program_release), which sets
-// endDate, records details.endShift and appends a RELEASE_PROGRAM event, bumping
-// revision so program_command_history stays intact. A direct UPDATE would bypass
-// that audit trail, which AGENTS.md forbids.
+// Applying a release does NOT write to programs directly. It goes through
+// public.apply_release_candidate(), which releases the program, recalculates pay,
+// marks the candidate applied and writes the release_auto_apply_log row in ONE
+// transaction. Releasing through several pools/statements (the previous shape)
+// could commit the release and lose the audit row, which is exactly how candidate
+// 2093 was applied without an audit record. If the function is absent the apply
+// fails closed instead of falling back to the non-atomic path.
 //
-// The command already stored endDate/endShift on the program; program_pay is then
-// recalculated so the register shows money instead of ৳—.
+// Rejecting a candidate never touches programs.
 
 import {database} from '@/db/raw';
 import {createPool} from '@/db/postgres.mjs';
@@ -58,40 +59,29 @@ async function loadCandidate(id: string): Promise<Candidate> {
 
 /** Apply one candidate. Idempotent: an already-applied row returns its state. */
 export async function applyCandidate(id: string, reviewedBy: string): Promise<{programId: string; alreadyApplied: boolean}> {
+  if (!/^\d+$/.test(id)) throw new ApplyError('CANDIDATE_NOT_FOUND', 404);
   const candidate = await loadCandidate(id);
   if (candidate.applied) return {programId: candidate.program_id ?? '', alreadyApplied: true};
   if (candidate.match_status !== 'MATCHED') throw new ApplyError('CANDIDATE_NOT_MATCHED', 409);
   if (!candidate.program_id) throw new ApplyError('CANDIDATE_WITHOUT_PROGRAM', 409);
   if (!candidate.end_shift) throw new ApplyError('CANDIDATE_WITHOUT_SHIFT', 409);
 
-  // Read the current revision immediately before commanding; the function rejects
-  // a stale revision rather than overwriting a concurrent change.
-  const current = await database().all<{revision: number}>(
-    'SELECT revision FROM public.programs WHERE id = $1', [candidate.program_id],
+  // Fail closed until the atomic function is installed (migration 0071).
+  const probe = await database().all<{atomic: boolean}>(
+    `SELECT to_regprocedure('public.apply_release_candidate(bigint,text,text,text)') IS NOT NULL AS atomic`,
   );
-  const revision = current.results[0]?.revision;
-  if (revision === undefined) throw new ApplyError('PROGRAM_NOT_FOUND', 404);
+  if (!probe.results[0]?.atomic) throw new ApplyError('ATOMIC_APPLY_REQUIRED_BUT_MISSING', 503);
 
   const actor = commandActorFromEnv(process.env as Record<string, string | undefined>).ref;
-  const commandKey = `release-candidate-${candidate.id}`;
-
-  const pool = commandPool();
-  await pool.query(
-    'SELECT public.alrifai_vessel_program_release($1,$2,$3,$4,$5,$6,$7,$8::jsonb) AS result',
-    [candidate.program_id, candidate.end_date, candidate.end_shift, '', actor, revision, commandKey,
-      JSON.stringify({source: 'release_candidates', candidateId: candidate.id})],
+  const result = await commandPool().query(
+    'SELECT public.apply_release_candidate($1::bigint,$2,$3,$4) AS result',
+    [id, actor, reviewedBy, 'release-review'],
   );
-
-  // Derived pay follows the release; without this the register keeps showing ৳—.
-  await pool.query('SELECT public.recalculate_program_pay($1)', [candidate.program_id]);
-
-  await writePool().query(
-    `UPDATE public.release_candidates
-        SET applied = true, match_status = 'APPLIED', reviewed_by = $2, reviewed_at = now()
-      WHERE id = $1`,
-    [id, reviewedBy],
-  );
-  return {programId: candidate.program_id, alreadyApplied: false};
+  const value = (result.rows[0]?.result ?? {}) as {programId?: string; alreadyApplied?: boolean};
+  return {
+    programId: String(value.programId ?? candidate.program_id),
+    alreadyApplied: value.alreadyApplied === true,
+  };
 }
 
 /** Reject one candidate. Never touches programs. */

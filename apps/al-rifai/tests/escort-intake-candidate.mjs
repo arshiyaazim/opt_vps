@@ -74,8 +74,13 @@ test('group evidence cannot become direct client or Admin authority',()=>{
  const r=qualifyEscortIntake(message,{bindings:[b]});assert.equal(r.items[0].classification,'REVIEW');
  assert.ok(r.items[0].reasons.includes('GROUP_SUPPORTING_EVIDENCE_ONLY'));
 });
-test('forwarded context and group release/finance discussion only support review',()=>{
- const r=incoming('owner-original-order',{forwarded:{isForwarded:true}});assert.equal(r.items[0].classification,'REVIEW');
+test('forwarded context is ordinary context; group release/finance discussion still needs review',()=>{
+ // Owner rule: a forwarded or pasted Order is an Order. Forwarding metadata is
+ // preserved in the evidence but never downgrades the classification.
+ const typed=incoming('owner-original-order');
+ const r=incoming('owner-original-order',{forwarded:{isForwarded:true}});
+ assert.equal(r.items[0].classification,'ORDER_DRAFT');assert.deepEqual(r.items[0].fields,typed.items[0].fields);
+ assert.equal(r.evidence.forwarded.isForwarded,true);
  const review=incoming('owner-original-order',{text:'Release Slip\nFood bill discussion\n'+body('owner-original-order')});
  assert.equal(review.items[0].classification,'REVIEW');assert.equal(review.operationalWrites,false);assert.equal(review.sendAuthorized,false);
 });

@@ -124,7 +124,8 @@ function evaluateConversation(state:CandidateState,workflow:WorkflowState,raw:un
   draft:'আপনার কলের বক্তব্য জানা নেই। কোন বিষয়ে যোগাযোগ করেছিলেন, জানাবেন?',workflow:'CALL_CALLBACK_DRAFT',
   fields:{observedResult:source.call!.result,endedAt:source.call!.endedAt,stateConfidence:'LOCAL_OBSERVATION_ONLY',statement:'কলের বক্তব্য জানা নেই'}}];
  else if(source.direction==='OUTGOING')items=[clarification('OUTGOING_NOT_INCOMING_INTENT')];
- else if(source.forwarded!==false)items=[clarification(source.forwarded===true?'FORWARDED_ORIGIN_NOT_SUBMITTER_AUTHORITY':'FORWARDING_PROVENANCE_UNKNOWN')];
+ // Forwarded / copy-pasted content from a verified sender is ordinary content
+ // (Owner rule). The verified-sender check above still decides authority.
  else {
   const intents=detectIntents(source.text);
   if(!intents.length)items=[clarification('INTENT_CONTEXT_REQUIRED')];

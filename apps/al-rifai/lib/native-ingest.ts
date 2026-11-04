@@ -63,7 +63,7 @@ export async function ingestNativePage(
           sourceHash: envelope.payload?.sha256 ?? record.semanticHash,
           senderLid: envelope.senderLid,
           quotedMessageId: envelope.quotedMessageId,
-          forwarded: envelope.forwarded,
+          forwarded: envelope.forwarded ?? null,
           observedAt: record.observedAt,
         }),
         envelope.payload?.text ?? '',

@@ -55,12 +55,15 @@ export function classifyDomains(text:string):Domain[]{
  return [...new Set(found.length?found:['OFFICE' as const])];
 }
 export function legacyRouteMessage(state:CandidateState,m:NativeMessageEnvelopeV1,occurrenceId:string,sourceRevision:number,actorId:string):ReviewItemV1[]{
+ // Forwarded and copy-pasted content is ordinary content (Owner rule). The
+ // forwarding flag is evidence, never an authority claim and never a review
+ // reason: the sender binding and direction below still decide authority.
  const identity=resolveIdentity(state,m),domainCandidates=classifyDomains(m.payload.text);
  const groups=verified(state,'group').filter(r=>{const g=groupSchema.parse(r.data);return g.nativeJid===m.chatJid&&g.accountIds.includes(m.accountId);});
  const group=groups.length===1?groupSchema.parse(groups[0].data):null;
  const groupDomain=group?.domain as Domain|undefined;
  const domain=m.chatType==='group'?(groupDomain??'IDENTITY'):domainCandidates.length===1?domainCandidates[0]:'OFFICE';
- const reasons=[...(identity.state!=='VERIFIED'?['SENDER_IDENTITY_'+identity.state]:[]),...identity.conflicts,...(m.forwarded?['FORWARDED_HEADER_HAS_NO_AUTHORITY']:[]),...(m.forwarded===null?['SOURCE_FORWARDING_UNKNOWN']:[]),...(m.media.length?['MEDIA_NOT_QUALIFIED']:[]),...(domainCandidates.length>1?['MULTIPLE_DOMAINS_REVIEW_REQUIRED']:[]),...(m.chatType==='group'?['GROUP_REVIEW_ONLY',...(!group?['GROUP_BINDING_UNVERIFIED']:[])]:[])];
+ const reasons=[...(identity.state!=='VERIFIED'?['SENDER_IDENTITY_'+identity.state]:[]),...identity.conflicts,...(m.media.length?['MEDIA_NOT_QUALIFIED']:[]),...(domainCandidates.length>1?['MULTIPLE_DOMAINS_REVIEW_REQUIRED']:[]),...(m.chatType==='group'?['GROUP_REVIEW_ONLY',...(!group?['GROUP_BINDING_UNVERIFIED']:[])]:[])];
  if(m.eventType!=='TEXT'||m.direction==='OUTGOING'&&domain!=='ESCORT')reasons.push('EVIDENCE_EVENT_NOT_AUTHORIZED_ACTION');
  const base=(fields:Record<string,unknown>,classification='REVIEW',extra:string[]=[],candidate:Record<string,unknown>={},index=0):ReviewItemV1=>({version:'review-item-v1',id:digest([occurrenceId,sourceRevision,index]),revision:1,accountId:m.accountId,chatJid:m.chatJid,domain,requiredDomains:[...new Set([domain,...domainCandidates])],sourceOccurrenceId:occurrenceId,sourceRevision,classification,status:classification==='ORDER_DRAFT'?'DRAFT':'REVIEW',fields,reasons:[...new Set([...reasons,...extra])],linkedDraftId:null,assignmentProposal:null,assignmentState:classification==='ORDER_DRAFT'?'UNASSIGNED':'REVIEW',clientDeliveryState:'NOT_SENT',createdBy:actorId,authorizationVersion:state.epoch,note:'',candidate});
  if(domain==='ESCORT'&&m.eventType==='TEXT'){
