@@ -67,28 +67,12 @@ export function normalisePhone(input: string | null | undefined): string | null 
   return d;
 }
 
-/** Dhaka wall-clock hour, so the shift rule uses the business timezone (§3 STEP 2). */
-function dhakaParts(timestampIso: string): { date: string; hour: number; minute: number } | null {
-  const parsed = new Date(timestampIso);
-  if (Number.isNaN(parsed.getTime())) return null;
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Dhaka',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
-  const parts = Object.fromEntries(fmt.formatToParts(parsed).map((p) => [p.type, p.value]));
-  return {
-    date: `${parts.year}-${parts.month}-${parts.day}`,
-    hour: Number(parts.hour) % 24,
-    minute: Number(parts.minute),
-  };
-}
+// The shift boundary lives in exactly one module (Owner decision D5, 2026-11-04:
+// Day 06:00:00–17:59:59, Night 18:00:00–05:59:59 Asia/Dhaka). This parser no
+// longer owns a copy of the cutoff; it only reads the local Dhaka clock.
+import {dhakaLocalTime, shiftForHour} from './shift-boundary.ts';
 
-export function shiftForHour(hour: number): 'D' | 'N' {
-  // 05:00–17:59 is a day message; 18:00–04:59 is a night message. The bill time is
-  // the shift; no "morning bill implies night duty" inference is made (§3/§4).
-  return hour >= 5 && hour < 18 ? 'D' : 'N';
-}
+export {shiftForHour};
 
 function addDays(isoDate: string, days: number): string {
   const d = new Date(`${isoDate}T00:00:00Z`);
@@ -132,7 +116,7 @@ function amountsOnLine(line: string): number[] {
  * numbers and are ignored for identity.
  */
 export function parseMessage(body: string, timestampIso: string): Payment[] {
-  const when = dhakaParts(timestampIso);
+  const when = dhakaLocalTime(timestampIso);
   if (!when) return [];
 
   const endDate = when.date;
