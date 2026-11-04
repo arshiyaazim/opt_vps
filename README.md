@@ -1,3 +1,50 @@
+> **CURRENT STATUS POINTER — 2026-11-04 (read this first).**
+> The body of this README is a **historical** architecture note closed by the
+> Owner on 11 October 2026; it is preserved unchanged below. Current operational
+> truth lives in `AGENTS.md` §0 and `docs/NEXT-HANDOFF.md`; infrastructure in
+> `docs/VPS_MAP.md`. Running system, verified read-only at `2026-11-04T20:12Z`:
+> image `sha256:b058dd48…` (source `ddbd3d5`, pin `91124c0`), migration ledger 75,
+> 98 Programs, 11/11 ingestion cursors, Cash Freeze active (0 postings),
+> reconciliation inactive, Target 02 live verification **pending**.
+>
+> **What the platform is.** AL-RIFA’I is the Owner’s marine workforce and cash
+> operations platform for a Chattogram shipping agency: escort/lighter Vessel
+> duties, Cash payment instructions, employee identity and attendance, and a
+> read-only review workspace over the WhatsApp evidence that authorises them.
+>
+> **Modules and workflows (current).**
+> *Vessel* — authorised client order → Draft → Admin confirmation → Program →
+> Assignment → derived payroll. *Cash* — verified Admin → Accountant payment
+> instruction captured as a `REVIEW` instruction under Cash Freeze; no posting
+> path exists. *Employee* — `employee_master` identity, attendance entries,
+> review queue. *Evidence* — WA-01 message mirror, release-slip scanner,
+> reconciliation staging (producer currently dormant).
+>
+> **Implementation status.**
+> *IMPLEMENTED* — Vessel order intake, Admin confirmation, Program/Assignment
+> creation, derived payroll (`UNRESOLVED` without an End Date), release candidate
+> extraction and atomic apply, Cash instruction capture (review-only), employee
+> identity, attendance, review queue, session auth.
+> *PARTIALLY IMPLEMENTED* — release image/OCR (interface only, no OCR engine),
+> office-group staffing/advance extraction, ±1-day duplicate review (staging
+> only), historical reconciliation (producer stopped).
+> *PLANNED* — Cash posting/approval/settlement execution, cancellation and
+> reinstatement events, WA-02 outbound messaging and AI assistant, migration
+> 0072–0076 features.
+>
+> **Setup and migration limitation.** `scripts/database.mjs migrate` reads only
+> `db/migrations/`; seven migrations (`0031`–`0036`, `0071`) live under
+> `db/migration-candidates/` and are applied in production but would be missed by
+> a fresh install. A fresh-install parity test is required before any rebuild.
+>
+> **Documentation index.** `AGENTS.md` (agent rules, safety, current position) ·
+> `docs/NEXT-HANDOFF.md` (current handoff and risks) · `docs/VPS_MAP.md`
+> (infrastructure) · `apps/al-rifai/README.md` (application detail) ·
+> `apps/al-rifai/docs/OWNER_BUSINESS_POLICY.md` (business policy) ·
+> `NEXT-SESSION-HANDOFF.md` (historical archive, not a status page).
+
+---
+
 # AL-RIFA’I AI Platform
 
 **HISTORICAL LEVEL B — CLOSED BY OWNER** (11 October 2026). Historical research, reconciliation, representation qualification, Option A validator repair and related historical-only work are closed. Original acceptance and PASS/FAIL/PARTIAL/BLOCKED/UNVERIFIED findings remain reference evidence; the old validator-repair recommendation is superseded. No import, posting or registry activation is authorized. Do not reopen without new explicit Owner authorization.

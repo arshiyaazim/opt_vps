@@ -1,5 +1,29 @@
 # START AUDIT — APP CONSTITUTION DOCUMENTATION — 14 October 2026 (Asia/Dhaka)
 
+> **CURRENT STATE POINTER — 2026-11-04 — read this before the dated sections below.**
+> This file is an infrastructure map plus dated audits. Its dated sections are
+> **historical evidence**, not current status. The authoritative running-system
+> position is `AGENTS.md` §0; the actionable handoff and the "read first / do not
+> do" contract is `docs/NEXT-HANDOFF.md`.
+> As of 2026-11-04 (verified `20:12Z`): app image
+> `sha256:b058dd4810d7830a9b2ac8e289c1358b7d4cb5668c474e9f4e19563a3ab9cae4`
+> (tag `local/alrifai:target02-final`, source `ddbd3d5`, compose pin `91124c0`),
+> migration ledger **75** rows through `0071_release_apply_atomic.sql`, roster
+> source `DB`, ingestion 11/11 cursors with 0 errors, **98 programs**
+> (39 priced / 54 `UNRESOLVED`), 93 assignments, 145 release candidates
+> (39 applied), **0 `CONFIRMED` register rows**, 3,726 Cash instructions
+> (2,140 `REVIEW` / 1,586 `MANUAL_READY`, **0 postings**), reconciliation timer
+> **inactive**.
+> Containers: `al-rifai-app-1` (started 2026-11-04T18:28:17Z, restarts 0),
+> `vps-infra-postgres-1` (`721873c3…`), WA-01 `28a646d2…`, WA-02 `d36ca851…`.
+> Deployment path note: the running container's Compose labels still reference
+> `/tmp/opencode/target02`; the tracked canonical file is
+> `/opt/vps/apps/al-rifai/compose.yaml` (same digest). See
+> `docs/NEXT-HANDOFF.md` "Git and deployment risks".
+> No image digest, ledger count, row count or permission statement in the dated
+> sections below is current without re-verification. Nothing here authorises a
+> migration, deploy, restart, `app.env` edit or `evidence/` write.
+
 Owner authorized root read/edit of only the three documents below. Documentation only; preserve previous content. Existing latest integration-readiness handoff reviewed (2026-10-13T20:57:56.793473+00:00 UTC). Its production findings are prior evidence, not live checks rerun here.
 
 ## App Constitution — Owner-authoritative — 14 October 2026 (Asia/Dhaka)

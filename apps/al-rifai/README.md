@@ -1,3 +1,15 @@
+> **CURRENT STATUS POINTER — 2026-11-04.** The "Current Production State
+> (2026-10-27)" section below is now historical. Current state, verified read-only
+> at `2026-11-04T20:12Z`: image `sha256:b058dd48…` (source `ddbd3d5`, compose pin
+> `91124c0`), ledger 75, 98 Programs / 93 Assignments / 93 pay rows (39
+> `CALCULATED`, 54 `UNRESOLVED`), register 616 `DRAFT` / 411 `REVIEW` /
+> 0 `CONFIRMED`, Cash Freeze active (3,726 instructions, 0 postings),
+> 11/11 ingestion cursors, reconciliation inactive, Target 02 live verification
+> pending. Target 01 added logical Vessel order identity, runtime packaging for
+> the reconciliation producer, and two recovered Programs; Target 02 added
+> free-text order parsing and the register → `CONFIRMED` transition. See
+> `AGENTS.md` §0 and `docs/NEXT-HANDOFF.md` for the authoritative position.
+
 # AL-RIFA’I — Current Production State (2026-10-27)
 
 This section supersedes older status notes below. Verified against the running
