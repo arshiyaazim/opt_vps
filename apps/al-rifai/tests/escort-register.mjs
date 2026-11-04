@@ -243,7 +243,9 @@ test('Vessel batch processing adds review operations to same-batch match state',
  assert.ok(processBatch.indexOf('const accountRows=existing.filter')<processBatch.indexOf('for(const row of rows)'));
  assert.ok(source.indexOf('classifyBusinessSource(')<source.indexOf('parseEscortOrder('));
  assert.match(processBatch,/approvedContacts\(contactsResult\.rows\?\?\[\]\)/);
- assert.match(loop,/await persistOperation\(client,operation\);\s*accountRows\.push\(/);
+ assert.match(loop,/await persistOperationIfNew\(client,operation\)/);
+ assert.match(loop,/if\(persisted==="skipped_duplicate"\)continue;/);
+ assert.match(loop,/accountRows\.push\(/);
  assert.doesNotMatch(loop,/if\(operation\.kind==="DRAFT"\)/);
 });
 
