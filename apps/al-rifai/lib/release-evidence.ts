@@ -301,6 +301,8 @@ export type ReleaseBundle = {
   travelDate: string | null;
   travelDateSource: TravelDateSource;
   paymentInstructionDate: string | null;
+  /** Office-return date the message stated, when any (supporting evidence). */
+  officeReturnDate: string | null;
   /** Month the conveyance belongs to (actual travel month), or null. */
   conveyanceMonth: string | null;
   conveyanceStatus: ConveyanceStatus;
@@ -621,6 +623,7 @@ function buildBundle(
     travelDate,
     travelDateSource,
     paymentInstructionDate,
+    officeReturnDate: entries.map((entry) => entry.payment.officeReturnDate).find(Boolean) ?? null,
     conveyanceMonth: travelDate ? monthOf(travelDate) : null,
     conveyanceStatus,
     classification,
