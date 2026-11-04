@@ -332,7 +332,7 @@ test('20. no path produces a Cash posting, settlement or approval', () => {
           'additionalAmount', 'cashPosting', 'classification', 'conveyanceMonth', 'conveyancePurpose',
           'conveyanceStatus', 'employeeIdentitySource', 'employeeMobile', 'evidenceFlags',
           'evidenceMessageIds', 'foodBillAmount', 'foodBillDate', 'foodBillDutyDays',
-          'foodBillStatedDays', 'lighterVessel', 'paymentInstructionDate', 'programId',
+          'foodBillStatedDays', 'lighterVessel', 'officeReturnDate', 'paymentInstructionDate', 'programId',
           'releaseDate', 'releaseDateSource', 'releaseEligible', 'reviewReasons', 'ruleTrace',
           'signals', 'sukaniMentioned', 'travelDate', 'travelDateSource',
         ]);
