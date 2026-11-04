@@ -278,7 +278,10 @@ export function qualifyEscortIntake(message,{bindings=[],existingDrafts=[],appro
  if(!time)base.push('SOURCE_TIMESTAMP_UNVERIFIED');
  if(!binding)base.push('SOURCE_ROLE_UNVERIFIED');
  if(message.chatJid.endsWith('@g.us'))base.push('GROUP_SUPPORTING_EVIDENCE_ONLY');
- if(message.forwarded)base.push('FORWARDED_DIRECTION_REQUIRES_REVIEW');
+ // Forwarded and copy-pasted messages are ordinary messages (Owner rule). The
+ // `forwarded` field is preserved in the occurrence evidence and in payloadSha so
+ // two distinct sends stay distinct, but it never downgrades the classification:
+ // authority still comes from the actual sender binding and direction.
  if(message.media?.length)base.push('MEDIA_EXTRACTION_REQUIRES_REVIEW');
  if(reviewContext)base.push('OPERATIONAL_DISCUSSION_REQUIRES_REVIEW');
  for(const block of blocks){
