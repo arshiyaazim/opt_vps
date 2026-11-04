@@ -152,17 +152,37 @@ export function messageTriggersParse(body: string | null | undefined, mediaType?
  *   - program has no endDate yet, so an already-released duty is never rewritten
  * Any failure is collected and returned; it never throws into the worker.
  */
-export async function autoApplyHigh(
-  client: Queryable,
-  command: {query(sql: string, values?: unknown[]): Promise<{rows: unknown[]}>},
-  actor: string,
-): Promise<{applied: number; skipped: number; failed: number}> {
-  let applied = 0;
-  let skipped = 0;
-  let failed = 0;
+export type AtomicApplyMode = 'auto' | 'required' | 'off';
+export type AutoApplyResult = {
+  applied: number;
+  skipped: number;
+  failed: number;
+  /** Which apply path ran. */
+  path: 'atomic' | 'legacy' | 'blocked';
+  /** Set when the operator demanded atomic apply and the function is absent. */
+  blocked?: 'ATOMIC_APPLY_REQUIRED_BUT_MISSING';
+};
 
-  const {rows} = await client.query(
-    `SELECT rc.id::text AS id, rc.program_id, rc.end_date::text AS end_date, rc.end_shift,
+/**
+ * `ALRIFAI_RELEASE_APPLY_ATOMIC`:
+ *   auto (default) — use the atomic function when it exists, otherwise the legacy
+ *                    path with an explicit diagnostic;
+ *   required        — refuse to apply unless the atomic function exists;
+ *   off             — never use the atomic function.
+ */
+export function atomicApplyMode(env: Record<string, string | undefined>): AtomicApplyMode {
+  const raw = (env.ALRIFAI_RELEASE_APPLY_ATOMIC ?? '').trim().toLowerCase();
+  if (raw === 'required' || raw === '1' || raw === 'true') return 'required';
+  if (raw === 'off' || raw === '0' || raw === 'false') return 'off';
+  return 'auto';
+}
+
+/**
+ * Eligibility query. The review_reasons gate is appended only when migration
+ * 0074/0075 are present, so an environment without them behaves exactly as before.
+ */
+function eligibilitySql(withReviewReasons: boolean): string {
+  return `SELECT rc.id::text AS id, rc.program_id, rc.end_date::text AS end_date, rc.end_shift,
             rc.source_msg_id, p.revision
        FROM public.release_candidates rc
        JOIN public.programs p ON p.id = rc.program_id
@@ -173,31 +193,103 @@ export async function autoApplyHigh(
         AND rc.program_id IS NOT NULL
         AND rc.end_shift IS NOT NULL
         AND lower(btrim(p.status)) = 'confirmed'
-        AND btrim(coalesce(p."endDate", '')) = ''
-      ORDER BY rc.end_date, rc.id`,
-  ) as {rows: Array<{id: string; program_id: string; end_date: string; end_shift: string; source_msg_id: string | null; revision: number}>};
+        AND btrim(coalesce(p."endDate", '')) = ''${withReviewReasons ? `
+        AND coalesce(jsonb_array_length(rc.review_reasons), 0) = 0` : ''}
+      ORDER BY rc.end_date, rc.id`;
+}
+
+type AtomicProbe = {atomic: boolean; reviewReasonsColumn: boolean};
+
+async function probeApplyPath(client: Queryable): Promise<AtomicProbe> {
+  const {rows} = await client.query(
+    `SELECT to_regprocedure('public.apply_release_candidate(bigint,text,text,text)') IS NOT NULL AS atomic,
+            EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_schema = 'public' AND table_name = 'release_candidates'
+                       AND column_name = 'review_reasons') AS review_cols`,
+  ) as {rows: Array<{atomic: boolean; review_cols: boolean}>};
+  const row = rows[0];
+  return {atomic: row?.atomic === true, reviewReasonsColumn: row?.review_cols === true};
+}
+
+/**
+ * Auto-apply high-confidence releases.
+ *
+ * When `apply_release_candidate()` exists the atomic path is used: one call per
+ * candidate covers release, pay recalculation, candidate status and the audit
+ * row in a single transaction. There is deliberately no per-candidate fallback
+ * to the legacy path — a failure leaves the candidate MATCHED so the next pass
+ * retries it, and the error is reported.
+ *
+ * When the function is absent and the mode is `required`, nothing is applied at
+ * all and the candidates are preserved for review. In `auto` mode the legacy
+ * path runs, but it announces itself so a missing migration cannot go unnoticed.
+ */
+export async function autoApplyHigh(
+  client: Queryable,
+  command: {query(sql: string, values?: unknown[]): Promise<{rows: unknown[]}>},
+  actor: string,
+  options: {mode?: AtomicApplyMode; probe?: AtomicProbe} = {},
+): Promise<AutoApplyResult> {
+  const mode = options.mode ?? atomicApplyMode(process.env as Record<string, string | undefined>);
+  const probe = options.probe ?? (await probeApplyPath(client));
+  let applied = 0;
+  let failed = 0;
+
+  const rows = (await client.query(eligibilitySql(probe.reviewReasonsColumn))).rows as Array<{
+    id: string; program_id: string; end_date: string; end_shift: string | null;
+    source_msg_id: string | null; revision: number;
+  }>;
+
+  if (!probe.atomic && mode !== 'auto') {
+    // `required`: the operator expects the atomic function; refuse and keep the
+    // candidates. `off`: the operator explicitly wants the legacy path.
+    if (mode === 'off') {
+      console.error('Release apply: atomic path disabled by configuration (ALRIFAI_RELEASE_APPLY_ATOMIC=off).');
+    } else {
+      console.error(`Release apply: ATOMIC_APPLY_REQUIRED_BUT_MISSING — ${rows.length} candidate(s) held for review.`);
+      return {applied: 0, skipped: rows.length, failed: 0, path: 'blocked', blocked: 'ATOMIC_APPLY_REQUIRED_BUT_MISSING'};
+    }
+  }
+
+  const atomic = probe.atomic && mode !== 'off';
+  if (!atomic) {
+    // Loud, once per pass: a legacy apply that writes the audit row after the
+    // candidate update cannot be atomic.
+    console.error(`Release apply: legacy (non-atomic) path active — apply_release_candidate() is not installed; ${rows.length} candidate(s) eligible.`);
+  }
 
   for (const row of rows) {
     try {
-      await command.query(
-        'SELECT public.alrifai_vessel_program_release($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
-        [row.program_id, row.end_date, row.end_shift, '', actor, row.revision,
-          `auto-release-${row.id}`, JSON.stringify({source: 'ingestion-auto-apply', candidateId: row.id})],
-      );
-      await command.query('SELECT public.recalculate_program_pay($1)', [row.program_id]);
-      await client.query(
-        `UPDATE public.release_candidates
-            SET applied = true, match_status = 'APPLIED', reviewed_by = 'auto-apply', reviewed_at = now()
-          WHERE id = $1::bigint`, [row.id],
-      );
-      await client.query(
-        `INSERT INTO public.release_auto_apply_log (candidate_id, program_id, trigger_message_id, end_date, end_shift)
-         VALUES ($1::bigint,$2,$3,$4::date,$5)`,
-        [row.id, row.program_id, row.source_msg_id, row.end_date, row.end_shift],
-      );
+      if (atomic) {
+        await command.query(
+          'SELECT public.apply_release_candidate($1::bigint,$2,$3,$4) AS result',
+          [row.id, actor, 'auto-apply', 'ingestion-auto-apply'],
+        );
+      } else {
+        await command.query(
+          'SELECT public.alrifai_vessel_program_release($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
+          [row.program_id, row.end_date, row.end_shift, '', actor, row.revision,
+            `auto-release-${row.id}`, JSON.stringify({source: 'ingestion-auto-apply', candidateId: row.id})],
+        );
+        await command.query('SELECT public.recalculate_program_pay($1)', [row.program_id]);
+        await client.query(
+          `UPDATE public.release_candidates
+              SET applied = true, match_status = 'APPLIED', reviewed_by = 'auto-apply', reviewed_at = now()
+            WHERE id = $1::bigint`, [row.id],
+        );
+        await client.query(
+          `INSERT INTO public.release_auto_apply_log (candidate_id, program_id, trigger_message_id, end_date, end_shift)
+           VALUES ($1::bigint,$2,$3,$4::date,$5)`,
+          [row.id, row.program_id, row.source_msg_id, row.end_date, row.end_shift],
+        );
+      }
       applied += 1;
-    } catch {
+    } catch (error) {
       failed += 1;
+      const code = error instanceof Error && /^[A-Z][A-Z0-9_:-]{1,80}$/.test(error.message) ? error.message : 'APPLY_FAILED';
+      // The candidate stays MATCHED (the function rolled back); the next pass
+      // retries it. Never fall back to the non-atomic path here.
+      console.error(`Release apply: candidate ${row.id} not applied (${code}); held for retry.`);
     }
   }
 
@@ -205,8 +297,8 @@ export async function autoApplyHigh(
     `SELECT count(*)::text AS n FROM public.release_candidates
       WHERE applied = false AND match_status = 'MATCHED' AND confidence = 'high'`,
   ) as {rows: Array<{n: string}>};
-  skipped = Number(remaining.rows[0]?.n ?? 0);
-  return {applied, skipped, failed};
+  const skipped = Number(remaining.rows[0]?.n ?? 0);
+  return {applied, skipped, failed, path: atomic ? 'atomic' : 'legacy'};
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -296,7 +296,8 @@ async function processReleaseGroup(pool:ReturnType<typeof createIngestionDbPool>
   try{
     const actor=commandActorFromEnv(process.env as Record<string,string|undefined>).ref;
     const applied=await autoApplyHigh(db,releaseCommandPool(),actor);
-    if(applied.applied)console.error(`Release parser: auto-applied ${applied.applied} release(s)`);
+    if(applied.blocked)console.error('Release parser: atomic apply required but apply_release_candidate() is missing; candidates held for review.');
+    if(applied.applied)console.error(`Release parser: auto-applied ${applied.applied} release(s) via ${applied.path}`);
     if(applied.failed)console.error(`Release parser: ${applied.failed} auto-apply failure(s), queued for review`);
     if(applied.skipped)console.error(`Release parser: queued for review: ${applied.skipped} high-confidence candidate(s)`);
   }catch(error){
