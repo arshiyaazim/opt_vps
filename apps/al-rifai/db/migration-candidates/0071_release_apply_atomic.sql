@@ -40,9 +40,10 @@ SECURITY DEFINER
 SET search_path TO 'public', 'pg_catalog'
 AS $function$
 DECLARE
-  c        record;
-  rev      integer;
-  applied  jsonb;
+  c            record;
+  rev          integer;
+  program_end  text;
+  applied      jsonb;
 BEGIN
   IF p_candidate_id IS NULL THEN RAISE EXCEPTION 'CANDIDATE_ID_REQUIRED'; END IF;
   IF NOT public.alrifai_vessel_actor_verified(p_actor) THEN RAISE EXCEPTION 'VERIFIED_ACTOR_REQUIRED'; END IF;
@@ -56,8 +57,13 @@ BEGIN
   IF c.program_id IS NULL THEN RAISE EXCEPTION 'CANDIDATE_WITHOUT_PROGRAM'; END IF;
   IF c.end_shift IS NULL OR c.end_shift NOT IN ('D','N') THEN RAISE EXCEPTION 'CANDIDATE_WITHOUT_SHIFT'; END IF;
 
-  SELECT revision INTO rev FROM public.programs WHERE id = c.program_id FOR UPDATE;
+  SELECT revision, coalesce("endDate", '') INTO rev, program_end
+    FROM public.programs WHERE id = c.program_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'PROGRAM_NOT_FOUND'; END IF;
+  -- A stale MATCHED candidate must never re-release a program that already has an
+  -- end date: the auto-apply eligibility query already excludes it, and the
+  -- function refuses it too rather than bumping the revision again.
+  IF btrim(program_end) <> '' THEN RAISE EXCEPTION 'PROGRAM_ALREADY_RELEASED'; END IF;
 
   applied := public.alrifai_vessel_program_release(
     c.program_id, c.end_date::text, c.end_shift, '',
