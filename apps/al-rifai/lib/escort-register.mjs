@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {parseEscortOrder} from './escort-intake-candidate.mjs';
-import {matchConfirmation,orderBusinessDay,orderIdentity} from './vessel-match.ts';
+import {matchConfirmation,motherFamily,orderBusinessDay,orderIdentity} from './vessel-match.ts';
 import {classifyProgramDuplicate} from './duplicate-identity.ts';
 
 const hash=value=>createHash('sha256').update(typeof value==='string'?value:JSON.stringify(value)).digest('hex');
@@ -245,7 +245,10 @@ export function deriveEscortRegisterOps(account,messages,contacts,existingRows,a
   const identity=orderIdentity({lighter:data.lighterVessel,masterRaw:data.masterMobileRaw||data.masterMobile,shift:data.shift});
   if(!identity)return null;
   const day=orderBusinessDay({dutyDate:data.dutyDate,sourceTime});
-  return hash(['escort-logical-order-v1',account.accountId,chat,identity,day]);
+  // The mother's leading name word buckets the fleet without splitting the two
+  // spellings of one vessel. The merge decision itself is made by the matcher,
+  // which additionally applies the tolerant `motherCompatible` rule.
+  return {logicalOrderId:hash(['escort-logical-order-v1',account.accountId,chat,identity,day,motherFamily(data.motherVessel)]),orderIdentity:`${identity}|${day}`};
  };
  for(const message of messages){
   const sourceRoute=classifyBusinessSource(account,message,contacts,aliases,groupAuthorizations,cashScopeChats);
@@ -275,7 +278,7 @@ export function deriveEscortRegisterOps(account,messages,contacts,existingRows,a
     // existing draft, never a second draft. The message itself stays immutable in
     const id=hash(['escort-order',...salt,account.accountId,source,blockKey]);
     const logicalOrderId=logicalOrderIdOf(canonicalChat(message.chatJid),data,message.sourceTime);
-    const row={id,accountId:account.accountId,clientContactId:contact.id,clientPhone:contact.phone,chatJid:message.chatJid,sourceMessageId:message.id,sourceHash:source,blockKey,sourceTime:message.sourceTime,businessKey:null,...data,status:'DRAFT',reasons:[],parsed:{...block,source:sourceProvenance,...(logicalOrderId?{logicalOrderId}:{})},sourceText:message.text};
+    const row={id,accountId:account.accountId,clientContactId:contact.id,clientPhone:contact.phone,chatJid:message.chatJid,sourceMessageId:message.id,sourceHash:source,blockKey,sourceTime:message.sourceTime,businessKey:null,...data,status:'DRAFT',reasons:[],parsed:{...block,source:sourceProvenance,...(logicalOrderId?{logicalOrderId:logicalOrderId.logicalOrderId,orderIdentity:logicalOrderId.orderIdentity}:{})},sourceText:message.text};
     const draftOp={kind:'DRAFT',row,event:{id:hash(['escort-order-event',id,'DRAFT_CREATED',source]),orderId:id,eventType:'DRAFT_CREATED',sourceMessageId:message.id,sourceHash:source,payload:{...row,source:sourceProvenance}}};
     ops.push(draftOp);known.push(rowForMatch({...row,account_id:account.accountId,client_phone:contact.phone,source_hash:source,block_key:blockKey,status:'DRAFT'}));orderPool.push({id,messageId:message.id,chatJid:row.chatJid,mother:data.motherVessel,lighter:data.lighterVessel,masterRaw:data.masterMobileRaw||data.masterMobile,sourceTime:message.sourceTime,contactId:contact.id,dutyDate:data.dutyDate??null,shift:data.shift??null});existingHashes.add(`${account.accountId}|${source}|${blockKey}`);continue;
    }

@@ -121,8 +121,6 @@ export function compareVesselNames(left: string, right: string): VesselSimilarit
 }
 
 /** One day of slack, so a fragment sent just after midnight still belongs. */
-const ORDER_DAY_TOLERANCE_MS = 86_400_000;
-
 export type LogicalOrderInput = {
   mother?: string | null;
   lighter?: string | null;
@@ -147,8 +145,9 @@ export function orderBusinessDay(input: LogicalOrderInput): string {
 /**
  * Identity of one logical Vessel order, shared by every message fragment that
  * describes it. The Lighter is the anchor: without it nothing is ever collapsed.
- * The day is compared separately (see `groupLogicalOrders`) so a fragment sent
- * after midnight still merges while two duties on different days never do.
+ * Mother Vessel compatibility is checked separately (`motherCompatible`), and the
+ * day must match exactly, so a new order for the same Lighter on another day — or
+ * a different fleet on the same day — never merges.
  */
 export function orderIdentity(input: LogicalOrderInput): string {
   const lighter = vesselKey(String(input.lighter ?? ''));
@@ -160,22 +159,59 @@ export function orderIdentity(input: LogicalOrderInput): string {
 
 export type LogicalOrder<T> = { identity: string; day: string; members: T[] };
 
+/** Leading name word of a vessel, with the M.V. prefix and punctuation removed. */
+export function motherFamily(value: string): string {
+  return String(value ?? '')
+    .replace(/^\s*m\.?\s*v\.?\s*[:.]?\s*/i, '')
+    .trim()
+    .toLowerCase()
+    .split(/[\s./,|-]+/)
+    .filter(Boolean)[0]
+    ?.replace(/[^\p{L}\p{N}]/gu, '') ?? '';
+}
+
+/**
+ * Mother Vessel compatibility for two rows that already share Lighter, Master
+ * Mobile, shift and day.
+ *
+ * A different fleet is a different order and must stay separate. Two spellings of
+ * the same fleet are the same order: "M.V. Union Udyssy" and "M.V. Union odyssey"
+ * are the same vessel written twice, and refusing to merge them is what blocked
+ * the November 3 confirmations.
+ *
+ * The rule is deliberately narrow — same leading name word AND at most three
+ * edits across the whole normalized name — so "Poavosa Wisdom" / "Poavosa Brave"
+ * and "Union odyssey" / "Union brave" stay distinct.
+ */
+export function motherCompatible(left: string, right: string): boolean {
+  const a = vesselKey(String(left ?? ''));
+  const b = vesselKey(String(right ?? ''));
+  if (!a || !b) return true; // a missing mother is not evidence of difference
+  if (a === b) return true;
+  if (compareVesselNames(left, right) !== 'DIFFERENT') return true;
+  const first = motherFamily(left);
+  if (!first || first !== motherFamily(right)) return false;
+  return editDistance(a, b) <= 3;
+}
+
 /**
  * Collapse fragments of one business order into one logical candidate.
  *
- * Fragments merge only when they share Lighter, Master Mobile and shift AND were
- * sent on the same day (or one day apart). Everything else stays a separate
- * candidate, so genuinely competing orders — a different Lighter, a different
- * Master, a different shift, or a different day — remain ambiguous.
+ * Fragments merge only when they share Lighter, Master Mobile and shift, were
+ * sent on the SAME day, and describe a compatible Mother Vessel. Everything else
+ * stays a separate candidate, so genuinely competing orders — a different
+ * Lighter, Master, shift, day or fleet — remain ambiguous.
  *
  * Deterministic: members are ordered by source time, so the earliest fragment is
- * the representative and the original Order Message ID is preserved.
+ * the representative and the original Order Message ID is preserved. The result
+ * does not depend on the order the caller supplies.
  */
 export function groupLogicalOrders<T>(
   candidates: readonly T[],
   identityOf: (value: T) => string,
   dayOf: (value: T) => string,
   timeOf: (value: T) => string,
+  compatibleOf?: (value: T, other: T) => boolean,
 ): Array<LogicalOrder<T>> {
   const groups: Array<LogicalOrder<T>> = [];
   const ordered = [...candidates].sort((left, right) => {
@@ -193,10 +229,9 @@ export function groupLogicalOrders<T>(
       groups.push({ identity: `#${groups.length}`, day, members: [candidate] });
       continue;
     }
-    const at = Date.parse(`${day}T00:00:00Z`);
     const existing = groups.find((group) => group.identity === identity
-      && (!day || !group.day || !Number.isFinite(at)
-        || Math.abs(Date.parse(`${group.day}T00:00:00Z`) - at) <= ORDER_DAY_TOLERANCE_MS));
+      && group.day === day
+      && (!compatibleOf || compatibleOf(candidate, group.members[0])));
     if (existing) existing.members.push(candidate);
     else groups.push({ identity, day, members: [candidate] });
   }
@@ -339,6 +374,7 @@ export function matchConfirmation(
     (candidate) => orderIdentity(candidate.order),
     (candidate) => orderBusinessDay(candidate.order),
     (candidate) => String(candidate.order.sourceTime ?? ''),
+    (candidate, other) => motherCompatible(candidate.order.mother, other.order.mother),
   ).map((group) => bestMobileEvidence(group.members));
   const confirmationShift = normalizeShift(confirmation.shift);
   const preferred = confirmationShift
