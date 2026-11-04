@@ -88,6 +88,14 @@ export type ConfirmedProgramInput = {
   matchState: MatchState;
   mobileEvidence: string;
   employeeLink?: {state: 'RESOLVED' | 'UNRESOLVED'; employeeId: string; name: string | null} | null;
+  /**
+   * "Escort Change" link between two separately recorded duties. The link is
+   * recorded on both sides; the release date is never inferred, so
+   * program_assignments.released_on stays NULL.
+   */
+  replacementOf?: string;
+  replacedBy?: string;
+  replacementReason?: string;
 };
 
 export type ConfirmedProgramResult = {programId: string; created: boolean};
@@ -123,6 +131,10 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
     lighterKey: vesselKey(input.lighter),
     employeeLink: input.employeeLink ?? {state: 'UNRESOLVED', employeeId: input.escortMobile, name: null},
     ownerRule: 'ADMIN_OUTGOING_MESSAGE_IS_CONFIRMATION',
+    ...(input.replacementOf
+      ? {replacementOf: input.replacementOf, replacementReason: input.replacementReason ?? 'ESCORT_CHANGE'}
+      : {}),
+    ...(input.replacedBy ? {replacedBy: input.replacedBy} : {}),
   };
   const inserted = await client.query(
     `INSERT INTO public.programs
@@ -139,10 +151,11 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
     `INSERT INTO public.program_assignments
      (id,scope_account,program_id,revision,employee_mobile,employee_person_id,start_date,start_shift,
       duty_started_on,released_on,predecessor_id,command_receipt,source_refs)
-     VALUES($1,$2,$3,1,$4,NULL,$5,$6,NULL,NULL,NULL,$7,$8::jsonb)
+     VALUES($1,$2,$3,1,$4,NULL,$5,$6,NULL,NULL,$7::text,$8,$9::jsonb)
      ON CONFLICT (id) DO NOTHING`,
     [hash(['vessel-assignment', programId]), input.account, programId, input.escortMobile, input.startDate,
-      input.shift, hash(['vessel-confirmation', programId, input.confirmationMessageId]),
+      input.shift, input.replacementOf ? hash(['vessel-assignment', input.replacementOf]) : null,
+      hash(['vessel-confirmation', programId, input.confirmationMessageId]),
       JSON.stringify([input.orderMessageId, input.confirmationMessageId])],
   );
   // Link the intake evidence row to the program it produced. Additive metadata
@@ -154,4 +167,137 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
     [input.reviewRowId, JSON.stringify({programId, confirmationMatch: {state: input.matchState, mobileEvidence: input.mobileEvidence}}), input.account],
   );
   return {programId, created};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Business-identity duplicate guard (backfill preparation).
+//
+// The live processor and the historical backfill derive DIFFERENT row ids for
+// the same evidence: the backfill salts the hash with the dataset epoch, the
+// live processor does not, while both write dataset_epoch = the column default.
+// The register has no unique business index (329 duplicate groups already exist
+// across the two epoch labels), so only the writer can prevent a new duplicate.
+//
+// Two identities are compared, because neither one alone is safe:
+//
+//  1. BUSINESS identity — account + source message id + normalized Lighter +
+//     duty date. Human-meaningful, and it catches a row that was written with a
+//     different generated id (the epoch salt) but the same evidence.
+//
+//  2. BLOCK identity — account + source message id + the block's start line
+//     (the leading integer of block_key). Stable across parser corrections: the
+//     line a Lighter starts on does not move when a name, capacity, date or
+//     shift is parsed better, whereas the business key does. Measured on the
+//     current corpus: of the 18 blocks a backfill derives, 5 would re-insert a
+//     Draft whose name the older parser had polluted. The business key alone
+//     catches none of them, because the name is exactly what changed; the block
+//     identity catches all five.
+//
+// Both are checked, both are advisory-locked, and the lock is transaction-
+// scoped, so two concurrent writers of the same evidence serialize instead of
+// both inserting. It is additive: the live path keeps calling persistOperation()
+// unchanged.
+// ════════════════════════════════════════════════════════════════════════════
+
+/** Same normalization as vesselKey(): case, punctuation, spacing and MV prefix. */
+export function normalizeVesselIdentity(value: string | null | undefined): string {
+  return String(value ?? '')
+    .normalize('NFC')
+    .toLowerCase()
+    .replace(/^m\.?\s*v\.?\s*[:.]?\s*/i, '')
+    .replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+export function businessIdentityKey(operation: VesselOperation): string {
+  const row = operation.row;
+  return [
+    row.accountId,
+    row.sourceMessageId,
+    normalizeVesselIdentity(row.lighterVessel),
+    row.dutyDate ?? '',
+  ].join('|');
+}
+
+/**
+ * Identity of the parsed block inside its source message. Returns '' when the
+ * operation carries no block key, in which case only the business key applies.
+ */
+export function blockIdentityKey(operation: VesselOperation): string {
+  const row = operation.row;
+  const ordinal = String(row.blockKey ?? '').split(':')[0].trim();
+  return ordinal ? [row.accountId, row.sourceMessageId, ordinal].join('|') : '';
+}
+
+export type PersistResult = 'inserted' | 'skipped_duplicate';
+
+/** The identity columns the guard needs. Register rows match this shape. */
+export type RegisterIdentityRow = {
+  lighter_vessel?: string | null;
+  duty_date?: string | null;
+  block_key?: string | null;
+};
+
+/**
+ * A DATE column arrives as a JS Date from `SELECT *` but as text from the
+ * guard's own `duty_date::text` projection. Normalise both to YYYY-MM-DD so the
+ * predicate cannot fail open just because of the driver's representation.
+ */
+function identityDate(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '';
+  if (value instanceof Date) {
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${value.getFullYear()}-${month}-${day}`;
+  }
+  return String(value).slice(0, 10);
+}
+
+/**
+ * Pure duplicate predicate, shared by the writer and by the backfill dry run so
+ * that both report the same insert/skip split.
+ */
+export function isDuplicateRegisterRow(
+  existing: readonly RegisterIdentityRow[],
+  operation: VesselOperation,
+): boolean {
+  const targetLighter = normalizeVesselIdentity(operation.row.lighterVessel);
+  const targetDate = identityDate(operation.row.dutyDate);
+  const targetOrdinal = blockIdentityKey(operation).split('|')[2] ?? '';
+  return existing.some((row) => {
+    const existingOrdinal = String(row.block_key ?? '').split(':')[0].trim();
+    if (targetOrdinal && existingOrdinal === targetOrdinal) return true;
+    return normalizeVesselIdentity(row.lighter_vessel) === targetLighter
+      && identityDate(row.duty_date) === targetDate;
+  });
+}
+
+/**
+ * Insert only when no row with the same business or block identity exists.
+ *
+ * Preconditions: the caller is inside a transaction (both the ingestion
+ * processor and the backfill begin one per message). The advisory locks are
+ * transaction-scoped, so the check and the insert cannot interleave with another
+ * guarded writer for the same key. The two lock keys are sorted so that two
+ * writers can never acquire them in opposite order.
+ */
+export async function persistOperationIfNew(
+  client: DbClient,
+  operation: VesselOperation,
+): Promise<PersistResult> {
+  const keys = [businessIdentityKey(operation), blockIdentityKey(operation)]
+    .filter((key) => key !== '')
+    .sort();
+  await client.query(
+    'SELECT pg_advisory_xact_lock(hashtext($1)), pg_advisory_xact_lock(hashtext($2))',
+    [keys[0], keys[1] ?? keys[0]],
+  );
+  const {rows} = await client.query(
+    `SELECT lighter_vessel, duty_date::text AS duty_date, block_key
+       FROM public.escort_order_register
+      WHERE account_id = $1 AND source_message_id = $2`,
+    [operation.row.accountId, operation.row.sourceMessageId],
+  );
+  if (isDuplicateRegisterRow((rows ?? []) as RegisterIdentityRow[], operation)) return 'skipped_duplicate';
+  await persistOperation(client, operation);
+  return 'inserted';
 }

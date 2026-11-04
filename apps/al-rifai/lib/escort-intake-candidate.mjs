@@ -15,7 +15,7 @@ const digits=s=>s.replace(/[০-৯]/g,c=>String('০১২৩৪৫৬৭৮৯
 const clean=s=>s.trim().replace(/^[\s*_:=-]+|[\s*]+$/g,'').trim();
 const mobilePattern=/(?:\+?880|0)[\s-]?1[3-9](?:[\s-]?\d){8}(?!\d)/g;
 const mobile=s=>normalizeEmployeeMobile(s,'employee_id');
-const vesselName=s=>clean(s).replace(/^\(?\d{1,2}\)?\s*[-.)]\s*/,'').replace(/^m\.?\s*v\.?\s*[:.]?\s*|^এমভি\s*[:.]?\s*/i,'').replace(/^[*_~`"'\s]+|[*_~`"'\s]+$/g,'').trim().replace(/[.,]+$/,'');
+const vesselName=s=>clean(s).replace(/^\(?\d{1,2}\)?\s*[-.)]\s*/,'').replace(/^m\.?\s*v\.?\s*[,:.]?\s*|^এমভি\s*[:.,]?\s*/i,'').replace(/^[*_~`"'\s,;-]+|[*_~`"'\s]+$/g,'').trim().replace(/[.,;]+$/,'');
 const vesselKey=s=>vesselName(s).normalize('NFC').toLowerCase().replace(/[.\s-]/g,'');
 const clone=v=>JSON.parse(JSON.stringify(v));
 const proven=v=>v?.decision==='APPROVED'&&typeof v.approver==='string'&&!!v.approver.trim()&&/^[a-f0-9]{64}$/.test(v.evidenceSha??'');
@@ -25,8 +25,8 @@ const labels={
  'lighter vessel':'lighterVessel','righter vessel':'lighterVessel','lighter name':'lighterVessel','lighter':'lighterVessel',
  'লাইটার ভেসেল':'lighterVessel','লাইটার নাম':'lighterVessel','লাইটার':'lighterVessel',
  'master mobile':'masterMobile','master mobile number':'masterMobile','master mob':'masterMobile','mst mob':'masterMobile','mobile number':'masterMobile','mob':'masterMobile',
- 'মাস্টার মোবাইল':'masterMobile','মোবাইল নম্বর':'masterMobile',
- 'cargo':'cargo','capacity':'capacity','cap':'capacity','importer':'importer','a/c':'importer',
+ 'মাস্টার মোবাইল':'masterMobile','মোবাইল নম্বর':'masterMobile','মাস্টার':'masterMobile',
+ 'cargo':'cargo','capacity':'capacity','cap':'capacity','ক্যাপাসিটি':'capacity','importer':'importer','a/c':'importer',
  'destination':'destination','dest':'destination','গন্তব্য':'destination','ডেস্টিনেশন':'destination',
  'booking date':'bookingDate','booking dt':'bookingDate',
  'escort name':'escortName','escort mobile':'escortMobile','employee id':'employeeMobile',
@@ -34,12 +34,18 @@ const labels={
  'shift':'shift','start shift':'shift','time':'shift',
  'trip':'trip','ট্রিপ':'trip',
 };
-const labelExpression=new RegExp('^('+Object.keys(labels).sort((a,b)=>b.length-a.length).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\s*[:=.-]+\\s*(.*)$','i');
+// A label may be separated from its value by ":" "=" "." "-" (with optional
+// spaces) or by whitespace alone. Whitespace-only is required for the Owner's
+// real messages "Destination kacpur" and "DESTINATION SHAH"; a bare label line
+// ("Importer") still matches nothing, which is the existing behaviour.
+const labelExpression=new RegExp('^('+Object.keys(labels).sort((a,b)=>b.length-a.length).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')'+'(?:\\s*[:=.-]+\\s*|\\s+)(.*)$','i');
 const labeled=s=>{const text=clean(s),mv=text.match(/^MV\s*[:=]\s*(.*)$/i),m=text.match(labelExpression);return mv?{field:'motherVessel',value:clean(mv[1])}:m?{field:labels[m[1].toLowerCase()],value:clean(m[2])}:null;};
 
 export function parseEscortDate(raw,messageDate){
  if(typeof raw!=='string')return {date:null,shift:null};
- const text=digits(raw.trim()).replace(/[.,]+$/,''),shiftMatch=text.match(/\(+\s*(D|N|Day|Night)\s*\)+/i);
+ // A trailing clock such as "(9:40AM)" is a time-of-day note, not a shift and not
+ // part of the date. Proven by a real authorized message: "১২/০৯/২৬(৯:৪০AM)".
+ const text=digits(raw.trim()).replace(/[.,]+$/,'').replace(/\s*\(\s*\d{1,2}:\d{2}\s*(?:am|pm)?\s*\)\s*$/i,''),shiftMatch=text.match(/\(+\s*(D|N|Day|Night)\s*\)+/i);
  const shift=shiftMatch?shiftMatch[1][0].toUpperCase():null;
  const m=text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4}|\d{2})(?:\s*\(+\s*(?:D|N|Day|Night)\s*\)+)?\s*$/i);
  if(!m){const iso=text.replace(/\s*\(+\s*(?:D|N|Day|Night)\s*\)+\s*$/i,'');return {date:validDate(iso)?iso:null,shift};}
@@ -77,20 +83,42 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   return false;
  };
  const mothers=[];let motherMobileConflict=false;
+ // "AT-O/A" (at owner's account) is the client's Mother-Vessel separator: the
+ // lighter lines come first, then the marker, then the Mother Vessel. 62 real
+ // authorized messages use it, so when the marker is present the Mother Vessel is
+ // chosen only from the lines after it; without the marker the heuristic is
+ // unchanged. The name is still truncated at "/" ("M.V.Belyamato At O/A" →
+ // "Belyamato At O") because that truncation is the key programIdFor() used for
+ // the 85 existing Programs; preserving "/A" would derive a different Program
+ // identity for the same duty. Order and confirmation truncate alike, so
+ // matching stays consistent.
+ const atOaIndex=lines.findIndex(l=>/^at\s*[- ]?o\s*\/?\s*a\b/i.test(l.value));
  for(let i=0;i<lines.length;i++){
   const f=labeled(lines[i].value);
+  const motherPositionOk=atOaIndex<0||i>atOaIndex;
   if(f?.field==='motherVessel'){
+   if(!motherPositionOk)continue;
    if(groupedPhone(i))motherMobileConflict=true;
    else mothers.push({raw:f.value,line:lines[i].line});
   }
-  else if(vesselLine(lines[i].value)&&!groupedPhone(i)&&!(/^\(?\d/.test(lines[i].value)))mothers.push({raw:lines[i].value,line:lines[i].line});
+  else if(motherPositionOk&&vesselLine(lines[i].value)&&!groupedPhone(i)&&!(/^\(?\d/.test(lines[i].value)))mothers.push({raw:lines[i].value,line:lines[i].line});
  }
+ const atOaMotherMissing=atOaIndex>=0&&mothers.length===0;
  const motherKeys=[...new Set(mothers.map(m=>vesselKey(m.raw.split('/')[0])).filter(Boolean))];
  const mother=motherKeys.length===1?mothers[0]:null;
  const context={},contextEvidence={};const blocks=[];let current=null;
+ // A DESTINATION line belongs to the whole message, so a Lighter listed before
+ // the line must still receive it. A block-level or inline value always wins.
+ let messageDestination=null;
  function set(block,field,value,line){
-  if(block.fields[field]&&block.fields[field]!==value)block.reasons.push('CONFLICTING_'+field);
-  block.fields[field]=value;block.fieldEvidence[field]={raw:value,bodyLine:line};
+  // A trailing comma belongs to the sentence, not to the destination name.
+  const normalised=field==='destination'?String(value).replace(/[,\s]+$/,''):value;
+  if(block.fields[field]&&block.fields[field]!==normalised){
+   block.reasons.push('CONFLICTING_'+field);
+   // A Lighter-specific destination is never overwritten by a message-level one.
+   if(field==='destination')return;
+  }
+  block.fields[field]=normalised;block.fieldEvidence[field]={raw:value,bodyLine:line};
  }
  function start(raw,line){
   current={startLine:line,fields:{...context,lighterVessel:raw},fieldEvidence:{...contextEvidence,lighterVessel:{raw,bodyLine:line}},reasons:[]};
@@ -103,30 +131,56 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   if(f?.field==='lighterVessel'){
    let name=f.value;
    if(!name){let next=i+1;while(next<lines.length&&!lines[next].value)next++;if(lines[next]&&!labeled(lines[next].value)){name=lines[next].value;i=next;}}
+   // The value line can itself be the old "15. NAME, CAPACITY: …, PHONE: …" form.
+   const markerAt=name.search(/,\s*(?:CAPACITY|PHONE)\b/i);
+   if(markerAt>0){
+    const raw=name;
+    const cap=raw.match(/\bCAPACITY\s*[:=]?\s*(\d[\d,.]*\s*(?:m\/?ton|mts|m\.?t|m\/t))/i);
+    const ph=raw.match(/\bPHONE\s*[:=]?\s*((?:\+?88)?0?1[3-9][\d\s-]{8,})/i);
+    start(raw.slice(0,markerAt),line);
+    if(cap&&!current.fields.capacity)set(current,'capacity',cap[1].trim(),line);
+    if(ph&&!current.fields.masterMobile)set(current,'masterMobile',ph[1].trim(),line);
+    continue;
+   }
    start(name,line);continue;
   }
   if(!f&&vesselLine(value)&&groupedPhone(i)){
    const phones=[...digits(value).matchAll(mobilePattern)];const first=phones[0];
-   const name=first?value.slice(0,first.index).replace(/[\s-]+$/,''):value;
+   // Old client format: "02. HADIZ, CAPACITY: 1,000 M/T, PHONE: 01863191301".
+   // Everything from the CAPACITY/PHONE marker on describes the lighter, not its
+   // name. Splitting on the marker (not on commas) keeps "1,000" intact.
+   const beforePhone=first?value.slice(0,first.index):value;
+   const markerAt=beforePhone.search(/,\s*(?:CAPACITY|PHONE)\b/i);
+   const name=(markerAt>0?beforePhone.slice(0,markerAt):beforePhone).replace(/[\s-]+$/,'');
    start(name,line);
    if(first){
     set(current,'masterMobile',first[0],line);
+    // Capacity stated before the phone in the same old format.
+    const capBefore=beforePhone.match(/\bCAPACITY\s*[:=]?\s*(\d[\d,.]*\s*(?:m\/?ton|mts|m\.?t|m\/t))/i);
+    if(capBefore&&!current.fields.capacity)set(current,'capacity',capBefore[1].trim(),line);
     const tail=clean(value.slice(first.index+first[0].length));
     if(tail){
      current.fields.inlineContext=tail;
      const cap=tail.match(/\d[\d,]*(?:\.\d+)?\s*(?:m\/?ton|mts|m\.?t|m\/t)\.?$/i);
-     if(cap){set(current,'capacity',cap[0],line);const dest=clean(tail.slice(0,cap.index));if(dest)set(current,'destination',dest,line);}
+     // Never let a bare separator ("/", "-", "|") become a destination. The
+     // inline tail before the capacity is only a destination when it carries a
+     // letter or digit; otherwise the labelled/context destination is kept.
+     if(cap){set(current,'capacity',cap[0],line);const dest=clean(tail.slice(0,cap.index));if(dest&&/[\p{L}\p{N}]/u.test(dest))set(current,'destination',dest,line);}
+     // Old format may put a bare destination after the phone, with the capacity
+     // written before it. A separator-only tail is never a destination.
+     else if(tail&&tail.length<=60&&!/^[\/,.;:|+-]/.test(tail)&&/[\p{L}]/u.test(tail))set(current,'destination',tail,line);
     }
    }
    continue;
   }
   if(f){
+   if(f.field==='destination'&&f.value)messageDestination=f.value.replace(/[,\s]+$/,'');
    if(!current){if(['cargo','importer','bookingDate','destination'].includes(f.field)){context[f.field]=f.value;contextEvidence[f.field]={raw:f.value,bodyLine:line};}continue;}
    set(current,f.field,f.value,line);continue;
   }
   if(!current)continue;
   const ac=value.match(/\bA\/c\s*[.:=-]?\s*(.+)$/i);
-  if(ac){set(current,'importer',ac[1],line);const dest=clean(value.slice(0,ac.index));if(dest)set(current,'destination',dest,line);continue;}
+  if(ac){set(current,'importer',ac[1],line);const dest=clean(value.slice(0,ac.index));if(dest&&/[\p{L}\p{N}]/u.test(dest))set(current,'destination',dest,line);continue;}
   const capacity=value.match(/^(?:capacity|cap)\s*[:=-]?\s*(.+)$/i);
   if(capacity){set(current,'capacity',capacity[1],line);continue;}
   const rawPhones=[...digits(value).matchAll(mobilePattern)];
@@ -140,6 +194,10 @@ export function parseEscortOrder(text,{messageDate=null}={}){
  }
  return blocks.map(b=>{
   const fields={...b.fields,motherVessel:mother?vesselName(b.fields.motherVessel):'',lighterVessel:vesselName(b.fields.lighterVessel)};
+  if(!fields.destination&&messageDestination)fields.destination=messageDestination.replace(/[,\s]+$/,'');
+  // Bengali digits in a numeric field (e.g. "ক্যাপাসিটি:১৭০০ mts") become ASCII;
+  // the raw text stays in fieldEvidence and in the source message.
+  if(fields.capacity)fields.capacity=digits(String(fields.capacity));
   const masterMobile=mobile(fields.masterMobile??'');
   const employeeMobile=mobile(fields.employeeMobile??fields.escortMobile??'');
   const assignment=parseEscortDate(fields.assignmentDate,messageDate),booking=parseEscortDate(fields.bookingDate,messageDate);
@@ -147,6 +205,7 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   const explicitShift=/^(D|N|Day|Night)$/i.test(shiftText)?shiftText[0].toUpperCase():null;
   const reasons=[...b.reasons];
   if(motherMobileConflict)reasons.push('MOTHER_VESSEL_HAS_GROUPED_MOBILE');
+  if(atOaMotherMissing)reasons.push('AT_OA_MOTHER_MISSING');
   if(motherKeys.length>1)reasons.push('MOTHER_VESSEL_AMBIGUOUS');
   const masterState=analyzeMobile(fields.masterMobile??'').kind;
   if(fields.masterMobile&&!masterMobile)reasons.push(masterState==='SHORT'?'MASTER_MOBILE_MISSING_DIGIT':masterState==='LONG'?'MASTER_MOBILE_EXTRA_DIGIT':'MASTER_MOBILE_INVALID_OR_AMBIGUOUS');

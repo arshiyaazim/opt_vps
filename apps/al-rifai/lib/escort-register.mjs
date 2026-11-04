@@ -54,9 +54,15 @@ function releasePoint(text){return /(?:^|\n)\s*(?:release\s*point|release\s*plac
 function sourceHash(account,message){return hash({accountId:account.accountId,chatJid:message.chatJid,id:message.id,sender:message.sender,direction:message.direction,sourceTime:message.sourceTime,text:message.text,nativeRevision:message.nativeRevision??null});}
 function blockData(block){
  const f=block.fields??{};
- return {motherVessel:f.motherVessel??'',lighterVessel:f.lighterVessel??'',masterMobile:block.masterMobile??'',masterMobileRaw:block.masterMobileRaw??String(f.masterMobile??''),masterMobileState:block.masterMobileState??'',cargo:f.cargo??'',capacity:f.capacity??'',importer:f.importer??'',destination:f.destination??f.inlineContext??'',bookingDate:block.bookingDate??null,escortName:f.escortName??'',escortMobile:block.employeeMobile??'',dutyDate:block.assignmentDate??null,shift:block.shift??'',releasePoint:releasePoint(block.raw??''),trip:f.trip??''};
+ // A destination must come from a label or from text before the capacity. The
+ // old inlineContext fallback could persist "/1000 m.t" as a destination; the
+ // parser now refuses separator-only text, so no fallback is needed.
+ return {motherVessel:f.motherVessel??'',lighterVessel:f.lighterVessel??'',masterMobile:block.masterMobile??'',masterMobileRaw:block.masterMobileRaw??String(f.masterMobile??''),masterMobileState:block.masterMobileState??'',cargo:f.cargo??'',capacity:f.capacity??'',importer:f.importer??'',destination:f.destination??'',bookingDate:block.bookingDate??null,escortName:f.escortName??'',escortMobile:block.employeeMobile??'',dutyDate:block.assignmentDate??null,shift:block.shift??'',releasePoint:releasePoint(block.raw??''),trip:f.trip??''};
 }
-function validDraftFields(data){return !!(data.motherVessel&&data.lighterVessel&&data.masterMobile&&!data.escortName&&!data.escortMobile&&!data.dutyDate&&!data.shift);}
+// An incoming Order may state a loading/booking/service date. That date is a
+// hint, not a confirmed assignment, so it must not block Draft creation. Only an
+// escort name or mobile turns the message into an assignment.
+function validDraftFields(data){return !!(data.motherVessel&&data.lighterVessel&&data.masterMobile&&!data.escortName&&!data.escortMobile);}
 // Assignment evidence: the message names an escort for a known vessel pair. It
 // may omit the escort mobile, duty date or shift; those gaps are recorded as
 // reasons instead of discarding the evidence. Nothing here confirms a program.
