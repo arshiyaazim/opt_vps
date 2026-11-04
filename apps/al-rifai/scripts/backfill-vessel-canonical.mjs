@@ -15,7 +15,7 @@ import {
   deriveEscortRegisterOps,
   scopePhoneAliases,
 } from '../lib/escort-register.mjs';
-import {persistConfirmedProgram, persistOperation} from '../lib/vessel-ops.ts';
+import {isDuplicateRegisterRow, persistConfirmedProgram, persistOperationIfNew} from '../lib/vessel-ops.ts';
 import {analyzeMobile} from '../lib/mobile-identity.mjs';
 import {masterCorrections} from '../lib/vessel-match.ts';
 import {CASH_SCOPE_CHATS} from '../lib/cash-scope.ts';
@@ -30,7 +30,7 @@ const writer = createPool({readOnly: false, user: 'ir_review_runtime'});
 const tally = {
   apply, messages: 0, routed: 0, blocks: 0, drafts: 0, reviews: 0,
   match: { EXACT: 0, VARIANT: 0, CORRECTED: 0, AMBIGUOUS: 0, UNMATCHED: 0, WEAK_EVIDENCE: 0 },
-  programsCreated: 0, programsExisting: 0, skippedIncomplete: 0, employeeResolved: 0, employeeUnresolved: 0,
+  programsCreated: 0, programsExisting: 0, skippedIncomplete: 0, employeeResolved: 0, employeeUnresolved: 0, duplicatesSkipped: 0,
 };
 
 const dhakaDate = (iso) => new Date(Date.parse(iso) + 6 * 3600 * 1000).toISOString().slice(0, 10);
@@ -128,15 +128,28 @@ async function main() {
     const known = new Set(rows.filter((r) => !r.dataset_epoch || r.dataset_epoch === EPOCH).map((r) => r.id));
     for (const operation of operations) {
       if (known.has(operation.row.id)) continue;
-      if (operation.kind === 'DRAFT') tally.drafts += 1; else tally.reviews += 1;
       const match = operation.row.parsed?.confirmationMatch;
-      if (match?.state) tally.match[match.state] = (tally.match[match.state] ?? 0) + 1;
+      // Counted only for a row that will actually exist afterwards, so a dry run
+      // and an apply report the same insert/skip split.
+      const countNew = () => {
+        if (operation.kind === 'DRAFT') tally.drafts += 1; else tally.reviews += 1;
+        if (match?.state) tally.match[match.state] = (tally.match[match.state] ?? 0) + 1;
+      };
 
       if (apply) {
         const client = await writer.connect();
         try {
           await client.query('BEGIN');
-          await persistOperation(client, operation);
+          // Business-identity guard: the same evidence already registered (by the
+          // live processor, a different generated id, or an older parser) is
+          // skipped instead of duplicated.
+          const persisted = await persistOperationIfNew(client, operation);
+          if (persisted === 'skipped_duplicate') {
+            tally.duplicatesSkipped = (tally.duplicatesSkipped ?? 0) + 1;
+            await client.query('COMMIT');
+            continue;
+          }
+          countNew();
           if (operation.kind === 'REVIEW' && match
             && ['EXACT', 'VARIANT', 'CORRECTED'].includes(match.state)
             && operation.row.escortMobile && operation.row.dutyDate
@@ -176,20 +189,31 @@ async function main() {
           await client.query('ROLLBACK').catch(() => undefined);
           throw error;
         } finally { client.release(); }
-      } else if (operation.kind === 'REVIEW' && match
-        && ['EXACT', 'VARIANT', 'CORRECTED'].includes(match.state)) {
-        if (operation.row.escortMobile && operation.row.dutyDate && ['D', 'N'].includes(operation.row.shift)) {
-          tally.programsCreated += 1; // dry-run: programs that would be created
-          const digits = analyzeMobile(operation.row.escortMobile).digits;
-          if (employeeByMobile.has(digits)) tally.employeeResolved += 1; else tally.employeeUnresolved += 1;
-        } else tally.skippedIncomplete += 1;
+      } else {
+        // Dry run: the same predicate the writer uses, so the report matches.
+        const sameMessage = rows.filter(
+          (r) => r.account_id === operation.row.accountId && r.source_message_id === operation.row.sourceMessageId,
+        );
+        if (isDuplicateRegisterRow(sameMessage, operation)) {
+          tally.duplicatesSkipped = (tally.duplicatesSkipped ?? 0) + 1;
+          continue;
+        }
+        countNew();
+        if (operation.kind === 'REVIEW' && match
+          && ['EXACT', 'VARIANT', 'CORRECTED'].includes(match.state)) {
+          if (operation.row.escortMobile && operation.row.dutyDate && ['D', 'N'].includes(operation.row.shift)) {
+            tally.programsCreated += 1; // dry-run: programs that would be created
+            const digits = analyzeMobile(operation.row.escortMobile).digits;
+            if (employeeByMobile.has(digits)) tally.employeeResolved += 1; else tally.employeeUnresolved += 1;
+          } else tally.skippedIncomplete += 1;
+        }
       }
 
       rows.push({
         ...operation.row, account_id: operation.row.accountId,
         client_contact_id: operation.row.clientContactId, client_phone: operation.row.clientPhone,
         chat_jid: operation.row.chatJid, source_time: operation.row.sourceTime,
-        dataset_epoch: EPOCH,
+        block_key: operation.row.blockKey, dataset_epoch: EPOCH,
       });
       known.add(operation.row.id);
     }
