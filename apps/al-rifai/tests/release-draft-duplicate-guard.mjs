@@ -376,3 +376,31 @@ test('15. the measured corpus split: 5 polluted-name duplicates skipped, 4 new D
   assert.equal(skipped, 5);
   assert.equal(inserts(calls).length, 4);
 });
+
+// ── Escort Change link ───────────────────────────────────────────────────────
+test('16. an Escort Change links both duties and never invents a release date', async () => {
+  const client = programClient();
+  const first = await persistConfirmedProgram(client, {...CONFIRMED, replacedBy: 'placeholder-second-id'});
+  const second = await persistConfirmedProgram(client, {
+    ...CONFIRMED, confirmationMessageId: 'CONF-2', startDate: '2026-07-15',
+    replacementOf: first.programId, replacementReason: 'ESCORT_CHANGE',
+  });
+  assert.notEqual(first.programId, second.programId);
+
+  const programInserts = client.calls.filter((c) => /INSERT INTO public\.programs/.test(c.sql));
+  const detailsFirst = JSON.parse(programInserts[0].values[10]);
+  const detailsSecond = JSON.parse(programInserts[1].values[10]);
+  assert.equal(detailsFirst.replacedBy, 'placeholder-second-id');
+  assert.equal(detailsFirst.replacementOf, undefined);
+  assert.equal(detailsSecond.replacementOf, first.programId);
+  assert.equal(detailsSecond.replacementReason, 'ESCORT_CHANGE');
+  assert.equal(detailsSecond.replacedBy, undefined);
+
+  const assignments = client.calls.filter((c) => /INSERT INTO public\.program_assignments/.test(c.sql));
+  assert.equal(assignments.length, 2);
+  // released_on stays NULL: the release date is unknown and must not be invented.
+  assert.match(assignments[1].sql, /NULL,NULL,\$7::text/);
+  assert.equal(assignments[0].values[6], null);
+  assert.match(String(assignments[1].values[6]), /^[a-f0-9]{64}$/);
+  assert.notEqual(assignments[1].values[6], assignments[1].values[0], 'predecessor is the other assignment');
+});

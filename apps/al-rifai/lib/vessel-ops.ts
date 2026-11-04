@@ -88,6 +88,14 @@ export type ConfirmedProgramInput = {
   matchState: MatchState;
   mobileEvidence: string;
   employeeLink?: {state: 'RESOLVED' | 'UNRESOLVED'; employeeId: string; name: string | null} | null;
+  /**
+   * "Escort Change" link between two separately recorded duties. The link is
+   * recorded on both sides; the release date is never inferred, so
+   * program_assignments.released_on stays NULL.
+   */
+  replacementOf?: string;
+  replacedBy?: string;
+  replacementReason?: string;
 };
 
 export type ConfirmedProgramResult = {programId: string; created: boolean};
@@ -123,6 +131,10 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
     lighterKey: vesselKey(input.lighter),
     employeeLink: input.employeeLink ?? {state: 'UNRESOLVED', employeeId: input.escortMobile, name: null},
     ownerRule: 'ADMIN_OUTGOING_MESSAGE_IS_CONFIRMATION',
+    ...(input.replacementOf
+      ? {replacementOf: input.replacementOf, replacementReason: input.replacementReason ?? 'ESCORT_CHANGE'}
+      : {}),
+    ...(input.replacedBy ? {replacedBy: input.replacedBy} : {}),
   };
   const inserted = await client.query(
     `INSERT INTO public.programs
@@ -139,10 +151,11 @@ export async function persistConfirmedProgram(client: DbClient, input: Confirmed
     `INSERT INTO public.program_assignments
      (id,scope_account,program_id,revision,employee_mobile,employee_person_id,start_date,start_shift,
       duty_started_on,released_on,predecessor_id,command_receipt,source_refs)
-     VALUES($1,$2,$3,1,$4,NULL,$5,$6,NULL,NULL,NULL,$7,$8::jsonb)
+     VALUES($1,$2,$3,1,$4,NULL,$5,$6,NULL,NULL,$7::text,$8,$9::jsonb)
      ON CONFLICT (id) DO NOTHING`,
     [hash(['vessel-assignment', programId]), input.account, programId, input.escortMobile, input.startDate,
-      input.shift, hash(['vessel-confirmation', programId, input.confirmationMessageId]),
+      input.shift, input.replacementOf ? hash(['vessel-assignment', input.replacementOf]) : null,
+      hash(['vessel-confirmation', programId, input.confirmationMessageId]),
       JSON.stringify([input.orderMessageId, input.confirmationMessageId])],
   );
   // Link the intake evidence row to the program it produced. Additive metadata
