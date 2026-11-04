@@ -33,6 +33,8 @@ export type OrderCandidate = {
   contactId?: string | null;
   /** D/N when the order states a shift; supporting identity evidence only. */
   shift?: string | null;
+  /** Stated duty date when the register row carries one. */
+  dutyDate?: string | null;
 };
 
 export type ConfirmationCandidate = {
@@ -118,6 +120,89 @@ export function compareVesselNames(left: string, right: string): VesselSimilarit
   return 'DIFFERENT';
 }
 
+/** One day of slack, so a fragment sent just after midnight still belongs. */
+const ORDER_DAY_TOLERANCE_MS = 86_400_000;
+
+export type LogicalOrderInput = {
+  mother?: string | null;
+  lighter?: string | null;
+  masterRaw?: string | null;
+  shift?: string | null;
+  dutyDate?: string | null;
+  sourceTime?: string | null;
+};
+
+/** Dhaka business day of an instant. Empty when the instant cannot be parsed. */
+export function businessDay(sourceTime?: string | null): string {
+  const at = Date.parse(String(sourceTime ?? ''));
+  return Number.isFinite(at) ? new Date(at + 6 * 60 * 60 * 1000).toISOString().slice(0, 10) : '';
+}
+
+/** The stated duty day when there is one, otherwise the day the order was sent. */
+export function orderBusinessDay(input: LogicalOrderInput): string {
+  const stated = String(input.dutyDate ?? '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(stated) ? stated : businessDay(input.sourceTime);
+}
+
+/**
+ * Identity of one logical Vessel order, shared by every message fragment that
+ * describes it. The Lighter is the anchor: without it nothing is ever collapsed.
+ * The day is compared separately (see `groupLogicalOrders`) so a fragment sent
+ * after midnight still merges while two duties on different days never do.
+ */
+export function orderIdentity(input: LogicalOrderInput): string {
+  const lighter = vesselKey(String(input.lighter ?? ''));
+  if (!lighter) return '';
+  const master = analyzeMobile(String(input.masterRaw ?? '')).digits || '';
+  const shift = normalizeShift(input.shift);
+  return [lighter, master, shift].join('|');
+}
+
+export type LogicalOrder<T> = { identity: string; day: string; members: T[] };
+
+/**
+ * Collapse fragments of one business order into one logical candidate.
+ *
+ * Fragments merge only when they share Lighter, Master Mobile and shift AND were
+ * sent on the same day (or one day apart). Everything else stays a separate
+ * candidate, so genuinely competing orders — a different Lighter, a different
+ * Master, a different shift, or a different day — remain ambiguous.
+ *
+ * Deterministic: members are ordered by source time, so the earliest fragment is
+ * the representative and the original Order Message ID is preserved.
+ */
+export function groupLogicalOrders<T>(
+  candidates: readonly T[],
+  identityOf: (value: T) => string,
+  dayOf: (value: T) => string,
+  timeOf: (value: T) => string,
+): Array<LogicalOrder<T>> {
+  const groups: Array<LogicalOrder<T>> = [];
+  const ordered = [...candidates].sort((left, right) => {
+    const a = Date.parse(timeOf(left));
+    const b = Date.parse(timeOf(right));
+    if (Number.isFinite(a) && Number.isFinite(b) && a !== b) return a - b;
+    if (Number.isFinite(a) !== Number.isFinite(b)) return Number.isFinite(a) ? -1 : 1;
+    return String(identityOf(left)).localeCompare(String(identityOf(right)));
+  });
+  for (const candidate of ordered) {
+    const identity = identityOf(candidate);
+    const day = dayOf(candidate);
+    if (!identity) {
+      // No Lighter: never collapsed, always its own candidate.
+      groups.push({ identity: `#${groups.length}`, day, members: [candidate] });
+      continue;
+    }
+    const at = Date.parse(`${day}T00:00:00Z`);
+    const existing = groups.find((group) => group.identity === identity
+      && (!day || !group.day || !Number.isFinite(at)
+        || Math.abs(Date.parse(`${group.day}T00:00:00Z`) - at) <= ORDER_DAY_TOLERANCE_MS));
+    if (existing) existing.members.push(candidate);
+    else groups.push({ identity, day, members: [candidate] });
+  }
+  return groups;
+}
+
 /**
  * Later "corrected Master Mobile" messages in the same conversation. A correction
  * is a valid 11-digit number stated for the same Lighter after the original
@@ -184,6 +269,17 @@ export function shiftEvidence(order: {shift?: string | null}, confirmation: {shi
   return a === b ? 'AGREE' : 'CONFLICT';
 }
 
+const MOBILE_RANK: Record<string, number> = { EXACT: 0, CORRECTED: 1, WEAK: 2, CONFLICT: 3 };
+
+/** Strongest mobile evidence represents a merged group; the earliest wins a tie. */
+function bestMobileEvidence<T extends { mobile: { kind: string } }>(members: readonly T[]): T {
+  let best = members[0];
+  for (const member of members) {
+    if ((MOBILE_RANK[member.mobile.kind] ?? 9) < (MOBILE_RANK[best.mobile.kind] ?? 9)) best = member;
+  }
+  return best;
+}
+
 /**
  * Match one outgoing confirmation block against the client's order candidates.
  * Returns a single deterministic state; ambiguous evidence never resolves.
@@ -234,11 +330,21 @@ export function matchConfirmation(
   }
   // Shift is corroborating evidence only: a shared shift may break a tie, but a
   // shift alone can never create a match, and disagreement never confirms.
+  // Several draft rows may describe one business order: repeated order
+  // fragments, or historical duplicates of the same Lighter/Master/shift/day.
+  // They are one logical order and must not manufacture an ambiguity. Genuinely
+  // different orders stay separate candidates and stay AMBIGUOUS.
+  const logical = groupLogicalOrders(
+    viable,
+    (candidate) => orderIdentity(candidate.order),
+    (candidate) => orderBusinessDay(candidate.order),
+    (candidate) => String(candidate.order.sourceTime ?? ''),
+  ).map((group) => bestMobileEvidence(group.members));
   const confirmationShift = normalizeShift(confirmation.shift);
   const preferred = confirmationShift
-    ? viable.filter((candidate) => normalizeShift(candidate.order.shift) === confirmationShift)
+    ? logical.filter((candidate) => normalizeShift(candidate.order.shift) === confirmationShift)
     : [];
-  const pool = preferred.length ? preferred : viable;
+  const pool = preferred.length ? preferred : logical;
   if (pool.length > 1) {
     return {
       state: 'AMBIGUOUS',

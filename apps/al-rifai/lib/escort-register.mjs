@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {parseEscortOrder} from './escort-intake-candidate.mjs';
-import {matchConfirmation} from './vessel-match.ts';
+import {matchConfirmation,orderBusinessDay,orderIdentity} from './vessel-match.ts';
 import {classifyProgramDuplicate} from './duplicate-identity.ts';
 
 const hash=value=>createHash('sha256').update(typeof value==='string'?value:JSON.stringify(value)).digest('hex');
@@ -231,8 +231,22 @@ export function deriveEscortRegisterOps(account,messages,contacts,existingRows,a
  const scopedRows=existingRows.filter(r=>epoch==null||(value(r,'dataset_epoch','datasetEpoch')||epoch)===epoch);
  const known=scopedRows.map(rowForMatch).sort((a,b)=>String(a.id).localeCompare(String(b.id)));
  const orderPool=scopedRows.filter(r=>value(r,'status')==='DRAFT'&&value(r,'account_id','accountId')===account.accountId)
-  .map(r=>({id:String(value(r,'id')),messageId:String(value(r,'source_message_id','sourceMessageId')),chatJid:String(value(r,'chat_jid','chatJid')),mother:String(value(r,'mother_vessel','motherVessel')),lighter:String(value(r,'lighter_vessel','lighterVessel')),masterRaw:String(r.parsed?.fields?.masterMobile??value(r,'master_mobile','masterMobile')??''),sourceTime:String(value(r,'source_time','sourceTime')),contactId:String(value(r,'client_contact_id','clientContactId')),shift:String(value(r,'shift')||r.parsed?.shift||'')}));
+  .map(r=>({id:String(value(r,'id')),messageId:String(value(r,'source_message_id','sourceMessageId')),chatJid:String(value(r,'chat_jid','chatJid')),mother:String(value(r,'mother_vessel','motherVessel')),lighter:String(value(r,'lighter_vessel','lighterVessel')),masterRaw:String(r.parsed?.fields?.masterMobile??value(r,'master_mobile','masterMobile')??''),sourceTime:String(value(r,'source_time','sourceTime')),contactId:String(value(r,'client_contact_id','clientContactId')),shift:String(value(r,'shift')||r.parsed?.shift||''),dutyDate:String(value(r,'duty_date','dutyDate')??'')}));
  const ops=[];const existingHashes=new Set(scopedRows.map(r=>`${value(r,'account_id','accountId')}|${value(r,'source_hash','sourceHash')}|${value(r,'block_key','blockKey')}`));
+ // Logical Vessel order identity (Target 01). One business order can arrive as
+ // several message fragments. Every fragment keeps its own row and its own
+ // source message — evidence is never dropped or overwritten — but carries the
+ // same deterministic `logicalOrderId`, so the register and the Admin
+ // Confirmation matcher can treat them as one order instead of manufacturing an
+ // ambiguity. Fragments only share an identity within the same Lighter, Master
+ // Mobile and shift on the same day (or one day apart); anything else stays a
+ // separate order, including a genuinely new duty for the same Lighter.
+ const logicalOrderIdOf=(chat,data,sourceTime)=>{
+  const identity=orderIdentity({lighter:data.lighterVessel,masterRaw:data.masterMobileRaw||data.masterMobile,shift:data.shift});
+  if(!identity)return null;
+  const day=orderBusinessDay({dutyDate:data.dutyDate,sourceTime});
+  return hash(['escort-logical-order-v1',account.accountId,chat,identity,day]);
+ };
  for(const message of messages){
   const sourceRoute=classifyBusinessSource(account,message,contacts,aliases,groupAuthorizations,cashScopeChats);
   if(sourceRoute.domain!=='vessel')continue;
@@ -257,9 +271,13 @@ export function deriveEscortRegisterOps(account,messages,contacts,existingRows,a
    if(message.direction==='INCOMING'&&authorContact&&data.escortName
     &&(!namedContact||String(namedContact.id)!==String(authorContact.id)))continue;
    if(message.direction==='INCOMING'&&!message.chatJid?.endsWith('@g.us')&&validDraftFields(data)){
+    // A repeated fragment of an order that is already known is evidence for the
+    // existing draft, never a second draft. The message itself stays immutable in
     const id=hash(['escort-order',...salt,account.accountId,source,blockKey]);
-    const row={id,accountId:account.accountId,clientContactId:contact.id,clientPhone:contact.phone,chatJid:message.chatJid,sourceMessageId:message.id,sourceHash:source,blockKey,sourceTime:message.sourceTime,businessKey:null,...data,status:'DRAFT',reasons:[],parsed:{...block,source:sourceProvenance},sourceText:message.text};
-    ops.push({kind:'DRAFT',row,event:{id:hash(['escort-order-event',id,'DRAFT_CREATED',source]),orderId:id,eventType:'DRAFT_CREATED',sourceMessageId:message.id,sourceHash:source,payload:{...row,source:sourceProvenance}}});known.push(rowForMatch({...row,account_id:account.accountId,client_phone:contact.phone,source_hash:source,block_key:blockKey,status:'DRAFT'}));orderPool.push({id,messageId:message.id,chatJid:row.chatJid,mother:data.motherVessel,lighter:data.lighterVessel,masterRaw:data.masterMobileRaw||data.masterMobile,sourceTime:message.sourceTime,contactId:contact.id});existingHashes.add(`${account.accountId}|${source}|${blockKey}`);continue;
+    const logicalOrderId=logicalOrderIdOf(canonicalChat(message.chatJid),data,message.sourceTime);
+    const row={id,accountId:account.accountId,clientContactId:contact.id,clientPhone:contact.phone,chatJid:message.chatJid,sourceMessageId:message.id,sourceHash:source,blockKey,sourceTime:message.sourceTime,businessKey:null,...data,status:'DRAFT',reasons:[],parsed:{...block,source:sourceProvenance,...(logicalOrderId?{logicalOrderId}:{})},sourceText:message.text};
+    const draftOp={kind:'DRAFT',row,event:{id:hash(['escort-order-event',id,'DRAFT_CREATED',source]),orderId:id,eventType:'DRAFT_CREATED',sourceMessageId:message.id,sourceHash:source,payload:{...row,source:sourceProvenance}}};
+    ops.push(draftOp);known.push(rowForMatch({...row,account_id:account.accountId,client_phone:contact.phone,source_hash:source,block_key:blockKey,status:'DRAFT'}));orderPool.push({id,messageId:message.id,chatJid:row.chatJid,mother:data.motherVessel,lighter:data.lighterVessel,masterRaw:data.masterMobileRaw||data.masterMobile,sourceTime:message.sourceTime,contactId:contact.id,dutyDate:data.dutyDate??null,shift:data.shift??null});existingHashes.add(`${account.accountId}|${source}|${blockKey}`);continue;
    }
    // Office assignments are outbound. A complete assignment posted inside an
    // approved group by its author is evidence for Admin review, never a

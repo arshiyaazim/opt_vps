@@ -81,8 +81,12 @@ test('unknown, Cash, and WA-02 messages never produce Vessel operations',()=>{
 });
 
 test('ambiguous matching drafts remain assignment review instead of confirmation',()=>{
+ // Genuine competition: two drafts for the same Lighter on different duty dates.
  const base={account_id:'wa-01',client_contact_id:OWNER_ESCORT_CLIENTS[0].id,chat_jid:'8801670535255@s.whatsapp.net',master_mobile:'+8801829984145',mother_vessel:'Alpha Unity',lighter_vessel:'Light One',booking_date:'2026-10-03',status:'DRAFT'};
- const ops=deriveEscortRegisterOps(account,[message('assignment-ambiguous',assignmentText,'OUTGOING')],contacts,[{...base,id:'draft-a'},{...base,id:'draft-b'}]);
+ const ops=deriveEscortRegisterOps(account,[message('assignment-ambiguous',assignmentText,'OUTGOING')],contacts,[
+  {...base,id:'draft-a',duty_date:'2026-10-03'},
+  {...base,id:'draft-b',duty_date:'2026-10-10'},
+ ]);
  assert.equal(ops.length,1);assert.equal(ops[0].kind,'REVIEW');assert.deepEqual(ops[0].row.reasons,['ASSIGNMENT_MATCH_AMBIGUOUS']);
 });
 
