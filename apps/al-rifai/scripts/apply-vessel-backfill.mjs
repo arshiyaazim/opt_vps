@@ -37,10 +37,10 @@ const APPROVED = {
     ['AC432D8B770DAD5DF70A108CF6B431DF', '6:zl1'],
     ['AC57161B823236D8AEB6F16CC0040268', '11:safroz1'],
   ],
-  // [row id, expected polluted Lighter prefix, expected block ordinal]
+  // [row id, polluted Lighter prefix, block ordinal, clean Lighter, clean block key]
   repairs: [
-    ['40ed08cdbf70', 'HADIZ', '8'],
-    ['c3b9e09aebcb', 'AL BADRA', '7'],
+    ['40ed08cdbf70', 'HADIZ', '8', 'HADIZ', '8:hadiz'],
+    ['c3b9e09aebcb', 'AL BADRA', '7', 'AL BADRA', '7:albadra'],
   ],
   // Confirmation message ids, in creation order.
   programs: [
@@ -56,8 +56,6 @@ const APPROVED = {
     older: 'ACC5D30AAD5C5CC5F79048002A031A7E',
     reason: 'ESCORT_CHANGE',
   },
-  expectedInserts: 4,
-  expectedDuplicates: 5,
 };
 
 const loader = createPool({readOnly: true});
@@ -165,31 +163,39 @@ async function main() {
     }
   }
 
-  if (inserts.length !== APPROVED.expectedInserts || duplicates.length !== APPROVED.expectedDuplicates) {
-    fail(`PLAN_DRIFT: inserts=${inserts.length} duplicates=${duplicates.length}, approved ${APPROVED.expectedInserts}/${APPROVED.expectedDuplicates}`);
-  }
+  const approvedInsertKeys = new Set(APPROVED.inserts.map(([source, block]) => `${source}|${block}`));
   const plannedInserts = new Map(inserts.map((op) => [`${op.row.sourceMessageId}|${op.row.blockKey}`, op]));
-  for (const key of APPROVED.inserts.map(([source, block]) => `${source}|${block}`)) {
-    if (!plannedInserts.has(key)) fail(`PLAN_DRIFT: approved insert missing ${key}`);
-  }
   for (const key of plannedInserts.keys()) {
-    if (!APPROVED.inserts.some(([source, block]) => `${source}|${block}` === key)) fail(`PLAN_DRIFT: unapproved insert ${key}`);
+    if (!approvedInsertKeys.has(key)) fail(`PLAN_DRIFT: unapproved insert ${key}`);
+  }
+  // Idempotency: an approved insert may already be registered (a second run).
+  const alreadyPresent = [];
+  for (const key of approvedInsertKeys) {
+    if (plannedInserts.has(key)) continue;
+    const [source, block] = key.split('|');
+    const registered = rows.some((r) => r.source_message_id === source && String(r.block_key) === block);
+    if (!registered) fail(`PLAN_DRIFT: approved insert missing and not registered ${key}`);
+    alreadyPresent.push(key);
   }
 
   // ── the two approvals: repair exactly the polluted Drafts HADIZ/AL BADRA ───
   const repairs = [];
-  for (const [rowId, expectedName, expectedOrdinal] of APPROVED.repairs) {
+  const alreadyRepaired = [];
+  for (const [rowId, expectedName, expectedOrdinal, cleanName, cleanBlock] of APPROVED.repairs) {
     const row = rows.find((r) => String(r.id).startsWith(rowId));
     if (!row) fail(`PLAN_DRIFT: repair row ${rowId} not found`);
+    if (String(row.block_key ?? '').split(':')[0] !== expectedOrdinal && String(row.block_key ?? '') !== cleanBlock) {
+      fail(`PLAN_DRIFT: repair row ${rowId} block ordinal`);
+    }
+    if (row.lighter_vessel === cleanName && String(row.block_key) === cleanBlock) {
+      alreadyRepaired.push(rowId); // a second run
+      continue;
+    }
     if (!String(row.lighter_vessel ?? '').toUpperCase().startsWith(expectedName)) {
       fail(`PLAN_DRIFT: repair row ${rowId} Lighter is "${row.lighter_vessel}" not ${expectedName}`);
     }
-    if (String(row.block_key ?? '').split(':')[0] !== expectedOrdinal) fail(`PLAN_DRIFT: repair row ${rowId} block ordinal`);
-    const operation = duplicates.find((op) => op.row.sourceMessageId === row.source_message_id
-      && String(op.row.blockKey ?? '').split(':')[0] === expectedOrdinal);
-    if (!operation) fail(`PLAN_DRIFT: no corrected parse for repair row ${rowId}`);
-    repairs.push({rowId: String(row.id), sourceMessageId: row.source_message_id, lighter: operation.row.lighterVessel,
-      blockKey: operation.row.blockKey, mother: operation.row.motherVessel, master: operation.row.masterMobile});
+    repairs.push({rowId: String(row.id), sourceMessageId: row.source_message_id, lighter: cleanName,
+      blockKey: cleanBlock, mother: row.mother_vessel, master: row.master_mobile});
   }
 
   // ── the six Programs, matched against the post-change Draft pool ───────────
@@ -270,6 +276,8 @@ async function main() {
 
   const plan = {
     dryRun: !apply,
+    alreadyPresent,
+    alreadyRepaired,
     inserts: inserts.map((op) => ({sourceMessageId: op.row.sourceMessageId, blockKey: op.row.blockKey,
       lighter: op.row.lighterVessel, mother: op.row.motherVessel, masterMobile: op.row.masterMobile,
       destination: op.row.destination, dutyDate: op.row.dutyDate, shift: op.row.shift})),
