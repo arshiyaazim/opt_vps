@@ -107,9 +107,18 @@ export function parseEscortOrder(text,{messageDate=null}={}){
  const motherKeys=[...new Set(mothers.map(m=>vesselKey(m.raw.split('/')[0])).filter(Boolean))];
  const mother=motherKeys.length===1?mothers[0]:null;
  const context={},contextEvidence={};const blocks=[];let current=null;
+ // A DESTINATION line belongs to the whole message, so a Lighter listed before
+ // the line must still receive it. A block-level or inline value always wins.
+ let messageDestination=null;
  function set(block,field,value,line){
-  if(block.fields[field]&&block.fields[field]!==value)block.reasons.push('CONFLICTING_'+field);
-  block.fields[field]=value;block.fieldEvidence[field]={raw:value,bodyLine:line};
+  // A trailing comma belongs to the sentence, not to the destination name.
+  const normalised=field==='destination'?String(value).replace(/[,\s]+$/,''):value;
+  if(block.fields[field]&&block.fields[field]!==normalised){
+   block.reasons.push('CONFLICTING_'+field);
+   // A Lighter-specific destination is never overwritten by a message-level one.
+   if(field==='destination')return;
+  }
+  block.fields[field]=normalised;block.fieldEvidence[field]={raw:value,bodyLine:line};
  }
  function start(raw,line){
   current={startLine:line,fields:{...context,lighterVessel:raw},fieldEvidence:{...contextEvidence,lighterVessel:{raw,bodyLine:line}},reasons:[]};
@@ -122,14 +131,33 @@ export function parseEscortOrder(text,{messageDate=null}={}){
   if(f?.field==='lighterVessel'){
    let name=f.value;
    if(!name){let next=i+1;while(next<lines.length&&!lines[next].value)next++;if(lines[next]&&!labeled(lines[next].value)){name=lines[next].value;i=next;}}
+   // The value line can itself be the old "15. NAME, CAPACITY: …, PHONE: …" form.
+   const markerAt=name.search(/,\s*(?:CAPACITY|PHONE)\b/i);
+   if(markerAt>0){
+    const raw=name;
+    const cap=raw.match(/\bCAPACITY\s*[:=]?\s*(\d[\d,.]*\s*(?:m\/?ton|mts|m\.?t|m\/t))/i);
+    const ph=raw.match(/\bPHONE\s*[:=]?\s*((?:\+?88)?0?1[3-9][\d\s-]{8,})/i);
+    start(raw.slice(0,markerAt),line);
+    if(cap&&!current.fields.capacity)set(current,'capacity',cap[1].trim(),line);
+    if(ph&&!current.fields.masterMobile)set(current,'masterMobile',ph[1].trim(),line);
+    continue;
+   }
    start(name,line);continue;
   }
   if(!f&&vesselLine(value)&&groupedPhone(i)){
    const phones=[...digits(value).matchAll(mobilePattern)];const first=phones[0];
-   const name=first?value.slice(0,first.index).replace(/[\s-]+$/,''):value;
+   // Old client format: "02. HADIZ, CAPACITY: 1,000 M/T, PHONE: 01863191301".
+   // Everything from the CAPACITY/PHONE marker on describes the lighter, not its
+   // name. Splitting on the marker (not on commas) keeps "1,000" intact.
+   const beforePhone=first?value.slice(0,first.index):value;
+   const markerAt=beforePhone.search(/,\s*(?:CAPACITY|PHONE)\b/i);
+   const name=(markerAt>0?beforePhone.slice(0,markerAt):beforePhone).replace(/[\s-]+$/,'');
    start(name,line);
    if(first){
     set(current,'masterMobile',first[0],line);
+    // Capacity stated before the phone in the same old format.
+    const capBefore=beforePhone.match(/\bCAPACITY\s*[:=]?\s*(\d[\d,.]*\s*(?:m\/?ton|mts|m\.?t|m\/t))/i);
+    if(capBefore&&!current.fields.capacity)set(current,'capacity',capBefore[1].trim(),line);
     const tail=clean(value.slice(first.index+first[0].length));
     if(tail){
      current.fields.inlineContext=tail;
@@ -138,11 +166,15 @@ export function parseEscortOrder(text,{messageDate=null}={}){
      // inline tail before the capacity is only a destination when it carries a
      // letter or digit; otherwise the labelled/context destination is kept.
      if(cap){set(current,'capacity',cap[0],line);const dest=clean(tail.slice(0,cap.index));if(dest&&/[\p{L}\p{N}]/u.test(dest))set(current,'destination',dest,line);}
+     // Old format may put a bare destination after the phone, with the capacity
+     // written before it. A separator-only tail is never a destination.
+     else if(tail&&tail.length<=60&&!/^[\/,.;:|+-]/.test(tail)&&/[\p{L}]/u.test(tail))set(current,'destination',tail,line);
     }
    }
    continue;
   }
   if(f){
+   if(f.field==='destination'&&f.value)messageDestination=f.value.replace(/[,\s]+$/,'');
    if(!current){if(['cargo','importer','bookingDate','destination'].includes(f.field)){context[f.field]=f.value;contextEvidence[f.field]={raw:f.value,bodyLine:line};}continue;}
    set(current,f.field,f.value,line);continue;
   }
@@ -162,6 +194,7 @@ export function parseEscortOrder(text,{messageDate=null}={}){
  }
  return blocks.map(b=>{
   const fields={...b.fields,motherVessel:mother?vesselName(b.fields.motherVessel):'',lighterVessel:vesselName(b.fields.lighterVessel)};
+  if(!fields.destination&&messageDestination)fields.destination=messageDestination.replace(/[,\s]+$/,'');
   // Bengali digits in a numeric field (e.g. "ক্যাপাসিটি:১৭০০ mts") become ASCII;
   // the raw text stays in fieldEvidence and in the source message.
   if(fields.capacity)fields.capacity=digits(String(fields.capacity));
