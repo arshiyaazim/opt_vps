@@ -7,7 +7,7 @@ import {
   scopePhoneAliases,
 } from "../lib/escort-register.mjs";
 import {CASH_SCOPE_CHATS,isCashScopeOwner} from "../lib/cash-scope.ts";
-import {persistConfirmedProgram,persistOperation} from "../lib/vessel-ops.ts";
+import {persistConfirmedProgram,persistOperationIfNew} from "../lib/vessel-ops.ts";
 import {analyzeMobile} from "../lib/mobile-identity.mjs";
 
 const BATCH_SIZE=50;
@@ -239,7 +239,11 @@ async function processBatch():Promise<number>{
           continue;
         }
         for(const operation of operations){
-          await persistOperation(client,operation);
+          // Same business/block identity guard as the historical backfill: a
+          // re-delivered or already-registered block is never written twice, and
+          // two writers of the same key serialize on the transaction-scoped lock.
+          const persisted=await persistOperationIfNew(client,operation);
+          if(persisted==="skipped_duplicate")continue;
           accountRows.push({
             ...operation.row,account_id:operation.row.accountId,
             client_contact_id:operation.row.clientContactId,client_phone:operation.row.clientPhone,

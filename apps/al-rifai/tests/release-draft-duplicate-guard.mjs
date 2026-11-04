@@ -6,6 +6,7 @@
 // serializes writers with a transaction-scoped advisory lock.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {businessIdentityKey, normalizeVesselIdentity, persistConfirmedProgram, persistOperation, persistOperationIfNew} from '../lib/vessel-ops.ts';
 
 const op = (over = {}) => {
@@ -414,4 +415,21 @@ test('17. a DATE column delivered as a Date object still matches the string form
   const operation = op({id: 'same-record', sourceMessageId: 'MSG-DATE', blockKey: '9:other', dutyDate: '2026-08-15'});
   assert.equal(await persistOperationIfNew(client, operation), 'skipped_duplicate');
   assert.equal(inserts(calls).length, 0);
+});
+
+// ── wiring ───────────────────────────────────────────────────────────────────
+test('18. live processing and the backfill share the same duplicate guard', () => {
+  const source = (name) => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
+  const live = source('scripts/process-vessel.ts');
+  const backfill = source('scripts/backfill-vessel-canonical.mjs');
+  const runner = source('scripts/apply-vessel-backfill.mjs');
+  for (const [name, text] of [['live', live], ['backfill', backfill], ['runner', runner]]) {
+    assert.match(text, /persistOperationIfNew/, `${name} must use the guarded writer`);
+    assert.doesNotMatch(text, /\bpersistOperation\(/, `${name} must not bypass the guard`);
+  }
+  assert.match(source('lib/vessel-ops.ts'), /export async function persistOperationIfNew/);
+  // The guard must take the transaction-scoped lock before it reads or inserts.
+  const ops = source('lib/vessel-ops.ts');
+  assert.match(ops, /pg_advisory_xact_lock/);
+  assert.ok(ops.indexOf('pg_advisory_xact_lock') < ops.indexOf('isDuplicateRegisterRow((rows'));
 });
