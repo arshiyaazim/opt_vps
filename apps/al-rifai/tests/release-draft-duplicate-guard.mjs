@@ -404,3 +404,14 @@ test('16. an Escort Change links both duties and never invents a release date', 
   assert.match(String(assignments[1].values[6]), /^[a-f0-9]{64}$/);
   assert.notEqual(assignments[1].values[6], assignments[1].values[0], 'predecessor is the other assignment');
 });
+
+test('17. a DATE column delivered as a Date object still matches the string form', async () => {
+  const existing = [{
+    account_id: 'wa-01', source_message_id: 'MSG-DATE', lighter_vessel: 'HADIZ',
+    duty_date: new Date(2026, 7, 15), block_key: '2:hadiz',
+  }];
+  const {client, calls} = fake(existing);
+  const operation = op({id: 'same-record', sourceMessageId: 'MSG-DATE', blockKey: '9:other', dutyDate: '2026-08-15'});
+  assert.equal(await persistOperationIfNew(client, operation), 'skipped_duplicate');
+  assert.equal(inserts(calls).length, 0);
+});

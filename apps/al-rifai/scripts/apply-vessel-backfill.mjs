@@ -34,7 +34,7 @@ const APPROVED = {
   inserts: [
     ['AC2919C330D82303BCBD4012FEDF888E', '11:kslbulker3'],
     ['AC93B8667565AC03D7717B2F8E254880', '11:nishad2'],
-    ['AC432D8B770DAD5DF70A108CF6B431DF', '4:zl1'],
+    ['AC432D8B770DAD5DF70A108CF6B431DF', '6:zl1'],
     ['AC57161B823236D8AEB6F16CC0040268', '11:safroz1'],
   ],
   // [row id, expected polluted Lighter prefix, expected block ordinal]
@@ -66,14 +66,19 @@ const writer = createPool({readOnly: false, user: 'ir_review_runtime'});
 const dhaka = (iso) => new Date(Date.parse(iso) + 6 * 3600 * 1000).toISOString().slice(0, 10);
 const fail = (message) => { throw new Error(message); };
 
+const pick = (row, snake, camel) => row[snake] ?? row[camel];
+
 function buildPool(rows) {
   return rows
-    .filter((r) => r.status === 'DRAFT')
+    .filter((r) => pick(r, 'status', 'status') === 'DRAFT')
     .map((r) => ({
-      id: String(r.id), messageId: r.source_message_id, chatJid: r.chat_jid,
-      mother: r.mother_vessel ?? '', lighter: r.lighter_vessel ?? '',
-      masterRaw: String(r.parsed?.fields?.masterMobile ?? r.master_mobile ?? ''),
-      sourceTime: new Date(r.source_time).toISOString(), contactId: r.client_contact_id,
+      id: String(r.id), messageId: pick(r, 'source_message_id', 'sourceMessageId'),
+      chatJid: pick(r, 'chat_jid', 'chatJid'),
+      mother: pick(r, 'mother_vessel', 'motherVessel') ?? '',
+      lighter: pick(r, 'lighter_vessel', 'lighterVessel') ?? '',
+      masterRaw: String(r.parsed?.fields?.masterMobile ?? pick(r, 'master_mobile', 'masterMobile') ?? ''),
+      sourceTime: new Date(pick(r, 'source_time', 'sourceTime')).toISOString(),
+      contactId: pick(r, 'client_contact_id', 'clientContactId'),
     }));
 }
 
@@ -100,8 +105,7 @@ async function main() {
        FROM public.whatsapp_messages_original WHERE wa_account='wa-01' AND chat_jid = ANY($1::text[])
       ORDER BY "timestamp", id`, [chats],
   )).rows;
-  let rows = (await loader.query("SELECT * FROM public.escort_order_register WHERE account_id='wa-01'")).rows
-    .map((r) => ({...r, duty_date: r.duty_date ? String(r.duty_date).slice(0, 10) : null}));
+  const rows = (await loader.query("SELECT * FROM public.escort_order_register WHERE account_id='wa-01'")).rows;
   const programs = (await loader.query('SELECT id FROM public.programs')).rows;
   const programIds = new Set(programs.map((p) => p.id));
   const employees = (await loader.query("SELECT employee_mobile,preferred_name,state FROM public.employee_master WHERE scope_account='wa-01'")).rows;
@@ -125,8 +129,7 @@ async function main() {
   }
   const corrections = masterCorrections(correctionInput);
 
-  // ── derive the plan ────────────────────────────────────────────────────────
-  const known = new Set(rows.filter((r) => !r.dataset_epoch || r.dataset_epoch === EPOCH).map((r) => r.id));
+  // ── derive the plan (mirrors scripts/backfill-vessel-canonical.mjs) ────────
   const inserts = [];
   const duplicates = [];
   for (const row of messages) {
@@ -139,6 +142,7 @@ async function main() {
       senderPhoneTransport: row.sender_phone, deletedAt: null,
     };
     if (classifyBusinessSource({accountId: 'wa-01'}, message, contacts, aliases, groupAuthorizations, [...CASH_SCOPE_CHATS]).domain !== 'vessel') continue;
+    const known = new Set(rows.filter((r) => !r.dataset_epoch || r.dataset_epoch === EPOCH).map((r) => r.id));
     for (const operation of deriveEscortRegisterOps(
       {accountId: 'wa-01'}, [message], contacts, rows, aliases, groupAuthorizations, [...CASH_SCOPE_CHATS],
       {epoch: EPOCH, chatAliases, corrections, windowDays: WINDOW_DAYS},
@@ -150,6 +154,14 @@ async function main() {
         continue;
       }
       inserts.push(operation);
+      // A derived row participates in later matches exactly as the backfill's
+      // in-memory pool does.
+      rows.push({
+        ...operation.row, account_id: operation.row.accountId,
+        client_contact_id: operation.row.clientContactId, client_phone: operation.row.clientPhone,
+        chat_jid: operation.row.chatJid, source_time: operation.row.sourceTime,
+        block_key: operation.row.blockKey, dataset_epoch: EPOCH,
+      });
     }
   }
 
@@ -181,16 +193,13 @@ async function main() {
   }
 
   // ── the six Programs, matched against the post-change Draft pool ───────────
-  const simulations = [...inserts.map((op) => ({
-    ...op.row, account_id: op.row.accountId, lighter_vessel: op.row.lighterVessel,
-    duty_date: op.row.dutyDate, block_key: op.row.blockKey, dataset_epoch: EPOCH,
-    parsed: op.row.parsed, master_mobile: op.row.masterMobile,
-  }))];
+  // The derivation loop already added each planned Draft to `rows`, so the pool
+  // must not add them a second time. Repairs are applied to the in-memory copy.
   for (const repair of repairs) {
     const index = rows.findIndex((r) => r.id === repair.rowId);
     if (index >= 0) rows[index] = {...rows[index], lighter_vessel: repair.lighter, block_key: repair.blockKey};
   }
-  const pool = buildPool([...rows.filter((r) => r.dataset_epoch === EPOCH), ...simulations]);
+  const pool = buildPool(rows.filter((r) => r.dataset_epoch === EPOCH));
 
   const messageById = new Map(messages.map((m) => [m.message_id, m]));
   const programPlan = [];
@@ -216,9 +225,12 @@ async function main() {
       lighter: block.fields?.lighterVessel ?? row.lighter_vessel ?? '',
       masterRaw: block.masterMobileRaw ?? block.masterMobile ?? row.master_mobile ?? '',
       sourceTime: new Date(row.source_time).toISOString(), contactId: null,
+      shift: block.shift || null,
     }, {windowDays: WINDOW_DAYS, canonicalChat: (jid) => chatAliases[jid] ?? jid});
     if (!['EXACT', 'VARIANT', 'CORRECTED'].includes(match.state) || !match.orderId) {
-      fail(`PLAN_DRIFT: confirmation ${confirmationId.slice(0, 10)} matches ${match.state}`);
+      const candidates = pool.filter((d) => vesselKey(d.lighter) === wanted)
+        .map((d) => `${d.id.slice(0, 8)}@${d.sourceTime}(${d.messageId.slice(0, 8)})`);
+      fail(`PLAN_DRIFT: confirmation ${confirmationId.slice(0, 10)} matches ${match.state}; candidates=${candidates.join(',')}`);
     }
     if (!block.employeeMobile || !block.assignmentDate || !['D', 'N'].includes(block.shift)) {
       fail(`PLAN_DRIFT: confirmation ${confirmationId.slice(0, 10)} incomplete`);

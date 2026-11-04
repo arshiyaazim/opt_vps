@@ -238,6 +238,21 @@ export type RegisterIdentityRow = {
 };
 
 /**
+ * A DATE column arrives as a JS Date from `SELECT *` but as text from the
+ * guard's own `duty_date::text` projection. Normalise both to YYYY-MM-DD so the
+ * predicate cannot fail open just because of the driver's representation.
+ */
+function identityDate(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '';
+  if (value instanceof Date) {
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${value.getFullYear()}-${month}-${day}`;
+  }
+  return String(value).slice(0, 10);
+}
+
+/**
  * Pure duplicate predicate, shared by the writer and by the backfill dry run so
  * that both report the same insert/skip split.
  */
@@ -246,13 +261,13 @@ export function isDuplicateRegisterRow(
   operation: VesselOperation,
 ): boolean {
   const targetLighter = normalizeVesselIdentity(operation.row.lighterVessel);
-  const targetDate = operation.row.dutyDate ?? '';
+  const targetDate = identityDate(operation.row.dutyDate);
   const targetOrdinal = blockIdentityKey(operation).split('|')[2] ?? '';
   return existing.some((row) => {
     const existingOrdinal = String(row.block_key ?? '').split(':')[0].trim();
     if (targetOrdinal && existingOrdinal === targetOrdinal) return true;
     return normalizeVesselIdentity(row.lighter_vessel) === targetLighter
-      && (row.duty_date ?? '') === targetDate;
+      && identityDate(row.duty_date) === targetDate;
   });
 }
 
