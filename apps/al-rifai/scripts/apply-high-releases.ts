@@ -1,8 +1,14 @@
 // Apply every high-confidence release candidate (Action 1.2).
 //
-// Standalone because the HTTP route needs an authenticated Owner session. The SQL
-// path is identical: alrifai_vessel_program_release (never a direct UPDATE), then
-// recalculate_program_pay, then the candidate is marked applied.
+// Standalone because the HTTP route needs an authenticated Owner session.
+//
+// Every candidate goes through public.apply_release_candidate(), which releases
+// the program, recalculates pay, marks the candidate and writes the audit row in
+// ONE transaction. This script used to call alrifai_vessel_program_release and
+// UPDATE the candidate on two different connections with no transaction and no
+// release_auto_apply_log row — the same non-atomic shape that let candidate 2093
+// be applied without an audit record. If the function is absent the script now
+// refuses to run and writes nothing.
 //
 // One candidate per program is applied: several candidates can describe one duty
 // (food bill + same-day partial), and releasing twice would append duplicate
@@ -18,6 +24,15 @@ async function main() {
   if (!actor) throw new Error('VESSEL_COMMAND_ACTOR_NOT_CONFIGURED');
 
   try {
+    const probe = await app.query<{atomic: boolean}>(
+      `SELECT to_regprocedure('public.apply_release_candidate(bigint,text,text,text)') IS NOT NULL AS atomic`,
+    );
+    if (!probe.rows[0]?.atomic) {
+      console.error('ATOMIC_APPLY_REQUIRED_BUT_MISSING: apply_release_candidate() is not installed; nothing was applied.');
+      process.exitCode = 1;
+      return;
+    }
+
     const picked = await app.query<Cand>(
       `SELECT DISTINCT ON (program_id) id::text AS id, program_id, end_date::text AS end_date, end_shift
          FROM public.release_candidates
@@ -31,22 +46,9 @@ async function main() {
 
     for (const cand of picked.rows) {
       try {
-        const rev = await app.query<{revision: number}>(
-          'SELECT revision FROM public.programs WHERE id = $1', [cand.program_id],
-        );
-        const revision = rev.rows[0]?.revision;
-        if (revision === undefined) throw new Error('PROGRAM_NOT_FOUND');
-
         await cmd.query(
-          'SELECT public.alrifai_vessel_program_release($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',
-          [cand.program_id, cand.end_date, cand.end_shift, '', actor, revision,
-            `release-candidate-${cand.id}`, JSON.stringify({source: 'apply-all-high', candidateId: cand.id})],
-        );
-        await cmd.query('SELECT public.recalculate_program_pay($1)', [cand.program_id]);
-        await app.query(
-          `UPDATE public.release_candidates
-              SET applied = true, match_status = 'APPLIED', reviewed_by = 'apply-all-high', reviewed_at = now()
-            WHERE id = $1::bigint`, [cand.id],
+          'SELECT public.apply_release_candidate($1::bigint,$2,$3,$4) AS result',
+          [cand.id, actor, 'apply-all-high', 'apply-all-high-cli'],
         );
         applied += 1;
       } catch (error) {
