@@ -7,6 +7,7 @@ import {
   programIdFor,
   vesselKey,
   masterKey,
+  orderIdentity,
 } from '../lib/vessel-match.ts';
 import { analyzeMobile, oneDigitApart } from '../lib/mobile-identity.mjs';
 
@@ -84,10 +85,50 @@ test('confirmation in a different client chat is rejected', () => {
 });
 
 test('two plausible orders stay ambiguous', () => {
-  const result = matchConfirmation([order({ id: 'a' }), order({ id: 'b' })], confirmation());
+  // Genuine competition: the same Lighter on two different days is two duties.
+  const result = matchConfirmation([
+    order({ id: 'a', sourceTime: '2026-09-28T10:00:00Z' }),
+    order({ id: 'b', messageId: 'order-msg-2', sourceTime: '2026-10-01T10:00:00Z' }),
+  ], confirmation());
   assert.equal(result.state, 'AMBIGUOUS');
   assert.equal(isConfirmable(result.state), false);
   assert.deepEqual(result.candidateIds.sort(), ['a', 'b']);
+});
+
+test('fragments of one business order collapse to a single logical order', () => {
+  const fragments = [
+    order({ id: 'frag-a', messageId: 'msg-a', sourceTime: '2026-10-01T05:38:58Z' }),
+    order({ id: 'frag-b', messageId: 'msg-b', sourceTime: '2026-10-01T05:39:37Z' }),
+    order({ id: 'frag-c', messageId: 'msg-c', sourceTime: '2026-10-01T06:36:01Z', mother: 'Poavosa Wisdom' }),
+  ];
+  const result = matchConfirmation(fragments, confirmation());
+  assert.equal(result.state, 'EXACT');
+  assert.equal(isConfirmable(result.state), true);
+  // The earliest fragment keeps the original Order Message ID.
+  assert.equal(result.orderId, 'frag-a');
+  assert.equal(result.orderMessageId, 'msg-a');
+  assert.deepEqual(result.candidateIds, ['frag-a']);
+});
+
+test('a fragment sent after midnight still belongs to the same order', () => {
+  const before = order({ id: 'late-a', sourceTime: '2026-10-01T18:30:00Z' });
+  const after = order({ id: 'late-b', sourceTime: '2026-10-01T19:30:00Z' }); // 01:30 Dhaka next day
+  const result = matchConfirmation([before, after], confirmation({ sourceTime: '2026-10-02T10:00:00Z' }));
+  assert.equal(result.state, 'EXACT');
+  assert.equal(result.orderId, 'late-a');
+});
+
+test('a different Lighter, Master or shift never collapses', () => {
+  const base = { sourceTime: '2026-10-01T10:00:00Z' };
+  assert.equal(matchConfirmation([
+    order({ ...base, id: 'l1' }), order({ ...base, id: 'l2', lighter: 'Other-Lighter' }),
+  ], confirmation({ lighter: 'Jafnun-Julfa-1' })).state, 'EXACT');
+  assert.equal(orderIdentity({ lighter: 'L 1', masterRaw: '01754334400' }),
+    orderIdentity({ lighter: 'L-1', masterRaw: '01754334400' }));
+  assert.notEqual(orderIdentity({ lighter: 'L 1', masterRaw: '01754334400' }),
+    orderIdentity({ lighter: 'L 1', masterRaw: '01754334401' }));
+  assert.notEqual(orderIdentity({ lighter: 'L 1', shift: 'D' }), orderIdentity({ lighter: 'L 1', shift: 'N' }));
+  assert.equal(orderIdentity({ lighter: '' }), '');
 });
 
 test('confirmation before the order is rejected', () => {
