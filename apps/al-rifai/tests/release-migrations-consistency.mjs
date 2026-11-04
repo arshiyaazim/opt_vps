@@ -78,6 +78,13 @@ test('the apply function is atomic by construction', () => {
   assert.ok(/GRANT USAGE, SELECT ON SEQUENCE public\.release_auto_apply_log_id_seq/.test(M.apply));
   assert.ok(M.apply.includes('release_auto_apply_log_candidate_uk'), 'one audit row per candidate is not enforced');
   assert.ok(M.apply.includes('alrifai_vessel_actor_verified'), 'actor is not re-checked');
+  // Idempotency and staleness are re-checked inside the function, not trusted to
+  // the caller: an applied candidate returns alreadyApplied, and a stale MATCHED
+  // candidate cannot re-release a program that already has an end date.
+  assert.ok(body.includes("'alreadyApplied'"), 'applied candidates are not idempotent');
+  assert.ok(body.includes('CANDIDATE_NOT_MATCHED'), 'match status is not re-checked');
+  assert.ok(body.includes('FOR UPDATE'), 'candidate/program are not locked');
+  assert.ok(body.includes('PROGRAM_ALREADY_RELEASED'), 'a stale candidate can re-release a program');
 });
 
 test('the event table allows exactly one event per candidate', () => {
