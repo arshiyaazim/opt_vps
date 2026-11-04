@@ -31,7 +31,20 @@ export type Payment = {
   dutyDays: number | null;    // floor(amount / 150)
   calcStart: string | null;   // endDate - dutyDays
   line: string;               // the source line, for audit
+  /** Release date the message itself states (End date / Release date line). */
+  statedReleaseDate: string | null;
+  statedReleaseShift: 'D' | 'N' | null;
+  /** Start date the message itself states (Start date line). */
+  statedStartDate: string | null;
+  /** Travel date stated on the conveyance line, if any. */
+  conveyanceDate: string | null;
+  /** Office-return date stated on a return line, if any. */
+  officeReturnDate: string | null;
+  /** Deterministic rules that produced the evidence above. */
+  rules: string[];
 };
+
+export type StatedDate = {date: string | null; shift: 'D' | 'N' | null; kind: 'release' | 'start' | null; invalid: boolean};
 
 export type MatchStatus = 'MATCHED' | 'ROSTER_MISMATCH' | 'NO_PAYMENT' | 'PENDING_REVIEW';
 
@@ -57,6 +70,78 @@ const CONVEYANCE_RE = /conv|conveyance|গাড়ি|ভাড়া|gari|vara
 const DAYWORD_RE = /\b\d{1,2}\s*[- ]?\s*(?:day|days|dsy|din)\b/gi;
 const DATE_RE = /\b\d{1,2}\s*[-./]\s*\d{1,2}\s*[-./]\s*\d{2,4}\b/g;
 
+// ── Release / travel date evidence ───────────────────────────────────────────
+// The release slip sometimes states its own end date and, for conveyance, the
+// actual travel or office-return date. These rules only record what the message
+// says; they never replace the approved "message date is the release date" rule
+// and they never invent a date. Proven formats (authorized release group):
+//   "End dte:-28-0-26-(D)" / "End date:-26-10-26-(D)" / "Start date:-27-10-26(N)"
+//   "End date:-28-01-26-(D)" + "Office return date:-02-02-26"
+//   "Ship to Office back---Convance bill" (conveyance, no date)
+const OFFICE_RETURN_RE = /office\s*(?:back|return)|ফির|ফেরত|অফিসে\s*(?:আসার|ফেরার|ফির)/i;
+const END_LABEL_RE = /(?:end|release)\s*(?:date|dte|dt)\b/i;
+const START_LABEL_RE = /start\s*(?:date|dte|dt)\b/i;
+const DATE_TOKEN_RE = /(\d{1,2}\s*[-/.]\s*\d{1,2}\s*[-/.]\s*(?:\d{4}|\d{2}))/;
+const SHIFT_TOKEN_RE = /\(+\s*(D|N|Day|Night)\s*\)+/i;
+
+/** Bengali digits are the same character class everywhere; no business rule here. */
+const asciiDigits = (value: string) => String(value).replace(/[০-৯]/g, (c) => String('০১২৩৪৫৬৭৮৯'.indexOf(c)));
+
+/**
+ * The date a line states, if any. `invalid` marks a labelled date that looks like
+ * a date but does not parse (e.g. "28-0-26"): the caller records it as an issue
+ * instead of silently falling back.
+ */
+export function statedDateOnLine(line: string, messageDate: string): StatedDate | null {
+  const text = asciiDigits(String(line ?? ''));
+  const token = DATE_TOKEN_RE.exec(text);
+  const kind = END_LABEL_RE.test(text) ? 'release' : START_LABEL_RE.test(text) ? 'start' : null;
+  const shiftMatch = SHIFT_TOKEN_RE.exec(text);
+  const shift = shiftMatch ? (shiftMatch[1][0].toUpperCase() as 'D' | 'N') : null;
+  if (!token) {
+    // A labelled date whose value is unusable (no date token at all).
+    if (kind === 'release') return {date: null, shift, kind, invalid: true};
+    return null;
+  }
+  const parsed = parseEscortDate(token[0], messageDate);
+  if (!parsed.date) return {date: null, shift: shift ?? parsed.shift, kind, invalid: true};
+  // The shift may be written after a separator, e.g. "28-01-26-(D)".
+  return {date: parsed.date, shift: shift ?? parsed.shift, kind, invalid: false};
+}
+
+function attachDateEvidence(
+  payment: Payment,
+  stated: StatedDate,
+  isConveyance: boolean,
+  isOfficeReturn: boolean,
+): void {
+  const add = (rule: string) => {
+    if (!payment.rules.includes(rule)) payment.rules.push(rule);
+  };
+  if (stated.invalid) {
+    add('R-INVALID-STATED-DATE');
+    return;
+  }
+  const date = stated.date as string;
+  if (stated.kind === 'release' && !payment.statedReleaseDate) {
+    payment.statedReleaseDate = date;
+    payment.statedReleaseShift = stated.shift;
+    add('R-STATED-END-DATE');
+  }
+  if (stated.kind === 'start' && !payment.statedStartDate) {
+    payment.statedStartDate = date;
+    add('R-STATED-START-DATE');
+  }
+  if (isConveyance && !payment.conveyanceDate) {
+    payment.conveyanceDate = date;
+    add('R-CONVEYANCE-DATE');
+  }
+  if (isOfficeReturn && !payment.officeReturnDate) {
+    payment.officeReturnDate = date;
+    add('R-OFFICE-RETURN-DATE');
+  }
+}
+
 /** Normalise any Bangladeshi mobile spelling to 01XXXXXXXXX. */
 export function normalisePhone(input: string | null | undefined): string | null {
   if (!input) return null;
@@ -71,6 +156,10 @@ export function normalisePhone(input: string | null | undefined): string | null 
 // Day 06:00:00–17:59:59, Night 18:00:00–05:59:59 Asia/Dhaka). This parser no
 // longer owns a copy of the cutoff; it only reads the local Dhaka clock.
 import {dhakaLocalTime, shiftForHour} from './shift-boundary.ts';
+// Date parsing is shared with the Order parser (one implementation): it already
+// understands dd/mm/yy, dd-mm-yyyy, a "(D)/(N)" shift suffix and a trailing
+// clock such as "(9:40AM)".
+import {parseEscortDate} from './escort-intake-candidate.mjs';
 
 export {shiftForHour};
 
@@ -145,9 +234,18 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
     }
 
     const amounts = amountsOnLine(line);
-    if (!amounts.length) continue;
-
     const isConveyance = CONVEYANCE_RE.test(line);
+    const isOfficeReturn = OFFICE_RETURN_RE.test(line);
+    const stated = statedDateOnLine(line, when.date);
+
+    if (!amounts.length) {
+      // A date-only follow-up line belongs to the escort already in context. No
+      // payment is created here, so the existing set of payments is unchanged.
+      const known = found.get(currentPhone);
+      if (known && stated) attachDateEvidence(known, stated, isConveyance, isOfficeReturn);
+      continue;
+    }
+
     const existing = found.get(currentPhone) ?? {
       escortPhone: currentPhone,
       escortName: currentName,
@@ -158,6 +256,12 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
       dutyDays: null,
       calcStart: null,
       line,
+      statedReleaseDate: null,
+      statedReleaseShift: null,
+      statedStartDate: null,
+      conveyanceDate: null,
+      officeReturnDate: null,
+      rules: [],
     };
 
     const total = amounts.reduce((a, b) => a + b, 0);
@@ -177,6 +281,7 @@ export function parseMessage(body: string, timestampIso: string): Payment[] {
       }
     }
     found.set(currentPhone, existing);
+    if (stated) attachDateEvidence(existing, stated, isConveyance, isOfficeReturn);
   }
 
   return [...found.values()].map((p) => {
