@@ -3,7 +3,7 @@ import {auth,audit,bodyOptional,bodyString,CashPortalError,clearCookie,createSes
 import {checkLoginThrottle, recordLoginFailure, recordLoginSuccess} from "@/lib/login-throttle";
 import {isAcceptablePassword} from "@/lib/password-policy";
 import {assertCanCreateUser,assertCanManageUser,assertCanResetPassword,CashUserPolicyError} from "@/lib/cash-user-policy";
-import {assertNotRemovingLastSuperAdmin,UnifiedAuthError,validateCapabilityRequest} from "@/lib/unified-auth-policy";
+import {assertNotRemovingLastSuperAdmin,hasCapability,UnifiedAuthError,validateCapabilityRequest} from "@/lib/unified-auth-policy";
 import {validateSubmission} from "@/lib/cash-submission";
 import {validateEmployeeSubmission} from "@/lib/employee-submission";
 import {assertCanActivateEmployee,assertCanDecideEmployee,EmployeeSubmissionPolicyError,validateEmployeeDecision,validateEmployeeDecisionNote,type EmployeeDecision,type EmployeeRequestState} from "@/lib/employee-submission-policy";
@@ -421,11 +421,12 @@ async function handle(request:NextRequest,segments:string[]){
   }
  }
  if(action==="summary"&&request.method==="GET"){
-  requireCashSuperAdmin(result.user);
+  if(!hasCapability(result.user,"cash.read"))throw new CashPortalError("CAPABILITY_REQUIRED:cash.read",403);
   const q=request.nextUrl.searchParams,term=bodyString(q.get("q"),150),method=bodyString(q.get("method"),20),from=bodyString(q.get("from"),10),to=bodyString(q.get("to"),10);
   // Current and Archive are disjoint epochs. Default remains Current so no
   // pre-transition record can appear in a Current total, filter or export.
   const scope: 'CURRENT'|'ARCHIVE' = q.get("scope")==="archive"?'ARCHIVE':'CURRENT';
+  if(scope==="ARCHIVE"&&result.user.role!=="ADMIN")throw new CashPortalError("ADMIN_REQUIRED",403);
   const clauses=cashScopedWhere('i',scope);const args:string[]=[];
   if(term){args.push(`%${term.toLowerCase()}%`);clauses.push(`lower(concat_ws(' ',i.employee_name,i.employee_mobile,i.payout_mobile,i.purpose,i.id)) LIKE $${args.length}`);}
   if(method){args.push(method);clauses.push(`i.method=$${args.length}`);}

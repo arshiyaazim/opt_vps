@@ -22,8 +22,9 @@ test('Cash data is denied unless an ADMIN identity is explicitly allowlisted',()
  }
 });
 
-test('Cash summary and message reads enforce the Super Admin guard before querying',()=>{
+test('Cash Current summary uses the read capability; source-message access stays Super Admin-only',()=>{
  const route=readFileSync(new URL('../app/api/cash/[...path]/route.ts',import.meta.url),'utf8');
- assert.match(route,/if\(action==="summary"&&request\.method==="GET"\)\{\s*requireCashSuperAdmin\(result\.user\);/);
+ assert.match(route,/if\(action==="summary"&&request\.method==="GET"\)\{\s*if\(!hasCapability\(result\.user,"cash\.read"\)\)/);
+ assert.match(route,/if\(scope==="ARCHIVE"&&result\.user\.role!=="ADMIN"\)/);
  assert.match(route,/if\(action==="messages"&&request\.method==="GET"\)\{\s*requireCashSuperAdmin\(result\.user\);/);
 });

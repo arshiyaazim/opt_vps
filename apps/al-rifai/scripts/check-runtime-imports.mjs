@@ -18,6 +18,17 @@ const ROOT = '/app';
 const SCAN_DIRS = ['scripts', 'lib'];
 const EXTENSIONS = ['', '.ts', '.mjs', '.js', '.json', '/index.ts', '/index.mjs'];
 
+// Entry points that must exist in the runtime image even though nothing inside
+// the image imports them. `reconcile-ingest.mjs` is executed by `docker exec`
+// from the host reconciliation producer (systemd timer), so a missing file does
+// not fail the build, the container or any route — it silently fails that
+// service every five minutes. That is exactly what happened between
+// 2026-10-17 and 2026-11-04: 5,108 consecutive failed reconciliations.
+const REQUIRED_ENTRY_POINTS = [
+  {path: 'scripts/reconcile-ingest.mjs', why: 'executed by the host reconciliation producer via docker exec'},
+  {path: 'lib/reconciliation-core.mjs', why: 'imported by scripts/reconcile-ingest.mjs'},
+];
+
 const seen = new Set();
 const missing = [];
 
@@ -67,6 +78,18 @@ function walk(dir) {
 }
 
 for (const dir of SCAN_DIRS) walk(join(ROOT, dir));
+
+const missingEntryPoints = REQUIRED_ENTRY_POINTS
+  .filter((entry) => !existsSync(join(ROOT, entry.path)));
+
+if (missingEntryPoints.length) {
+  console.error('\nRUNTIME ENTRY POINT CHECK FAILED');
+  console.error('These entry points are required at runtime but are not in the image.');
+  console.error('Add them to the Dockerfile runtime COPY whitelist:\n');
+  for (const entry of missingEntryPoints) console.error(`  ${entry.path}  (${entry.why})`);
+  console.error('');
+  process.exit(1);
+}
 
 if (missing.length) {
   console.error('\nRUNTIME IMPORT CHECK FAILED');

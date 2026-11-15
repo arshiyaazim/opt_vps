@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {extractStoredMessage,exactMinor} from '../lib/history-extraction.mjs';
+import {extractStoredMessage,exactMinor,reconcileCashSourceCopies} from '../lib/history-extraction.mjs';
 import {historyAdmission,extractionScopes} from '../lib/history-policy.mjs';
 import {compatibleDraft} from '../candidates/identity-review/history-business.ts';
 import {visibleHistorySources} from '../candidates/identity-review/source-visibility.ts';
@@ -25,6 +25,49 @@ function state(){
 }
 test('multiple payment blocks retain source order, exact BDT and malformed sibling',()=>{
  const rows=extractStoredMessage(message,context);assert.equal(rows.length,3);assert.deepEqual(rows.map(r=>r.assertion.blockOrder),[0,1,2]);assert.equal(rows[0].assertion.fields.amountMinor,'125050');assert.equal(rows[2].assertion.fields.amountMinor,'125050');assert.ok(rows[1].assertion.reasons.includes('EMPLOYEE_ID_UNRESOLVED'));assert.equal(exactMinor('1,000.09'),'100009');assert.equal(exactMinor('1,00'),null);
+});
+test('historical parser accepts Owner ID formats and preserves Employee ID as text',()=>{
+ const samples=[
+  'ID: 01839882307 Ali Khan 01923100237(B) 200/-',
+  'ID: 01752149074 Sahedul Islam 01605263994(B) 500/-',
+  'ID: 01540564651 Mirajul Islam 01540564651(B) 200/-',
+  'ID: 01883192831 Yanat Alam 01883192831(B) 200/-',
+  'ID: 01939987667 Elahe Molla 01939987667(B) 200/-',
+  'ID: 01896087511 Mohammed Sihab 01952406074(B) 1500/-',
+  'ID: 01321706844 Md.Nazmul Hossain 01321706844(B) 500/-',
+  'ID: 01896087511 Mohammed Sihab 01896087511(N) 1000/-',
+  'ID: 01405516576 Md.Jahidul Islam 01405516576(N) 2000/-',
+  'ID 01937539700 Joy Samadder 01755627557(B) 300/-',
+  'ID: 01405516576 Md.Jahidul Islam 01405516576(N) 200/-',
+ ];
+ const rows=samples.map((text,index)=>extractStoredMessage({...message,id:`owner-sample-${index}`,text},context)[0]);
+ assert.equal(rows.filter(Boolean).length,11);
+ assert.equal(new Set(rows.map(row=>row.assertion.fields.employeeId)).size,9);
+ assert.equal(rows.reduce((sum,row)=>sum+BigInt(row.assertion.fields.amountMinor),0n),680000n);
+ assert.equal(rows.filter(row=>row.assertion.fields.method==='bkash').length,8);
+ assert.equal(rows.filter(row=>row.assertion.fields.method==='nagad').length,3);
+ assert.equal(rows[6].assertion.fields.employeeName,'Md.Nazmul Hossain');
+ assert.equal(rows[8].assertion.fields.employeeName,'Md.Jahidul Islam');
+ assert.equal(rows[9].assertion.fields.employeeId,'01937539700');
+ assert.equal(rows[9].assertion.fields.payoutMobile,'+8801755627557');
+ assert.equal(rows[5].assertion.fields.payoutMobile,'+8801952406074');
+});
+test('Cash source-copy reconciliation prefers one canonical original and isolates unresolved groups',()=>{
+ const signature=(row)=>[row.direction,row.text];
+ const original={account_id:'wa-01',message_id:'message-1',source_store:'original',direction:'outgoing',text:'ID: 01839882307 Example Person 01923100237(B) 200/-'};
+ const stagingCopy={...original,source_store:'staging',text:'conflicting staged copy'};
+ const unresolvedA={...original,message_id:'message-2',source_store:'staging'};
+ const unresolvedB={...unresolvedA,text:'conflicting source copy'};
+ const sameTextOriginal={...original,message_id:'message-3'};
+ const sameTextCopy={...sameTextOriginal,source_store:'staging'};
+ const result=reconcileCashSourceCopies(
+  [original,stagingCopy,unresolvedA,unresolvedB,sameTextOriginal,sameTextCopy],signature,
+ );
+ assert.deepEqual(result.unique,[original,sameTextOriginal]);
+ assert.equal(result.duplicateCopies,2);
+ assert.equal(result.resolvedConflictGroups,1);
+ assert.deepEqual(result.unresolvedGroups,[[unresolvedA,unresolvedB]]);
+ assert.equal(result.ambiguousCopies,2);
 });
 test('incoming Accountant summary and unbound outgoing account do not create payment intents',()=>{
  assert.deepEqual(extractStoredMessage({...message,direction:'INCOMING'},context),[]);assert.deepEqual(extractStoredMessage(message,{...context,admission:{...admission,role:'UNRESOLVED'}}),[]);

@@ -20,6 +20,48 @@ native-reader content capability and chat scope have been verified. The WA-03
 connector uses the same per-bridge socket, token-file, and chat-list settings;
 it remains `READY_FOR_CONNECTION` until a real source is configured.
 
+## Cash source authorization (separate from the Mirror)
+
+The Message Mirror is not the Cash parser or instruction writer. In particular,
+the production Mirror remains disabled and this documentation does not authorize
+its activation. The app's separate Cash intake/backfill path may accept a
+message only when all source identity is verified: WA-01 / Bridge-1, outgoing
+from the verified Admin, and addressed to the exact designated Accountant's
+direct conversation. No group, other contact, incoming Accountant message,
+WA-02 source, or ambiguous identity is eligible.
+
+Forwarded, quoted, copied, pasted, and manually typed content is acceptable;
+forwarding/quote metadata is not an eligibility requirement. The sanitized
+format is `ID[: ]<EMPLOYEE_ID> <EMPLOYEE_NAME> <PAYOUT_NUMBER>(B|N) <AMOUNT>/-`.
+Employee ID is a string (including leading zeroes) and the canonical employee
+lookup key. Employee name is retained as evidence and checked for conflicts.
+Payout number is a separate destination, never an employee identity or a field
+to write back onto an employee. `B` means bKash and `N` means Nagad; no other
+method markers are authorized by this correction. Preserve exact amount,
+original source text, native source-message identity, and source timestamp.
+
+Only stable source-message and block identity provide idempotency. Repeated
+Employee IDs or otherwise identical instruction text do not justify merging
+distinct source messages. Missing/unmatched IDs and conflicting employee
+identity stay in review; ambiguous source identity is withheld for
+reconciliation. A parsed instruction is not a payment or ledger posting:
+posting remains subject to the separate ADMIN approval workflow.
+
+The 2026-11-03 parser correction remains source-only and is not deployed to live
+intake. Separately, after explicit Owner approval and a fresh verified backup,
+the exact 90-row historical write set was applied to Current Cash in `REVIEW`
+only (batch `backfill-20261103-cash-d7fe95c1`; digest
+`d7fe95c1334bc3b6417501b498d18eff0da3566e64baac4aae1ea0ca8e231387`). All 19
+conflicting source-copy groups had one canonical PostgreSQL original and were
+resolved without blocking unrelated instructions. The available WA-01 native
+metadata stream matched 409 PostgreSQL message IDs, but 1,892 authorized
+PostgreSQL IDs were absent from the exposed native event history; the source
+mirror is not proven complete. Do not treat this bounded PostgreSQL backfill as
+a complete native-history reconciliation. See
+[`docs/NEXT-HANDOFF.md`](../../../docs/NEXT-HANDOFF.md) for counts, cutoff,
+backup, review outcomes and coverage limits. Cash posting remains subject to
+the separate ADMIN approval workflow.
+
 The production Compose setting is deliberately `0` until chat-scope review is
 complete. WA-02 policy is never widened by this worker. The worker records
 permission or connection errors and keeps WA-01, WA-02, and WA-03 checkpoints

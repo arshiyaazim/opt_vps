@@ -17,9 +17,18 @@ export function isCashScopeChat(chatJid: string){
  return (CASH_SCOPE_CHATS as readonly string[]).includes(chatJid);
 }
 
+function approvedAddress(value:string,approved:string){
+ const [approvedUser,approvedServer]=approved.split('@');
+ const match=/^([0-9]{6,20})(?::[0-9]{1,5})?@(s\.whatsapp\.net|lid)$/.exec(value);
+ return !!match&&match[1]===approvedUser&&match[2]===approvedServer;
+}
+
 export function isCashScopeOwner(sender: string){
- const base=sender.replace(/@.*$/,'').replace(/:\d+$/,'');
- return base===CASH_SCOPE_OWNER.replace(/@.*$/,'')||base===CASH_SCOPE_OWNER_LID.replace(/@.*$/,'');
+ return approvedAddress(sender,CASH_SCOPE_OWNER)||approvedAddress(sender,CASH_SCOPE_OWNER_LID);
+}
+
+export function isCashScopeAccountant(recipient: string){
+ return approvedAddress(recipient,CASH_SCOPE_CHAT)||approvedAddress(recipient,CASH_SCOPE_CHAT_LID);
 }
 
 // Server-owned scope. The browser cannot select another account, chat, or

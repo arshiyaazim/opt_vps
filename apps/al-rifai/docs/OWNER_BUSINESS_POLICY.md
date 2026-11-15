@@ -83,3 +83,51 @@ payment-posting-v1 explicitly supersedes earlier proposed mandatory Accountant v
 EMP, PRG, REL and GHAT rules remain unchanged in their own domains. Program recurrence windows and Ghat pattern detection do not govern payment dedup/posting. Instructions remain distinct from independently verified transfers; this distinction no longer imposes an external-transfer prerequisite on payment posting. Prior statements that no cash posting is authorized describe execution permission, which remains unchanged in this task. Released, Program Completed, Settlement Approved, business payment Confirmed/Posted and externally verified disbursement remain separate.
 
 The [Application Responsibility & Data Contract Specification](../../../services/whatsapp/qualification/application-contract-20261011/specification.md), section 10, records the historical read-only audit, preview plan and synthetic acceptance design; the existing handoff records task evidence and non-interference. No parallel policy file is created.
+
+## Owner Cash message-format and eligibility correction — 2026-11-03
+
+This later instruction supersedes earlier parser/source assumptions in this
+document where they conflict, including any requirement for forwarding or quote
+metadata and any interpretation that a parsed WhatsApp message can bypass the
+established ADMIN approval and posting workflow.
+
+Only a verified WA-01 Admin outgoing message to the exact designated
+Accountant's authorized direct conversation can yield a Cash instruction.
+Office, Escort Release and other groups, other direct contacts, incoming
+Accountant messages, WA-02 and ambiguous source identities are ineligible.
+Forwarded, quoted, copied, pasted or manually typed content is acceptable when
+the verified source and required fields are present.
+
+The accepted form is `ID[: ]<EMPLOYEE_ID> <EMPLOYEE_NAME> <PAYOUT_NUMBER>(B|N) <AMOUNT>/-`.
+For example, the sanitized shape `ID: 01XXXXXXXXX Example Person
+01YYYYYYYYY(B) 200/-` illustrates the delimiters only. `ID:` and `ID ` are
+accepted. Preserve Employee ID as text, including leading zeroes, and use it as
+the primary key to look up the existing canonical employee. Parse the name
+between Employee ID and payout number, including multiple words and punctuation
+such as `Md.`. Payout number is a separate destination and must not overwrite
+employee identity. `(B)` means bKash and `(N)` means Nagad; no other codes are
+authorized by this correction. Parse the amount exactly to minor units and
+preserve the source message and timestamp.
+
+Repeated Employee IDs, dates, names, payout numbers, methods, amounts or
+identical text are not deduplication keys. Idempotency uses the stable WA-01
+message identity plus logical block identity; distinct source message IDs stay
+distinct. A missing/unmatched Employee ID or conflicting employee name remains
+in review and must not create or alter an employee record. Source identity or
+historical-copy conflicts are withheld for reconciliation.
+
+Parsed Cash instructions are not proof of an external transfer and do not post
+to the canonical ledger. Any ledger write must use the existing ADMIN approval
+and posting workflow. The 11 supplied examples parse as 11 blocks, 9 Employee
+IDs, 8 bKash and 3 Nagad instructions. Their arithmetic sum is **BDT 6,800**,
+not BDT 7,100; do not alter an example to force the stated expected total.
+
+The 2026-11-03 implementation is source-only and not deployed. Its read-only
+reconciliation and apply evidence are recorded in
+[`docs/NEXT-HANDOFF.md`](../../../docs/NEXT-HANDOFF.md). With explicit Owner
+approval and a fresh verified backup, the 90 missing source-linked instructions
+were applied on 2026-11-03 to Current in `REVIEW` only: 65 exact Employee ID
+matches and 25 employee-review cases. No canonical posting or approval was
+created, and the parser correction has not been deployed to live intake. This
+final source rule supersedes earlier PAY-* language wherever that language
+would permit a parsed message to bypass ADMIN review and posting controls.
