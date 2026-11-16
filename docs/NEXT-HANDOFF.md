@@ -283,6 +283,7 @@ instructions in the audited instruction set. The 7 Current and 5 legacy
 records without parsed source keys remain separate reconciliation items.
 
 ### Cash parser release — deployed 2026-11-03
+## Cash parser release — deployed 2026-11-03
 
 Source commit `38ce0da8c9623b4b099b5bad87003b9c257e88c8` was pushed to
 `cash-parser-release-20261103`; compose pin commit
@@ -309,6 +310,26 @@ signature appeared; app healthy, `RestartCount=0`.
 Post-deploy counts are unchanged: Current **2,094 REVIEW instructions / 0
 postings**; Legacy **1,610 instructions / 1,586 postings**. The approved
 backfill remains `PUBLISHED`, 90 inserted. Fresh pre-deploy backup
+(tag `local/al-rifai:20261103-cash-parser-38ce0da`). The release contains only
+the 10 reviewed parser, source-gate, live processor/publisher, Docker packaging,
+backfill-safety and regression-test files; unrelated Cash USER permission/UI
+changes were excluded.
+
+Verification on committed source: 42 focused tests passed / 2 skipped;
+typecheck, lint (0 errors/warnings), production build and the 29-module runtime
+import check passed. The deployed container passed all 11 Owner parser examples
+(BDT 6,800), Employee ID/payout separation and source-gate assertions
+(authorized WA-01 Admin → Accountant eligible; WA-02 and incoming rejected).
+Cash continuation started in review-only mode; 13,905 Cash processing rows had
+no errors, and all 11 native cursors were error-free. No new authorized message
+arrived, so genuine message-to-instruction completion remains **PENDING**.
+`/login` and `/api/health` returned 200; unauthenticated `/vessel`,
+`/api/vessel-programs` and `/api/cash/summary` returned 401. No new error
+signature appeared; app healthy, `RestartCount=0`.
+
+Post-deploy counts: Current **2,094 REVIEW instructions / 0 postings**; Legacy
+**1,610 instructions / 1,586 postings**. Backfill remains `PUBLISHED`, 90
+inserted. Fresh backup
 `/var/lib/vps/al-rifai/backups/pre-cash-parser-20261103-2353.dump` is
 64,371,520 bytes, mode `600 root:root`, SHA-256
 `0da75c439af5a224a2ecf5f9e45af0d2d027a9831069d52ceff71505fd5e533d`; checksum
@@ -319,6 +340,7 @@ posting, bridge restart, permission change, or Cash Freeze change occurred.
 ---
 
 ## Production State (verified 2026-11-03)
+## Production State
 
 | Field | Value |
 |---|---|
