@@ -1,0 +1,366 @@
+{
+  "version": "employee-program-v4-lifecycle",
+  "authority": "Owner: Employee Mobile Identity rules and Program Lifecycle Business Rules Implementation & Verification",
+  "currentIdentityPolicy": "employee-mobile-v3",
+  "productionExecutionAuthorized": false,
+  "rules": [
+    {
+      "id": "EMP-001",
+      "status": "ACTIVE",
+      "rule": "Employee Ledger employee_id represents mobile; normalized mobile is the operational matching key, never the internal relational ID."
+    },
+    {
+      "id": "EMP-002",
+      "status": "ACTIVE",
+      "rule": "Same normalized employee mobile means same operational employee, irrespective of name spelling; retain contradictory ownership evidence for review without silently splitting the mobile identity."
+    },
+    {
+      "id": "EMP-003",
+      "status": "ACTIVE",
+      "rule": "Preserve every original name as an alias with source references; no original name overwrite."
+    },
+    {
+      "id": "EMP-004",
+      "status": "ACTIVE",
+      "rule": "Separate escort_mobile is optional, not required. Existing explicit escortMobile associates with matching employee_id; introduce no duplicate phone column."
+    },
+    {
+      "id": "EMP-005",
+      "status": "ACTIVE",
+      "rule": "Same name with different mobiles remains separate unless an explicitly owner-approved linkage exists."
+    },
+    {
+      "id": "EMP-006",
+      "status": "ACTIVE",
+      "rule": "Require established Employee Ledger or employee/escort mobile source role; sender, master, client, payout and JID/LID are excluded."
+    },
+    {
+      "id": "PRG-001",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Client/authorized requester service order preserves all evidence as Draft; equivalent Draft receives additional evidence, never confirmation solely from a request."
+    },
+    {
+      "id": "PRG-002",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Verified Admin plus Mother, Lighter, name, employee mobile, duty start date and shift promotes/links Draft or creates unmatched confirmation candidate without invented client order."
+    },
+    {
+      "id": "PRG-003",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Same-day same details and matching details within three days are duplicate/correction candidates; preserve all messages and reference existing program."
+    },
+    {
+      "id": "PRG-004",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Same lighter within five days needs cancellation/restart/replacement review; beyond five days new program may be valid with lifecycle evidence. Day five remains review due to inclusive earlier owner rule."
+    },
+    {
+      "id": "PRG-005",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Different lighters under same mother are separate programs; vessel names alone are not permanent physical identities; no mother program-count cap."
+    },
+    {
+      "id": "PRG-006",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Cancellation/restart/correction/replacement append linked evidence events; explicit effective dates only, preserve predecessor assignments and old/new mobile identities; insufficient evidence is Review."
+    },
+    {
+      "id": "PRG-007",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Confirmation, assignment and actual duty start are distinct facts; never mark historical confirmations Active without actual start evidence."
+    },
+    {
+      "id": "PRG-008",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Preserve source occurrence, original reference, sender-role evidence, message timestamp, duty date/shift, fields, applied rule IDs, missing/conflict reasons and linked order/program."
+    },
+    {
+      "id": "REL-001",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Release OCR is extracted evidence, not approval. Vessel names may be missing; employee mobile, chronology and references propose program matches; ambiguous matches remain Review."
+    },
+    {
+      "id": "REL-002",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Duty Released, Program Completed, Salary Settlement Approved and Payment Completed are distinct milestones; no invented dates/totals or settlement from release."
+    },
+    {
+      "id": "REL-003",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "New confirmed assignment for same mobile with open prior assignment creates closure review, never fabricated prior release date."
+    },
+    {
+      "id": "GHAT-001",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Repeated BDT 200 daily evidence after release may indicate Ghat Duty; require mobile/date/amount/purpose and prior release/assignment context for review."
+    },
+    {
+      "id": "GHAT-002",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Three consecutive distinct calendar days of BDT 200 evidence are strong review candidates; distinguish instructions from verified transfers; duplicate evidence does not add days; no financial/attendance posting."
+    },
+    {
+      "id": "PAY-001",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Complete valid unambiguously parsed authorized Admin wa-01 (…6111) to Accountant (…6824) direct-chat successful send is Confirmed and eligible for immediate posting if not already posted; no Accountant reply, receipt, manual verification or additional Admin approval. Attempts, failed or ambiguous sends are not success."
+    },
+    {
+      "id": "PAY-002",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Each valid logical payment block is a separate transaction; retain source spans and parser version; incomplete or ambiguous blocks require Review without discarding valid siblings."
+    },
+    {
+      "id": "PAY-003",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Authenticated permitted Admin frontend entry is directly Confirmed and posted; no additional approver or Accountant verification."
+    },
+    {
+      "id": "PAY-004",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Authenticated authorized Office Assistant, Operations or other Staff frontend entry remains Pending Admin Approval; permitted authenticated Admin approval posts the exact version, rejection does not; user-supplied actor labels never authorize."
+    },
+    {
+      "id": "PAY-005",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Employee ID is normalized source-role-proven employee mobile; payout/contact name/sender/unresolved LID never substitute; same mobile names are aliases, same name distinct mobiles remain separate absent explicit reconciliation; invalid or ambiguous identity is Review."
+    },
+    {
+      "id": "PAY-006",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Genuine distinct instructions/logical blocks remain separate including identical employee/amount/text/minute/day; replay suppression uses established exact source/business-operation identity, not similarity."
+    },
+    {
+      "id": "PAY-007",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Approved target alrifai has one canonical atomic financial posting identity supplying Employee Ledger, Daily Cash, cash-account movements and reports with idempotency, audit and controlled linked reversals; no second writer or execution/cutover authorization here."
+    },
+    {
+      "id": "PAY-008",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Source, authorized send-success, business confirmation, posting and external disbursement proof are separate; external fund-transfer proof is not a WhatsApp posting prerequisite; summaries/deposits/daily totals are not individual employee payments."
+    },
+    {
+      "id": "PAY-009",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Approved Relay sender …1596 original instruction and final Admin wa-01 forwarding to Accountant …6824 correlate as one instruction; final authorized send-success triggers posting, relay receipt/attempt does not; no live relay activation authorized."
+    },
+    {
+      "id": "PAY-010",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Invalid components/unresolved identity or peer/missing send-success/conflicting replay payload require Review or reconciliation; failed sends cannot confirm; corrections/deletions/returns preserve evidence and never silently replace posted records."
+    },
+    {
+      "id": "PAY-011",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Historical archives remain accessible and separate; reconcile source/block/posted-transaction overlap before an Owner-approved import; never add archived instruction totals automatically or fabricate unavailable old/manual records; no restoration prerequisite."
+    },
+    {
+      "id": "PAY-012",
+      "status": "ACTIVE",
+      "authority": "OWNER_APPROVED_BUSINESS_RULE",
+      "rule": "Payments alone do not establish earnings, dues, advances/recoveries, cash inflows or opening balances; unknown basis remains Unknown / Incomplete History, never invented zero; show source coverage/cutoff separately from archives."
+    }
+  ],
+  "history": [
+    {
+      "version": "employee-program-v1",
+      "status": "SUPERSEDED",
+      "identityAssumptions": [
+        "Phone never primary operational identity; every historical name/mobile combination requires independent identity binding.",
+        "Same phone/different names retained only as unresolved candidates.",
+        "Proposed employee child foreign keys identified technical internal id."
+      ],
+      "retainedManifestSha256": "ba18497b3a9a13d7bed98c74cbe4a4ec48ccdb6ceb595a954907117a9f9bbe1b"
+    },
+    {
+      "version": "employee-program-v2",
+      "status": "SUPERSEDED",
+      "identityAssumptions": [
+        "Only an explicit Escort Mobile label can supply the primary matching key.",
+        "Employee Ledger employeePhone remains an unresolved payment label without that field.",
+        "Contradictory ownership splits same-mobile operational identities."
+      ],
+      "retainedManifestSha256": "dac1b76f628d36458ab751f5e8f834a77c291b3652b2f26ac1f642d130f55ab7"
+    },
+    {
+      "version": "employee-program-v3-employee-mobile",
+      "status": "ACTIVE",
+      "supersedes": [
+        "employee-program-v1",
+        "employee-program-v2"
+      ],
+      "internalRelationalId": "Permitted separately; never changes operational employee_id mobile meaning."
+    },
+    {
+      "version": "employee-program-v4-lifecycle",
+      "status": "ACTIVE",
+      "scope": "Owner-approved Program Lifecycle Business Rules Implementation & Verification",
+      "previousRegisterSha256": "c8fe14c4bbe93d274cdb0934b96ee7ba2d175e7b20d9a3e92a4d8218c355a6bf",
+      "identityPolicyUnchanged": "EMP-001–006 remain ACTIVE; no identity reapproval requested."
+    },
+    {
+      "version": "payment-posting-v1",
+      "status": "ACTIVE",
+      "scope": "Owner Payment Posting Contract & Historical WhatsApp Import Plan — 11 October 2026; documentation/read-only audit/design only",
+      "previousRegisterSha256": "adc9fe19d22f16a16749f0c03b9c160d28c3dcabc0e1904f01b291cff4a5d1f4",
+      "supersededAssumptions": [
+        "Mandatory Accountant verification or external receipt before authorized WhatsApp posting",
+        "Mandatory extra approval for authenticated Admin manual entry",
+        "Relay send-success can never provide payment business confirmation",
+        "Same-day equal payment instructions are automatically suppressed"
+      ],
+      "identityPolicyUnchanged": "employee-mobile-v3 / EMP-001–006; PRG/REL/GHAT rules remain scoped to their domains",
+      "productionExecutionAuthorized": false
+    }
+  ],
+  "retainedOwnerBusinessRules": {
+    "version": "employee-mobile-v3",
+    "authority": "Owner business rules reconciliation request; production execution not authorized",
+    "contextCounts": {
+      "messages": 6221,
+      "accountMessages": 10434
+    },
+    "identity": {
+      "rules": [
+        "EMP-001",
+        "EMP-002",
+        "EMP-003",
+        "EMP-004",
+        "EMP-005",
+        "EMP-006"
+      ],
+      "primaryMatchingField": "Employee Ledger employee_id (mobile)",
+      "actualCanonicalProjectionField": "accountsCash.employeePhone, already labeled Employee ID phone by parser/UI",
+      "normalization": "one BD national or +880 E164 mobile; formatting/Bengali digits only; multiple values/JID/LID invalid",
+      "sameMobileNames": "one operational employee, preserve all name spellings as source-bound aliases",
+      "sameNameMobiles": "separate unless explicit owner-approved link",
+      "escortMobile": "optional association to same employee_id; no new escort_mobile column proposed",
+      "internalId": "technical relational ID only; never substitutes the mobile-valued employee_id",
+      "employment": "not inferred from alias or primary mobile match",
+      "sourceRoles": "source-attested parser employeePhone accepted as ledger employee-mobile role; sender/master/client/payout/JID/LID excluded"
+    },
+    "program": {
+      "clientOrder": "Draft only after exact client message-role verification",
+      "adminConfirmation": "confirmation candidate after exact admin-role verification and complete labeled fields",
+      "required": [
+        "motherVessel",
+        "lighterVessel",
+        "escortName",
+        "employeeMobile",
+        "startDate",
+        "shift"
+      ],
+      "optional": [
+        "destination",
+        "masterMobile",
+        "separate escort_mobile column"
+      ],
+      "windows": {
+        "sameDay": "exact business details duplicate candidate",
+        "threeDaysInclusive": "matching details duplicate/correction candidate, based on message-calendar dates and retained local message time",
+        "fiveDaysInclusive": "same lighter cancellation/restart/replacement review; name match is not physical identity"
+      },
+      "history": "append approved events referencing existing program; no silent cancellation; mother has no program-count cap"
+    },
+    "release": {
+      "ocr": "only when original media bytes supplied; absent bytes are OCR_MEDIA_UNAVAILABLE",
+      "milestones": [
+        "Released",
+        "Program Completed",
+        "Settlement Approved",
+        "Payment Completed"
+      ],
+      "nextAssignment": "new verified Admin confirmation creates closure review for prior open assignment; no guessed release/duty"
+    },
+    "ghat": {
+      "amountCents": 20000,
+      "currencyContext": "BDT supplied by owner for pattern review only",
+      "days": 3,
+      "consecutive": "distinct calendar dates, duplicate source evidence/day does not add days",
+      "posting": "none; instructions distinct from independently verified receipts/transfers"
+    },
+    "references": {
+      "nativeLinks": "retain if present; currently absent, never manufacture wa.me message links",
+      "archive": "file hash, chunk/decoded pointer, source ID, raw hash, original export hash/Library ID/line and media references retained"
+    },
+    "messageRoleBindings": [],
+    "supersededIdentityPolicies": [
+      "v1: independent HR identity binding is mandatory for every phone/name operational match",
+      "v2: only an explicit Escort Mobile label may identify an employee",
+      "v2: accountsCash.employeePhone remains merely an unresolved payment label despite the canonical Employee Ledger role"
+    ]
+  },
+  "differentMobileOwnerApprovedLinks": [],
+  "implementationSafeguards": [
+    {
+      "id": "SAFE-001",
+      "rule": "Offline candidate reducer only; no database/network/writer/startup hook."
+    },
+    {
+      "id": "SAFE-002",
+      "rule": "Exact owner-approved source-export/chat/sender/effective-period role binding required; role conflicts fail closed."
+    },
+    {
+      "id": "SAFE-003",
+      "rule": "Known operational context and non-message correction/OCR/completion decisions require explicit approved source-bound proof; unverified historical statuses are assertions."
+    },
+    {
+      "id": "SAFE-004",
+      "rule": "Day-five overlap handled conservatively as recurrence review; more-than-five days permits new candidate, never automatic verified identity."
+    },
+    {
+      "id": "SAFE-005",
+      "rule": "One source message may contain multiple genuine lighter blocks; deterministic event key hashes source occurrence plus original body start line. Replay uniqueness and approval FK use occurrence/role/event key; blank event key retains whole-record scope."
+    }
+  ],
+  "lifecycleStates": [
+    "draft",
+    "review",
+    "confirmed",
+    "assigned",
+    "active",
+    "released",
+    "completed",
+    "cancelled"
+  ],
+  "eventTypeAdapter": {
+    "SERVICE_ORDER": "client_order",
+    "ORDER_DRAFT": "client_order",
+    "ADMIN_CONFIRMATION": "admin_confirmation",
+    "PROGRAM_DUPLICATE": "duplicate",
+    "PROGRAM_CORRECTION": "corrected",
+    "PROGRAM_CANCELLATION": "cancelled",
+    "PROGRAM_RESTART": "restarted",
+    "ESCORT_REPLACEMENT": "escort_replaced",
+    "DUTY_START": "duty_started",
+    "RELEASE_EVIDENCE": "release_evidence",
+    "PROGRAM_RELEASE": "released",
+    "PROGRAM_COMPLETION": "program_completed",
+    "NEW_ASSIGNMENT": "assigned",
+    "GHAT_DUTY_CANDIDATE": "ghat_review"
+  }
+}

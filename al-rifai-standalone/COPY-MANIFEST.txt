@@ -1,0 +1,128 @@
+AL-RIFA'I — STANDALONE SOURCE COPY — MANIFEST
+=============================================
+
+Created      : 2026-11-04
+Destination  : /opt/vps/al-rifai-standalone
+Task         : copy only — no code change, build, install, migration, deployment or restart
+
+SOURCE REFERENCES (verified with `git cat-file -t` before copying)
+------------------------------------------------------------------
+Application source : 91124c00629db0f55c5a80c4c6d5fb296a535245
+                     branch target02-p1-p2
+                     "deploy: pin app image to target02-final b058dd48"
+Documentation      : 597d82e7b278814a76c4dd0194457ee33906e515
+                     branch docs/t03d-canonical
+                     "docs: canonicalise Target 01/02 position, Vessel and Cash policy"
+
+COPY METHOD
+-----------
+git archive <commit> apps/al-rifai | tar -x -C al-rifai-standalone
+git archive 597d82e AGENTS.md docs/NEXT-HANDOFF.md docs/VPS_MAP.md README.md \
+            apps/al-rifai/README.md | tar -x -C al-rifai-standalone/reference/canonical-docs
+
+The dirty primary worktree (/opt/vps, 17 uncommitted entries) was NOT used.
+
+INTEGRITY
+---------
+Application files copied : 634
+Blob check at copy time   : 634 / 634 match `git hash-object` vs `git rev-parse 91124c0:<path>`
+Mismatches               : 0
+Documentation files      : 5 (byte-identical to 597d82e7)
+
+Later revision (database configuration, see the end of this file) intentionally
+modified 7 application files; the other 627 remain byte-identical to 91124c0.
+
+TOTALS
+------
+Total files : 641 (634 app + 5 canonical docs + this manifest + README.md)
+Folder size : ~8.1 MB (100 directories)
+
+CONTENTS (file counts)
+----------------------
+apps/al-rifai/app                  106   pages + API routes + platform shell
+apps/al-rifai/lib                   75   domain modules
+apps/al-rifai/components            61   UI primitives
+apps/al-rifai/hooks                  1
+apps/al-rifai/public                 4
+apps/al-rifai/db                    87   68 migrations + 14 candidates + 5 helpers
+apps/al-rifai/release               11   production entry points (reference only)
+apps/al-rifai/scripts               55   migration runner, lint, DB tools, workers
+apps/al-rifai/tests                 92   73 .mjs tests + SQL/fixtures
+apps/al-rifai/docs                  60   domain docs + evidence-checksums.json
+apps/al-rifai/candidates            54   legacy identity-review candidate module (source)
+apps/al-rifai/legacy-reference       5
+apps/al-rifai/vendor                 2
+reference/canonical-docs             5
+README.md, COPY-MANIFEST.txt         2
+
+EXCLUDED (verified absent: 0 matches in the destination)
+--------------------------------------------------------
+services/**                     WhatsApp MCP server, Go bridge, compose
+infra/**                        PostgreSQL compose + role bootstrap (PostgreSQL not bundled)
+/var/lib/vps/whatsapp/**        bridge sessions, stores, outbox
+/var/lib/vps/al-rifai/evidence/** message archives and private business evidence
+*.dump, backups                 production database dumps
+/etc/vps/**                     app.env, tokens, TLS keys, password files
+.git/**, bundles, worktrees     version-control state
+node_modules, .next, caches     build artefacts and dependency trees
+*.log, *.sqlite, *.db           logs and live message stores
+qualification/, import/, staging/  untracked evidence workspaces
+
+No credential, token, private key or live message body is present in this copy.
+
+MIGRATION SET — 75 REQUIRED, RUNNER DISCOVERS 68
+------------------------------------------------
+The normal runner (scripts/database.mjs) reads only db/migrations (68 files).
+Production's ledger has 75 rows. The seven files below live in
+db/migration-candidates/ and must be applied at the stated position, unchanged.
+
+position  file                                              sha256
+--------  ------------------------------------------------  ----------------------------------------------------------------
+after 0030 0031_cash_submissions_and_reviews.sql             f803dbc6d7a5e49bf96a95c2cab2b92d2c88c457a258e912302c5d3338109202
+after 0030 0032_vessel_program_commands.sql                  25ee46143f1841ccc894cad099d8734f350641390122b807d64410b428ac3a3c
+after 0030 0033_unified_auth_sessions.sql                     c7e05dae48389ac79758b8d633279bb2a9017fb2174812da3315b3eef6ab9158
+after 0030 0034_signup_requests.sql                           0395bfe8cb8fd21249a18a7a336f3724dca4d1ad8f17089d839f244dde7149f7
+after 0030 0035_employee_submission_requests.sql              32cf532e931847cc3e2c6433ba36a46b164cf4add0f8285d4cd8608b69d1a0d3
+after 0030 0036_login_throttle.sql                            0bb22904f1d336129e652f2306a9f0550dc6d1ea0f97370e8dd42d8a8d7c3742
+after 0070 0071_release_apply_atomic.sql                      4a43dec4361752cb0dc327a3148bf583d03883f5e8552aa945af23f0a6237245
+
+Full order: 0000…0030 (db/migrations) → 0031…0036 (candidates) → 0037…0070
+(db/migrations) → 0071 (candidates). Ledger row = (id = filename,
+sha256 = sha256(file)); these hashes match the production ledger exactly.
+
+Not part of this installation (future work): db/migration-candidates/0006,
+0011, 0072, 0073, 0074, 0075, 0076.
+
+KNOWN BLOCKERS BEFORE UNMODIFIED STANDALONE START
+-------------------------------------------------
+1. [RESOLVED in the database-configuration revision] DB coordinates are now
+   environment-driven; see the revision block below and README §5 / §11.1.
+2. Vessel Register read requires the evidence import (lib/conversation-snapshot.ts).
+3. Migration 0008 issues CREATE ROLE — the non-CREATEROLE runner cannot apply it.
+4. Release private entry hard-codes production host names.
+5. Production start script starts WhatsApp workers.
+6. No non-WhatsApp release-candidate intake.
+7. Monthly payroll / food bill / release-evidence tables are unapplied candidates.
+
+REVISION — DATABASE CONNECTION CONFIGURATION
+--------------------------------------------
+Files changed (10):
+  apps/al-rifai/db/postgres.mjs                  env-driven factory + validation
+  apps/al-rifai/lib/cash-portal.ts               uses the shared factory (review role)
+  apps/al-rifai/lib/live-cash-read.ts            uses the shared factory (review role)
+  apps/al-rifai/lib/release-apply.ts             role selectors instead of user literals
+  apps/al-rifai/lib/review-api.ts                role selector instead of user literal
+  apps/al-rifai/app/api/vessel-programs/route.ts role selector instead of user literal
+  apps/al-rifai/scripts/verify-roster-equivalence.mjs  uses the shared factory
+  apps/al-rifai/scripts/reconcile-ingest.mjs     uses the shared factory + config
+  apps/al-rifai/scripts/workflow-sql-parse.mjs   env configuration, no fixed path
+  apps/al-rifai/.env.example                     full variable set + examples
+
+README.md updated (§4, §5 with three connection examples, §9, §10, §11.1, §13).
+
+Supported variables: PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD_FILE,
+PGSCHEMA, ALRIFAI_REVIEW_DB_USER, ALRIFAI_REVIEW_PASSWORD_FILE, plus the
+optional ALRIFAI_MIRROR_WORKER_DB_USER / ALRIFAI_MIRROR_WORKER_PASSWORD_FILE.
+No host, port, database, user or password path is hard-coded in the application
+runtime. scripts/generate-bridge-profile.ts (WhatsApp bridge tooling, not used
+standalone) keeps its production defaults and is reported as such.

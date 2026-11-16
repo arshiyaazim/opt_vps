@@ -1,0 +1,8 @@
+[Unit]
+Description=Reconcile cached historical messages and tail
+[Timer]
+OnBootSec=3min
+OnUnitInactiveSec=5min
+Persistent=true
+[Install]
+WantedBy=timers.target

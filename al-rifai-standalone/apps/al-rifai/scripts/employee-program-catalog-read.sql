@@ -1,0 +1,33 @@
+-- Explicit production READ ONLY inspection; no recovery gate.
+BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
+SET LOCAL search_path=public;
+SET LOCAL statement_timeout='15s';
+SELECT replace(json_build_object('label','identity','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT current_database() AS database,current_user AS "user",current_setting('transaction_read_only') AS "readOnly",current_setting('server_version') AS version,(SELECT system_identifier::text FROM pg_control_system()) AS cluster) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:programs','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.programs ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:reviews','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.reviews ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:datasets','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.datasets ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:site_cash_archive','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.site_cash_archive ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:site_operation_notes','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.site_operation_notes ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:site_payment_drafts','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.site_payment_drafts ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:site_settlement_drafts','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.site_settlement_drafts ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:site_source_snapshots','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.site_source_snapshots ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','table:alrifai_schema_migrations','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT * FROM public.alrifai_schema_migrations ORDER BY id) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:columns','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT table_name,column_name,ordinal_position,data_type,udt_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:constraints','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT conrelid::regclass::text relation,conname,pg_get_constraintdef(oid) definition FROM pg_constraint WHERE connamespace='public'::regnamespace ORDER BY 1,2) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:indexes','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT tablename,indexname,indexdef FROM pg_indexes WHERE schemaname='public' ORDER BY 1,2) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:triggers','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT tgname,tgenabled,pg_get_triggerdef(oid) definition FROM pg_trigger WHERE NOT tgisinternal AND tgrelid='public.site_source_snapshots'::regclass ORDER BY tgname) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:function','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT pg_get_functiondef('public.alrifai_reject_snapshot_change()'::regprocedure) definition) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:ownership','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT tablename,tableowner FROM pg_tables WHERE schemaname='public' ORDER BY tablename) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','catalog:grants','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT grantee,table_name,privilege_type FROM information_schema.role_table_grants WHERE table_schema='public' ORDER BY 1,2,3) t))::text,chr(10),'');
+SELECT replace(json_build_object('label','supplemental','rows',(SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT
+ (SELECT json_build_object('owner',pg_get_userbyid(datdba),'encoding',pg_encoding_to_char(encoding),'collate',datcollate,'ctype',datctype,'provider',datlocprovider,'acl',datacl::text) FROM pg_database WHERE datname=current_database()) AS database,
+ (SELECT json_build_object('owner',pg_get_userbyid(nspowner),'acl',nspacl::text) FROM pg_namespace WHERE nspname='public') AS schema,
+ (SELECT json_build_object('owner',pg_get_userbyid(proowner),'securityDefiner',prosecdef,'language',(SELECT lanname FROM pg_language WHERE oid=prolang)) FROM pg_proc WHERE oid='public.alrifai_reject_snapshot_change()'::regprocedure) AS function,
+ (SELECT json_agg(x) FROM (SELECT c.relname AS name,i.indisvalid AS valid,i.indisready AS ready FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' ORDER BY c.relname) x) AS indexes,
+ (SELECT json_agg(x) FROM (SELECT c.relname AS name,c.relrowsecurity AS rls,c.relforcerowsecurity AS "forceRls",c.relacl::text AS acl FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' ORDER BY c.relname) x) AS relations,
+ (SELECT json_agg(x) FROM (SELECT extname AS name,extversion AS version FROM pg_extension ORDER BY extname) x) AS extensions,
+ (SELECT json_agg(x) FROM (SELECT proname AS name,pg_get_function_identity_arguments(p.oid) AS arguments,pg_get_function_result(p.oid) AS returns,pg_get_userbyid(proowner) AS owner,prosecdef AS "securityDefiner",l.lanname AS language FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_language l ON l.oid=p.prolang WHERE n.nspname='public' ORDER BY proname,arguments) x) AS functions,
+ (SELECT json_agg(x) FROM (SELECT nspname AS name FROM pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname<>'information_schema' ORDER BY nspname) x) AS schemas,
+ (SELECT json_agg(x) FROM (SELECT relname AS name,relkind AS kind FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' ORDER BY relname) x) AS "relationKinds",
+ (SELECT json_agg(x) FROM (SELECT rolname AS name,rolsuper AS superuser,rolcreatedb AS "createDatabase",rolcreaterole AS "createRole",rolcanlogin AS login,rolreplication AS replication,rolbypassrls AS "bypassRls" FROM pg_roles WHERE rolname IN ('alrifai_app','vps_pg_admin') ORDER BY rolname) x) AS roles) t))::text,chr(10),'');
+ROLLBACK;

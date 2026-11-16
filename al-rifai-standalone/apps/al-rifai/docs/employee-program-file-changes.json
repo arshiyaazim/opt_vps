@@ -1,0 +1,3477 @@
+{
+  "canonicalRoot": "/opt/vps/apps/al-rifai",
+  "scope": "employee-program-v4-lifecycle historical evidence and isolated SQL qualification",
+  "previousInventory": {
+    "canonicalRoot": "/opt/vps/apps/al-rifai",
+    "scope": "Owner-approved Program Lifecycle candidate implementation; historical operational verification BLOCKED by missing evidence",
+    "previousInventory": {
+      "canonicalRoot": "/opt/vps/apps/al-rifai",
+      "scope": "Owner business rules reconciliation and employee mobile identity correction; no production execution",
+      "previousPreparationInventory": {
+        "canonicalRoot": "/opt/vps/apps/al-rifai",
+        "newFiles": [
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migration-candidates/0006_employee_program_identity.sql",
+            "sha256": "31ee7a44cdcaa1a74f0d8ecafe3610cbf26c5e2a6cd63dc93e45efb8fac5685e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_DRY_RUN_REPORT.md",
+            "sha256": "3dc725dd067a7d51ae3cc6a691a7657ce2fc73d8db1db089301bf8e0de021fdc"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SCHEMA_PROPOSAL.md",
+            "sha256": "b1640bbf4486182b8b58b480e54122f81373761bd5f1c1184be5d2b57714be36"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SOURCE_MAPPING.md",
+            "sha256": "a0329218c1f987effca63ac2cc462b7443eacf2273f6414f3e4e267c6fe3c108"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/employee-program-baseline.json",
+            "sha256": "934888ff30c33a09e62010fef919ec2be00768d716c4703addaa325637874e59"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/employee-program-mapping-v1.json",
+            "sha256": "0f7a1f1fac049688eb8ecd683686282be885391819d02baf5bd6a4c77b7c11e0"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/employee-program-validation.mjs",
+            "sha256": "eb170e6234fe82fdf0fbe1319220ffd7a459167210e4ea5aa51d834fda7fb189"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/employee-program-catalog-read.sql",
+            "sha256": "0fd56119bc28127a92d4c3fa834c2739d2bc445f95e8817fb40c4cb6b056592f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/employee-program-dry-run.mjs",
+            "sha256": "3f0677db9117573c0c00cd71537e89cccee74f7f83bff0814469bc13a0ad31db"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/employee-program.mjs",
+            "sha256": "dbf290f49ca0c41304e8d8b690266e81688bc44508362308816899ccca53566a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/employee-program-file-changes.json",
+            "sha256": null
+          }
+        ],
+        "modifiedExistingFiles": [],
+        "untouchedExistingFiles": [
+          {
+            "path": "/opt/vps/apps/al-rifai/.dockerignore",
+            "sha256": "aa80dd58ac7406f048582e0d0ccc4260efe109c242fd3385341a0f6f693dae4c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/.env.example",
+            "sha256": "215757692020f956364c6c87e39a94daea3b8924ae40b0cb2e9eb036ac54d401"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/.gitignore",
+            "sha256": "0d5f450f53a9b253b5bf8e2104dc7746777806bdde29d2ebdb3892a8169a3095"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/.lint-results.json",
+            "sha256": "54ebc845316c52acb95259b14933edb459b9f05554371da36d1100ab06b745eb"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/.npmrc",
+            "sha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/Dockerfile",
+            "sha256": "08013cf855c354bae80142bae5889dd9bcb1e3e82511fabf599e119ab90eaa75"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/README.md",
+            "sha256": "76abf5425af3c0c605dd996983781c5117bcb84ea4a811afb532aff29e6a98dd"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/SOURCE-MANIFEST.json",
+            "sha256": "1ee70b73d337bac0c2043227dd8a6170d732b2402e916ac90e2e256df2371233"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/accounts-panel.tsx",
+            "sha256": "4597c485e179ff2f6c8c44e01cc81a6f69859f7b831dde18c0b74108b466eda7"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/assistant/route.ts",
+            "sha256": "a832d084d3053418c4be349313fe30f559595f0ebf715029bb8cac0837b9f0fd"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/conversations/route.ts",
+            "sha256": "b67e93e917638bea0cc787f010e2a4243d7379f084f708b2ebc39c5616fb1d23"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/core/route.ts",
+            "sha256": "bd9c4e7c08fa2d6641121a804d3a3b3b9049d2b154ca741550f994a6487bcc88"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/health/route.ts",
+            "sha256": "9efdd105ab018b852a3de4b75d943adc42ed3f0e30269f462cdb4abb59db5ca5"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/import-audit/route.ts",
+            "sha256": "23d057afcf519bb87952060454f368f271a9d7a85fdbf835e9c075fd5d6d0483"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/operations/route.ts",
+            "sha256": "923a29f8049f54a55f1551d1e3e19f33181d2028449fc4babed95290a337b60b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/program-tools/route.ts",
+            "sha256": "c1ce88340fdfc076addefa64fa812ad8e3b03e0dcb319ecead50959705567add"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/register/route.ts",
+            "sha256": "003818673bf23a30d29a10a2f4e2d1877f450dcb141947cd40a2e6f1d9fe5f38"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/api/vessels/route.ts",
+            "sha256": "5897bb7628c1a153d55df0f1070c96ecaf51e0fb477edf5ea870ab3cc8dcf79b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/assistant-popup.tsx",
+            "sha256": "33fa450a8e090341dd894fca11d934084d708e1c7b608b946e1973ff16b11754"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/chatgpt-auth.ts",
+            "sha256": "3599f3231238f517103bd9312caa2c77b3771729cfe52f18cdaed77d6f52f2fe"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/conversation-inspector.css",
+            "sha256": "f7624220d9a9e4ebc0435854a26512b80b487d9584cffa61a8d0a2042b54c481"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/conversations/inspector.tsx",
+            "sha256": "3f78d3a17fb756c9f1e40ba4f66fff21b57198c00552e90f826792ade9ed85de"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/conversations/page.tsx",
+            "sha256": "0625931ac53eef7ed186c4dee517bd6f86f29384ca01340965385770aceb55af"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/globals.css",
+            "sha256": "9cd8140b5c4b1d0556fdcb32f89e2beca16ce63b11eef06eee77e07dec063b30"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/historical-conversations.tsx",
+            "sha256": "5ba7daec340e9f97032f0fd4bfb15646581de419ba4dc466ae444d82991e6c89"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/import-review.tsx",
+            "sha256": "b2ffbe320d29ac3cf2b42e5a6ff8668ce92ce4a6e4e168e0f1068f85f30fdaf8"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/layout.tsx",
+            "sha256": "e6678cb4b2667c882ba11c5f33d8449ee7f4eb2fdfbe097ae0bb83f8fecbfd43"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/operations.tsx",
+            "sha256": "158f889b019dd88091fbe1b6e463198088f81b8ad253df62dc7c9d253f1d91c6"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/page.tsx",
+            "sha256": "27536e1c61dbae0c1aac698f53dd87f43418c1b045e6d3625af84045e1180510"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/program-tools.tsx",
+            "sha256": "5f83bfb1b6edbe8bd44b34eb96b3f16e6322caebaba40b0c23bd29813831b447"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/register-views.tsx",
+            "sha256": "9ee1ee6591975785f8c9e6ea9e70f0de8c2018afa47554a5af73f65b4538e84b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/register/page.tsx",
+            "sha256": "ef98f504e3fc6d278c33f862b06879fcc4741d17eb3341a23cb933952f189028"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/tracker.tsx",
+            "sha256": "0ed0873c505e1e24d00d21e35fcbda3b050afa022afe2455d74121698d330c28"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/vessel-dashboard.tsx",
+            "sha256": "ea089c971ea520e4a80565683fb0612354601f8c4eeadd81e1d499a6a86b3e33"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/app/vessel-register.css",
+            "sha256": "3f8142f9b849e0d6ea03845b7062322923341eacb14011dd7235eca4b4785bda"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components.json",
+            "sha256": "31f4ca67a4a62572571003d3d5aac85ee6fbfca67a192924bac6b168d95e98fd"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/accordion.tsx",
+            "sha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/alert-dialog.tsx",
+            "sha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/alert.tsx",
+            "sha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/aspect-ratio.tsx",
+            "sha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/attachment.tsx",
+            "sha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/avatar.tsx",
+            "sha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/badge.tsx",
+            "sha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/breadcrumb.tsx",
+            "sha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/bubble.tsx",
+            "sha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/button-group.tsx",
+            "sha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/button.tsx",
+            "sha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/calendar.tsx",
+            "sha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/card.tsx",
+            "sha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/carousel.tsx",
+            "sha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/chart.tsx",
+            "sha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/checkbox.tsx",
+            "sha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/collapsible.tsx",
+            "sha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/combobox.tsx",
+            "sha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/command.tsx",
+            "sha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/context-menu.tsx",
+            "sha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/dialog.tsx",
+            "sha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/direction.tsx",
+            "sha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/drawer.tsx",
+            "sha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/dropdown-menu.tsx",
+            "sha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/empty.tsx",
+            "sha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/field.tsx",
+            "sha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/form.tsx",
+            "sha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/hover-card.tsx",
+            "sha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/input-group.tsx",
+            "sha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/input-otp.tsx",
+            "sha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/input.tsx",
+            "sha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/item.tsx",
+            "sha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/kbd.tsx",
+            "sha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/label.tsx",
+            "sha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/marker.tsx",
+            "sha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/menubar.tsx",
+            "sha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/message-scroller.tsx",
+            "sha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/message.tsx",
+            "sha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/native-select.tsx",
+            "sha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/navigation-menu.tsx",
+            "sha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/pagination.tsx",
+            "sha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/popover.tsx",
+            "sha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/progress.tsx",
+            "sha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/radio-group.tsx",
+            "sha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/resizable.tsx",
+            "sha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/scroll-area.tsx",
+            "sha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/select.tsx",
+            "sha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/separator.tsx",
+            "sha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/sheet.tsx",
+            "sha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/sidebar.tsx",
+            "sha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/skeleton.tsx",
+            "sha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/slider.tsx",
+            "sha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/sonner.tsx",
+            "sha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/spinner.tsx",
+            "sha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/switch.tsx",
+            "sha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/table.tsx",
+            "sha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/tabs.tsx",
+            "sha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/textarea.tsx",
+            "sha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/toggle-group.tsx",
+            "sha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/toggle.tsx",
+            "sha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/components/ui/tooltip.tsx",
+            "sha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/compose.yaml",
+            "sha256": "38ae52a657061c6d621bada95f1dee201e9687a63c8fb667ee379566e056a782"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/data/conversation-policy.json",
+            "sha256": "640c7f92ed5c913e158679cfbc7e7b5db91bae35dd2198706c6955ee0c753983"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/index.ts",
+            "sha256": "63acb5965e5ffddd58b247fad5ae760e80ac5f327bff4e69d67e1923825a9023"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migrations/0000_gorgeous_the_executioner.sql",
+            "sha256": "fb2d9661657b954201adb7a6c7d6798b1c860a9f427f82b4cb8dddeee96eb6bf"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migrations/0001_loud_monster_badoon.sql",
+            "sha256": "32c8c1e5945d2a2e7b9a43469710f83e7a767d573680340b711abc16fb52044a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migrations/0002_flashy_nico_minoru.sql",
+            "sha256": "2c72a9a3cf03675856ae96d8a0a37ec12023d84c09f7775dbb525181d9978552"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migrations/0003_wide_exodus.sql",
+            "sha256": "c1b8ccde321efbf92c2c4baaaa6abae6212b546474aade69541d0b5e821fc706"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migrations/0004_wonderful_warlock.sql",
+            "sha256": "541123a96038c7ca77cbeccd43c1d46d6bac0b6aacf9a65d3ffa0a9f3e601f57"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/migrations/0005_snapshot_immutability.sql",
+            "sha256": "1163d1f86f205aad01d813d4d7e962a573551cbad9aa09f820e1f458b7b36b8e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/postgres.mjs",
+            "sha256": "cf7aff9a56a898e29838c7f96b9fe9939a02b9ddfa35b40014974323bd697e40"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/raw.ts",
+            "sha256": "ca5b974f095cdde0cf6a719b4b40c2bb505622230fb26f841de2120873996fee"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/db/schema.ts",
+            "sha256": "5316c49032a5d12db686ddaa3fad31cd3eaf578c75cdb94140cab7669afb016d"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/CONTROLLED_OPERATIONAL_IMPORT_PLAN.md",
+            "sha256": "20ecd01d28b63bad87a33bf26158eba5211744aa5cc83e59ca8b556dbeda0d92"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/DATA_QUALITY_AND_MIGRATION_RISKS.md",
+            "sha256": "7f35313c94cfcc642f287c3f2451c1e33a3a09529e09e0755d51c2ebd99cfa23"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/PHASE1_REPORT.md",
+            "sha256": "47ecaa8d6daa0da910e1d29cb93ce599032732cb021892f98fc5ebed7f04a03f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_DECISIONS_REQUIRED.md",
+            "sha256": "ac9dbbd1b8087b412e99da8ba00a97a487191353c8cf034698fc6ae711b6aa4b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_GAP_ANALYSIS.md",
+            "sha256": "b2771a753c0353b72eff10b3bc6a316713fadc375ffd5220f4e7e1620c4676bc"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/PHASE2_IMPLEMENTATION_PLAN.md",
+            "sha256": "70415c46484ba8f89c235abe236eeb25c7b8078ae332945aacad9a83e5fbe628"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/SOURCE_TO_OPERATIONAL_SCHEMA_AUDIT.md",
+            "sha256": "763e10f758347861f2e3e168263e1ec1e0d73467bc6fbc68132e952198c30407"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/evidence-checksums.json",
+            "sha256": "bc4e8f6efc5d3146d285c54842aa2a5318c969dcb9cbe7b682aca28710e35b22"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0000_gorgeous_the_executioner.sql",
+            "sha256": "d854e332deb6ddad81c8f058a3a3d8ce536d52b59ac07a86dd049992b214188d"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0001_loud_monster_badoon.sql",
+            "sha256": "251aabd0fad9f5428fd81a5ac090becf94e817abf772a28657abf3788f88632f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0002_flashy_nico_minoru.sql",
+            "sha256": "d6243f69f4a64f86d982ecfd81652c7362333fa5c67df14bc5c730026eb8fd3b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0003_wide_exodus.sql",
+            "sha256": "fd213f341ced405f212517cf429e7dab1dd9c644108616e22e0dc1ec4c3a4ecd"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0004_wonderful_warlock.sql",
+            "sha256": "c8605060398995f4eb2a47300a12fac7686ae69798096d5abd909fdad10bd45e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0000_snapshot.json",
+            "sha256": "c1416406d59e2c27deec30700db8ded6725af0b56cb637661bd4cd2f58ebda09"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0001_snapshot.json",
+            "sha256": "861c3e595dc76cba0bb7ef6d012f1e71fcec901eb0eea3aaee15c448501b280e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0002_snapshot.json",
+            "sha256": "55f6ddc584ede45d979e8538f0e456bf5a9caf603f0f35294dd11ffccd04489a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0003_snapshot.json",
+            "sha256": "91f56f87913246d2eff55f9208962c5be0b9b8f377b53e3dfec061eaf0b4e185"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0004_snapshot.json",
+            "sha256": "0b679be1ac5a2b9f1bb24962c82c2aacba83e1f6ec18957a0092e440e2f84207"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/_journal.json",
+            "sha256": "311115468aee765561d30956fd63a3d744dd113a8c64357c4372069e78d022bf"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/phase1-file-changes.json",
+            "sha256": "2d54bdbbcdd1a64db5808416b8949d6f7814b52db461d0035fe83a7f04648e58"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/phase1-retired-paths.json",
+            "sha256": "d627cc1a66e59ef9c875ce608f8573af443e066aaf697bb76cc705b2f3ec82e9"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/v10/CONVERSATIONS.md",
+            "sha256": "6a7da88aad0f8ebbb4f20a617732918b5433018c2b3091ba5aa059054b4a29d6"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/v10/README-OPERATIONS.md",
+            "sha256": "0e917f17d75dbb3db4e5f63f9940e8f9c957c3bff9f165a0216a37063e9e6713"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/v10/README.md",
+            "sha256": "b670ba0eff3b6b1598f619278ca1f61eb609bebc1f80f68c56829905d715dac7"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/docs/v10/START-HERE-BN.md",
+            "sha256": "e30758abfe87ee1db2171f201467bb4de50c33244e9a5b652147b4a1349ce215"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/drizzle.config.ts",
+            "sha256": "25d2e504a12a74216dd58644866b90273ccfe3c6d94380618c6b9b7ed4d0a76d"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/eslint.config.mjs",
+            "sha256": "f4f5de1c012112d21f25eb2f49b1e9d56cbeb0cb68290cc49e122ba5ecd74a53"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/hooks/use-mobile.ts",
+            "sha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/accounts-snapshot.ts",
+            "sha256": "4c2a2b9db298b75601396e4bd4757069d43f36250ffe6cdb12a61cb9efd4b8d1"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/cash-data.ts",
+            "sha256": "81603379a3970158037dd40b8b455e03acb9bb7fbf51dd52b78fce3890123c7a"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/cash-source.ts",
+            "sha256": "5346f34f8e6c310a22bf68334530235de62b01fd6074b7dcfc883e21103e2776"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/conversation-read.ts",
+            "sha256": "e13d4baf611e650672904b33163f1a7acc526acd73373e5f6910c75ede8377ee"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/conversation-snapshot.ts",
+            "sha256": "7bd6bc920203bc01392f64a460aacb9a100934d07ba289c5ae7526863576dd38"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/evidence-types.ts",
+            "sha256": "0a3cadb72793527ec742220984a9d31254397ada37c99763c3b3b970807567be"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/evidence.ts",
+            "sha256": "ee5a8753156fdb5c5520d743183033c89625373d8176bcd3bd49b45b22bb000e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/integrations.ts",
+            "sha256": "2dbead2575e9b7bac1775c0a9ba36ab053f2ca734da6eb50143467747f5a61bc"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/operations-assistant.ts",
+            "sha256": "4ee88afd273024e6e53e03de2e6aa3099d126b8545629156351f09fd1e7510d9"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/operations.ts",
+            "sha256": "5ee3c91b7b4f6c7f04387250a704901521bb93c796a303a6a3ceeaea9bbfb3b8"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/popup-position.ts",
+            "sha256": "c5d55aae8252e27377c42f5455a06093bb0e2b45255e7964faa1650371d7652c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/private-origin.ts",
+            "sha256": "7290d01da32f6bed73d81a358c7108ad4bf957cc411cca0b29268c1f01052635"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/program-workflows.ts",
+            "sha256": "8ac8a6d5d7c06a7788304168d056540bf379778d7decdd7282df1d2f99aa9206"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/programs.ts",
+            "sha256": "a2ce32a1749f3ab99e3778fe483e8284ed19a110b5a7e4bb7621b4f4b331a30e"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/register-assistant.ts",
+            "sha256": "c27cb31a39f5539ce4cec4e1611b7cd05aa59be30015f5051fd0f629bab0db2f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/register.ts",
+            "sha256": "365c681e14968a4cca6520ff9e95d5c85d67bc98f1a7a9b3f893e31619d410ab"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/seed.ts",
+            "sha256": "e8c4ada9ad36b8c6894a6155c5d15b66e814938cb613529e47745243d33e3f6d"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/utils.ts",
+            "sha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/validation-auth.mjs",
+            "sha256": "28bb9494c47f9ca4e49f90ded32e75c321ee15f08eeec8c2a8d264082fa0de4c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/vessel-data.ts",
+            "sha256": "da1fa75cb181ea972f9fa23979ee3a43dfa3d0521c654a89759ef786a2fc52b7"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/lib/vessel-source.ts",
+            "sha256": "b545132da16894d75dcad7b41c463020eb65fc1421cf2a25e8ada4fef301e172"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/next-env.d.ts",
+            "sha256": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/next.config.ts",
+            "sha256": "106f9e8becc8dc9a84347de2d218b5b474fe7a593cdca919140cafe6b82041a2"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/package.json",
+            "sha256": "213877e7afb19dad8b38b78158d11fcc104872e4ec0b104c6260710fe7b92ed6"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/pnpm-lock.yaml",
+            "sha256": "90686fa60558d70fe5239283591f1db9fa9f9bb4abd3304d7780d1da5b000cb5"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/pnpm-workspace.yaml",
+            "sha256": "da28734883e5ecb09985a0d6829c853b857b9a154d8c24fbdf64ba35e79372f9"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/postcss.config.mjs",
+            "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/proxy.ts",
+            "sha256": "f3b463cd146b963229ef1ba26d2979182493064bac06203a0735694fb01eb431"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/public/favicon.svg",
+            "sha256": "1ddbd6435ef40f1112c0a10a6e84c9ac982fad01f5c791f79b27adbe4c580405"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/public/file.svg",
+            "sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/public/globe.svg",
+            "sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/public/window.svg",
+            "sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/database.mjs",
+            "sha256": "203acfb30aa2d70ee522074f7eceb038f3aa1a57c09dd42fb1b4738f897ae481"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/externalize-seed.mjs",
+            "sha256": "4e9433bfbdbad856158c8449c050b615b3541130cd3806d6bc04ed8909e29da4"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/ingest_chats.py",
+            "sha256": "aed391de8aac179e324a2d88d2854e2447b348b6c708c59a00378c07d666704c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/lint.mjs",
+            "sha256": "82b85b1f4da5341174d8a9675e2cef5ac57125a6f45d56a970f14ee498010a70"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/operations/import_sources.py",
+            "sha256": "9a5bdb4f6ac14de6859d7a08fcbebc490c4ee7da9a9f214e1bc6b2032e3e7a7f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/update_accounts.py",
+            "sha256": "db74b7854eac19e094d1a7f3918ff508c7b04031d00a7f4b3764cf055519ab87"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/update_conversations.py",
+            "sha256": "3f0774bd3c9f4d47f38860bc12535fa05c97f89eb05f13395fa136145cf6c0d9"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/scripts/verify-state.mjs",
+            "sha256": "5dfc42f98952d3bc67267370ab868a2c7a6a6063d9dbda1c114974eaf8c394e5"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/database.mjs",
+            "sha256": "41e2971d2f199f7d9d93ce15ad1d110940b587de74b7061f32558812b60f95ad"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/legacy-source/api.mjs",
+            "sha256": "e42a086536eb0671af3bb988514b6251a6a7d6de034b7f8bb2d6914734a74486"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/legacy-source/conversations.mjs",
+            "sha256": "43bdf493c2a998bcf6ff958043c5da4b82a881bc1d18534e38ed9e7d1553a7ef"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/legacy-source/operations.mjs",
+            "sha256": "97528b1042fbc3f7441abf12ab2b3b0f37371d1ac7f92c051a5185575b61ca32"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/phase1-http.mjs",
+            "sha256": "ce924095953358f9430134518d1f0fafdd7a03232de7fe1ff696e6d36f786a95"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/phase1-unit.mjs",
+            "sha256": "ba07b2e088031f9c10842170d29a5fc5f5966a09f075140d2faf8b45ff73e195"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/source-register.mjs",
+            "sha256": "d89fd28514af8fe82d08336d10919bfcb5b7b076a1d36c55f2e72356651c509f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/test_accounts_import.py",
+            "sha256": "daf03af786aff3730fece427489f31b3407e778f28aa19e39a286d5ee89c4852"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/test_cash_archive.py",
+            "sha256": "d2252b0b333ff4194a3a866df5c7f0f7c462339dc055f3750c0620db3d68cd95"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/test_updated_conversations.py",
+            "sha256": "8337f0abd980f33a49235a6cb0dd7a2b687f9cada357a4c4aa79ded8013924aa"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tests/workflows.mjs",
+            "sha256": "2d05df6a500daad6f3aec6f00847700c808a5a91a5e021d359b6212e1eb5237f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tsconfig.json",
+            "sha256": "ba9b76bf972dfc1c4eba7bcc45ba3c651ea6386c1cd4fdc74c2810deda16fd7c"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/tsconfig.tsbuildinfo",
+            "sha256": "4f0f7706336ec8ec8e2619fd3fd64195b0ae63c6b15d021f7ffff263a33b16ff"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.LICENSE.md",
+            "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+          },
+          {
+            "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.css",
+            "sha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a"
+          }
+        ],
+        "untouchedExternalEvidence": {
+          "accounts-snapshot.json": {
+            "bytes": 6000862,
+            "sha256": "e8bb01f520f035362acd1284419e6929ec02547edaef1b0ebcfcf2c0a914e5c2"
+          },
+          "chat-archive.json": {
+            "bytes": 1878416,
+            "sha256": "9f2ba5c0e881e19bb1a7df50ac86c25fc479550dc707bc0737b20c22a46ec872"
+          },
+          "conversation-snapshot.json": {
+            "bytes": 9428183,
+            "sha256": "63cd86a078268046deb2ce0e3186dba7ebda0cf323ed7e5e7e58df6f2fb0d8d4"
+          },
+          "operations.json": {
+            "bytes": 3804967,
+            "sha256": "e41b24393a6822c74e9f8f87dca538e9dc0e2f38c93c1e8791907d805d6a8547"
+          },
+          "seed-source.ts": {
+            "bytes": 1138,
+            "sha256": "1e6e1566e6c2baf4f2b0bd2d0bd1a4e05d33ab90400ee374ef5c7f27071bdc52"
+          },
+          "recovered-programs.json": {
+            "bytes": 2731,
+            "sha256": "5b1761598fe4619ab416b6ead7c3502b8670a8eda9fd103ce6a55b40fde3bf86"
+          }
+        },
+        "inventorySelfHash": "Omitted to avoid recursive self-hash",
+        "productionWrites": 0,
+        "productionMigrations": 0,
+        "productionImports": 0,
+        "restarts": 0,
+        "deployment": false
+      },
+      "baselineFileCount": 203,
+      "newFiles": [
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/OWNER_BUSINESS_POLICY.md",
+          "sha256": "8f5198a464f4a610e57d8f8e37ff083fcb31ca10ce86ef67dffabd3816b0eed8"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/owner-business-rules.json",
+          "sha256": "c8fe14c4bbe93d274cdb0934b96ee7ba2d175e7b20d9a3e92a4d8218c355a6bf"
+        }
+      ],
+      "modifiedFiles": [
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migration-candidates/0006_employee_program_identity.sql",
+          "beforeSha256": "31ee7a44cdcaa1a74f0d8ecafe3610cbf26c5e2a6cd63dc93e45efb8fac5685e",
+          "afterSha256": "3fec986388f6ac2c225d646d2f090e360c3cb0456e6e74535060e67195e14c57"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_DRY_RUN_REPORT.md",
+          "beforeSha256": "3dc725dd067a7d51ae3cc6a691a7657ce2fc73d8db1db089301bf8e0de021fdc",
+          "afterSha256": "e80c35f2357b8d95d5f80328745e362702601a57e4c948d9adcb67fb9ab61be9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SCHEMA_PROPOSAL.md",
+          "beforeSha256": "b1640bbf4486182b8b58b480e54122f81373761bd5f1c1184be5d2b57714be36",
+          "afterSha256": "7369b42cf6ea17c171cfc88e65cee8210571ba60137340e133c8359489af668c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SOURCE_MAPPING.md",
+          "beforeSha256": "a0329218c1f987effca63ac2cc462b7443eacf2273f6414f3e4e267c6fe3c108",
+          "afterSha256": "8d47f2dbec8c4b9adc384b5516b6118e955709fee3130b362354ba99fa607a30"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/employee-program-file-changes.json",
+          "beforeSha256": "e2fd04033b376a2949f791d295a602ca03475b7023963a5fdda0be2f64f30869",
+          "afterSha256": "SELF_HASH_OMITTED"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/employee-program-mapping-v1.json",
+          "beforeSha256": "0f7a1f1fac049688eb8ecd683686282be885391819d02baf5bd6a4c77b7c11e0",
+          "afterSha256": "94e83f5b346f8e4c34ad4954d1c67e0fc051928c818382f76e4a5b545387dc1f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/employee-program-validation.mjs",
+          "beforeSha256": "eb170e6234fe82fdf0fbe1319220ffd7a459167210e4ea5aa51d834fda7fb189",
+          "afterSha256": "486eae8f77a4db5580cdbac2b52f33bc9cde86a5c86bd1a5d80a4f33782cde86"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/employee-program-dry-run.mjs",
+          "beforeSha256": "3f0677db9117573c0c00cd71537e89cccee74f7f83bff0814469bc13a0ad31db",
+          "afterSha256": "fb36cec541e0cfb192057641462ce3b6c678f78d40cf84d0fdea037a7a684209"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/employee-program.mjs",
+          "beforeSha256": "dbf290f49ca0c41304e8d8b690266e81688bc44508362308816899ccca53566a",
+          "afterSha256": "8c124dfcfc003e450e0db7c0dec06776a07ff10010d18bc92ab87bd48038874e"
+        }
+      ],
+      "untouchedFiles": [
+        {
+          "path": "/opt/vps/apps/al-rifai/.dockerignore",
+          "sha256": "aa80dd58ac7406f048582e0d0ccc4260efe109c242fd3385341a0f6f693dae4c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/.env.example",
+          "sha256": "215757692020f956364c6c87e39a94daea3b8924ae40b0cb2e9eb036ac54d401"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/.gitignore",
+          "sha256": "0d5f450f53a9b253b5bf8e2104dc7746777806bdde29d2ebdb3892a8169a3095"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/.lint-results.json",
+          "sha256": "54ebc845316c52acb95259b14933edb459b9f05554371da36d1100ab06b745eb"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/.npmrc",
+          "sha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/Dockerfile",
+          "sha256": "08013cf855c354bae80142bae5889dd9bcb1e3e82511fabf599e119ab90eaa75"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/README.md",
+          "sha256": "76abf5425af3c0c605dd996983781c5117bcb84ea4a811afb532aff29e6a98dd"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/SOURCE-MANIFEST.json",
+          "sha256": "1ee70b73d337bac0c2043227dd8a6170d732b2402e916ac90e2e256df2371233"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/accounts-panel.tsx",
+          "sha256": "4597c485e179ff2f6c8c44e01cc81a6f69859f7b831dde18c0b74108b466eda7"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/assistant/route.ts",
+          "sha256": "a832d084d3053418c4be349313fe30f559595f0ebf715029bb8cac0837b9f0fd"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/conversations/route.ts",
+          "sha256": "b67e93e917638bea0cc787f010e2a4243d7379f084f708b2ebc39c5616fb1d23"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/core/route.ts",
+          "sha256": "bd9c4e7c08fa2d6641121a804d3a3b3b9049d2b154ca741550f994a6487bcc88"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/health/route.ts",
+          "sha256": "9efdd105ab018b852a3de4b75d943adc42ed3f0e30269f462cdb4abb59db5ca5"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/import-audit/route.ts",
+          "sha256": "23d057afcf519bb87952060454f368f271a9d7a85fdbf835e9c075fd5d6d0483"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/operations/route.ts",
+          "sha256": "923a29f8049f54a55f1551d1e3e19f33181d2028449fc4babed95290a337b60b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/program-tools/route.ts",
+          "sha256": "c1ce88340fdfc076addefa64fa812ad8e3b03e0dcb319ecead50959705567add"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/register/route.ts",
+          "sha256": "003818673bf23a30d29a10a2f4e2d1877f450dcb141947cd40a2e6f1d9fe5f38"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/api/vessels/route.ts",
+          "sha256": "5897bb7628c1a153d55df0f1070c96ecaf51e0fb477edf5ea870ab3cc8dcf79b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/assistant-popup.tsx",
+          "sha256": "33fa450a8e090341dd894fca11d934084d708e1c7b608b946e1973ff16b11754"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/chatgpt-auth.ts",
+          "sha256": "3599f3231238f517103bd9312caa2c77b3771729cfe52f18cdaed77d6f52f2fe"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/conversation-inspector.css",
+          "sha256": "f7624220d9a9e4ebc0435854a26512b80b487d9584cffa61a8d0a2042b54c481"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/conversations/inspector.tsx",
+          "sha256": "3f78d3a17fb756c9f1e40ba4f66fff21b57198c00552e90f826792ade9ed85de"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/conversations/page.tsx",
+          "sha256": "0625931ac53eef7ed186c4dee517bd6f86f29384ca01340965385770aceb55af"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/globals.css",
+          "sha256": "9cd8140b5c4b1d0556fdcb32f89e2beca16ce63b11eef06eee77e07dec063b30"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/historical-conversations.tsx",
+          "sha256": "5ba7daec340e9f97032f0fd4bfb15646581de419ba4dc466ae444d82991e6c89"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/import-review.tsx",
+          "sha256": "b2ffbe320d29ac3cf2b42e5a6ff8668ce92ce4a6e4e168e0f1068f85f30fdaf8"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/layout.tsx",
+          "sha256": "e6678cb4b2667c882ba11c5f33d8449ee7f4eb2fdfbe097ae0bb83f8fecbfd43"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/operations.tsx",
+          "sha256": "158f889b019dd88091fbe1b6e463198088f81b8ad253df62dc7c9d253f1d91c6"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/page.tsx",
+          "sha256": "27536e1c61dbae0c1aac698f53dd87f43418c1b045e6d3625af84045e1180510"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/program-tools.tsx",
+          "sha256": "5f83bfb1b6edbe8bd44b34eb96b3f16e6322caebaba40b0c23bd29813831b447"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/register-views.tsx",
+          "sha256": "9ee1ee6591975785f8c9e6ea9e70f0de8c2018afa47554a5af73f65b4538e84b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/register/page.tsx",
+          "sha256": "ef98f504e3fc6d278c33f862b06879fcc4741d17eb3341a23cb933952f189028"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/tracker.tsx",
+          "sha256": "0ed0873c505e1e24d00d21e35fcbda3b050afa022afe2455d74121698d330c28"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/vessel-dashboard.tsx",
+          "sha256": "ea089c971ea520e4a80565683fb0612354601f8c4eeadd81e1d499a6a86b3e33"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/app/vessel-register.css",
+          "sha256": "3f8142f9b849e0d6ea03845b7062322923341eacb14011dd7235eca4b4785bda"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components.json",
+          "sha256": "31f4ca67a4a62572571003d3d5aac85ee6fbfca67a192924bac6b168d95e98fd"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/accordion.tsx",
+          "sha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/alert-dialog.tsx",
+          "sha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/alert.tsx",
+          "sha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/aspect-ratio.tsx",
+          "sha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/attachment.tsx",
+          "sha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/avatar.tsx",
+          "sha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/badge.tsx",
+          "sha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/breadcrumb.tsx",
+          "sha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/bubble.tsx",
+          "sha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/button-group.tsx",
+          "sha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/button.tsx",
+          "sha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/calendar.tsx",
+          "sha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/card.tsx",
+          "sha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/carousel.tsx",
+          "sha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/chart.tsx",
+          "sha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/checkbox.tsx",
+          "sha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/collapsible.tsx",
+          "sha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/combobox.tsx",
+          "sha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/command.tsx",
+          "sha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/context-menu.tsx",
+          "sha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/dialog.tsx",
+          "sha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/direction.tsx",
+          "sha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/drawer.tsx",
+          "sha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/dropdown-menu.tsx",
+          "sha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/empty.tsx",
+          "sha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/field.tsx",
+          "sha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/form.tsx",
+          "sha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/hover-card.tsx",
+          "sha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/input-group.tsx",
+          "sha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/input-otp.tsx",
+          "sha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/input.tsx",
+          "sha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/item.tsx",
+          "sha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/kbd.tsx",
+          "sha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/label.tsx",
+          "sha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/marker.tsx",
+          "sha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/menubar.tsx",
+          "sha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/message-scroller.tsx",
+          "sha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/message.tsx",
+          "sha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/native-select.tsx",
+          "sha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/navigation-menu.tsx",
+          "sha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/pagination.tsx",
+          "sha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/popover.tsx",
+          "sha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/progress.tsx",
+          "sha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/radio-group.tsx",
+          "sha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/resizable.tsx",
+          "sha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/scroll-area.tsx",
+          "sha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/select.tsx",
+          "sha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/separator.tsx",
+          "sha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/sheet.tsx",
+          "sha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/sidebar.tsx",
+          "sha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/skeleton.tsx",
+          "sha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/slider.tsx",
+          "sha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/sonner.tsx",
+          "sha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/spinner.tsx",
+          "sha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/switch.tsx",
+          "sha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/table.tsx",
+          "sha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/tabs.tsx",
+          "sha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/textarea.tsx",
+          "sha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/toggle-group.tsx",
+          "sha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/toggle.tsx",
+          "sha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/components/ui/tooltip.tsx",
+          "sha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/compose.yaml",
+          "sha256": "38ae52a657061c6d621bada95f1dee201e9687a63c8fb667ee379566e056a782"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/data/conversation-policy.json",
+          "sha256": "640c7f92ed5c913e158679cfbc7e7b5db91bae35dd2198706c6955ee0c753983"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/index.ts",
+          "sha256": "63acb5965e5ffddd58b247fad5ae760e80ac5f327bff4e69d67e1923825a9023"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migrations/0000_gorgeous_the_executioner.sql",
+          "sha256": "fb2d9661657b954201adb7a6c7d6798b1c860a9f427f82b4cb8dddeee96eb6bf"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migrations/0001_loud_monster_badoon.sql",
+          "sha256": "32c8c1e5945d2a2e7b9a43469710f83e7a767d573680340b711abc16fb52044a"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migrations/0002_flashy_nico_minoru.sql",
+          "sha256": "2c72a9a3cf03675856ae96d8a0a37ec12023d84c09f7775dbb525181d9978552"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migrations/0003_wide_exodus.sql",
+          "sha256": "c1b8ccde321efbf92c2c4baaaa6abae6212b546474aade69541d0b5e821fc706"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migrations/0004_wonderful_warlock.sql",
+          "sha256": "541123a96038c7ca77cbeccd43c1d46d6bac0b6aacf9a65d3ffa0a9f3e601f57"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/migrations/0005_snapshot_immutability.sql",
+          "sha256": "1163d1f86f205aad01d813d4d7e962a573551cbad9aa09f820e1f458b7b36b8e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/postgres.mjs",
+          "sha256": "cf7aff9a56a898e29838c7f96b9fe9939a02b9ddfa35b40014974323bd697e40"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/raw.ts",
+          "sha256": "ca5b974f095cdde0cf6a719b4b40c2bb505622230fb26f841de2120873996fee"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/db/schema.ts",
+          "sha256": "5316c49032a5d12db686ddaa3fad31cd3eaf578c75cdb94140cab7669afb016d"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/CONTROLLED_OPERATIONAL_IMPORT_PLAN.md",
+          "sha256": "20ecd01d28b63bad87a33bf26158eba5211744aa5cc83e59ca8b556dbeda0d92"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/DATA_QUALITY_AND_MIGRATION_RISKS.md",
+          "sha256": "7f35313c94cfcc642f287c3f2451c1e33a3a09529e09e0755d51c2ebd99cfa23"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/PHASE1_REPORT.md",
+          "sha256": "47ecaa8d6daa0da910e1d29cb93ce599032732cb021892f98fc5ebed7f04a03f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_DECISIONS_REQUIRED.md",
+          "sha256": "ac9dbbd1b8087b412e99da8ba00a97a487191353c8cf034698fc6ae711b6aa4b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_GAP_ANALYSIS.md",
+          "sha256": "b2771a753c0353b72eff10b3bc6a316713fadc375ffd5220f4e7e1620c4676bc"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/PHASE2_IMPLEMENTATION_PLAN.md",
+          "sha256": "70415c46484ba8f89c235abe236eeb25c7b8078ae332945aacad9a83e5fbe628"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/SOURCE_TO_OPERATIONAL_SCHEMA_AUDIT.md",
+          "sha256": "763e10f758347861f2e3e168263e1ec1e0d73467bc6fbc68132e952198c30407"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/employee-program-baseline.json",
+          "sha256": "934888ff30c33a09e62010fef919ec2be00768d716c4703addaa325637874e59"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/evidence-checksums.json",
+          "sha256": "bc4e8f6efc5d3146d285c54842aa2a5318c969dcb9cbe7b682aca28710e35b22"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0000_gorgeous_the_executioner.sql",
+          "sha256": "d854e332deb6ddad81c8f058a3a3d8ce536d52b59ac07a86dd049992b214188d"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0001_loud_monster_badoon.sql",
+          "sha256": "251aabd0fad9f5428fd81a5ac090becf94e817abf772a28657abf3788f88632f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0002_flashy_nico_minoru.sql",
+          "sha256": "d6243f69f4a64f86d982ecfd81652c7362333fa5c67df14bc5c730026eb8fd3b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0003_wide_exodus.sql",
+          "sha256": "fd213f341ced405f212517cf429e7dab1dd9c644108616e22e0dc1ec4c3a4ecd"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0004_wonderful_warlock.sql",
+          "sha256": "c8605060398995f4eb2a47300a12fac7686ae69798096d5abd909fdad10bd45e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0000_snapshot.json",
+          "sha256": "c1416406d59e2c27deec30700db8ded6725af0b56cb637661bd4cd2f58ebda09"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0001_snapshot.json",
+          "sha256": "861c3e595dc76cba0bb7ef6d012f1e71fcec901eb0eea3aaee15c448501b280e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0002_snapshot.json",
+          "sha256": "55f6ddc584ede45d979e8538f0e456bf5a9caf603f0f35294dd11ffccd04489a"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0003_snapshot.json",
+          "sha256": "91f56f87913246d2eff55f9208962c5be0b9b8f377b53e3dfec061eaf0b4e185"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0004_snapshot.json",
+          "sha256": "0b679be1ac5a2b9f1bb24962c82c2aacba83e1f6ec18957a0092e440e2f84207"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/_journal.json",
+          "sha256": "311115468aee765561d30956fd63a3d744dd113a8c64357c4372069e78d022bf"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/phase1-file-changes.json",
+          "sha256": "2d54bdbbcdd1a64db5808416b8949d6f7814b52db461d0035fe83a7f04648e58"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/phase1-retired-paths.json",
+          "sha256": "d627cc1a66e59ef9c875ce608f8573af443e066aaf697bb76cc705b2f3ec82e9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/v10/CONVERSATIONS.md",
+          "sha256": "6a7da88aad0f8ebbb4f20a617732918b5433018c2b3091ba5aa059054b4a29d6"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/v10/README-OPERATIONS.md",
+          "sha256": "0e917f17d75dbb3db4e5f63f9940e8f9c957c3bff9f165a0216a37063e9e6713"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/v10/README.md",
+          "sha256": "b670ba0eff3b6b1598f619278ca1f61eb609bebc1f80f68c56829905d715dac7"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/docs/v10/START-HERE-BN.md",
+          "sha256": "e30758abfe87ee1db2171f201467bb4de50c33244e9a5b652147b4a1349ce215"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/drizzle.config.ts",
+          "sha256": "25d2e504a12a74216dd58644866b90273ccfe3c6d94380618c6b9b7ed4d0a76d"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/eslint.config.mjs",
+          "sha256": "f4f5de1c012112d21f25eb2f49b1e9d56cbeb0cb68290cc49e122ba5ecd74a53"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/hooks/use-mobile.ts",
+          "sha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/accounts-snapshot.ts",
+          "sha256": "4c2a2b9db298b75601396e4bd4757069d43f36250ffe6cdb12a61cb9efd4b8d1"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/cash-data.ts",
+          "sha256": "81603379a3970158037dd40b8b455e03acb9bb7fbf51dd52b78fce3890123c7a"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/cash-source.ts",
+          "sha256": "5346f34f8e6c310a22bf68334530235de62b01fd6074b7dcfc883e21103e2776"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/conversation-read.ts",
+          "sha256": "e13d4baf611e650672904b33163f1a7acc526acd73373e5f6910c75ede8377ee"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/conversation-snapshot.ts",
+          "sha256": "7bd6bc920203bc01392f64a460aacb9a100934d07ba289c5ae7526863576dd38"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/evidence-types.ts",
+          "sha256": "0a3cadb72793527ec742220984a9d31254397ada37c99763c3b3b970807567be"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/evidence.ts",
+          "sha256": "ee5a8753156fdb5c5520d743183033c89625373d8176bcd3bd49b45b22bb000e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/integrations.ts",
+          "sha256": "2dbead2575e9b7bac1775c0a9ba36ab053f2ca734da6eb50143467747f5a61bc"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/operations-assistant.ts",
+          "sha256": "4ee88afd273024e6e53e03de2e6aa3099d126b8545629156351f09fd1e7510d9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/operations.ts",
+          "sha256": "5ee3c91b7b4f6c7f04387250a704901521bb93c796a303a6a3ceeaea9bbfb3b8"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/popup-position.ts",
+          "sha256": "c5d55aae8252e27377c42f5455a06093bb0e2b45255e7964faa1650371d7652c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/private-origin.ts",
+          "sha256": "7290d01da32f6bed73d81a358c7108ad4bf957cc411cca0b29268c1f01052635"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/program-workflows.ts",
+          "sha256": "8ac8a6d5d7c06a7788304168d056540bf379778d7decdd7282df1d2f99aa9206"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/programs.ts",
+          "sha256": "a2ce32a1749f3ab99e3778fe483e8284ed19a110b5a7e4bb7621b4f4b331a30e"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/register-assistant.ts",
+          "sha256": "c27cb31a39f5539ce4cec4e1611b7cd05aa59be30015f5051fd0f629bab0db2f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/register.ts",
+          "sha256": "365c681e14968a4cca6520ff9e95d5c85d67bc98f1a7a9b3f893e31619d410ab"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/seed.ts",
+          "sha256": "e8c4ada9ad36b8c6894a6155c5d15b66e814938cb613529e47745243d33e3f6d"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/utils.ts",
+          "sha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/validation-auth.mjs",
+          "sha256": "28bb9494c47f9ca4e49f90ded32e75c321ee15f08eeec8c2a8d264082fa0de4c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/vessel-data.ts",
+          "sha256": "da1fa75cb181ea972f9fa23979ee3a43dfa3d0521c654a89759ef786a2fc52b7"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/lib/vessel-source.ts",
+          "sha256": "b545132da16894d75dcad7b41c463020eb65fc1421cf2a25e8ada4fef301e172"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/next-env.d.ts",
+          "sha256": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/next.config.ts",
+          "sha256": "106f9e8becc8dc9a84347de2d218b5b474fe7a593cdca919140cafe6b82041a2"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/package.json",
+          "sha256": "213877e7afb19dad8b38b78158d11fcc104872e4ec0b104c6260710fe7b92ed6"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/pnpm-lock.yaml",
+          "sha256": "90686fa60558d70fe5239283591f1db9fa9f9bb4abd3304d7780d1da5b000cb5"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/pnpm-workspace.yaml",
+          "sha256": "da28734883e5ecb09985a0d6829c853b857b9a154d8c24fbdf64ba35e79372f9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/postcss.config.mjs",
+          "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/proxy.ts",
+          "sha256": "f3b463cd146b963229ef1ba26d2979182493064bac06203a0735694fb01eb431"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/public/favicon.svg",
+          "sha256": "1ddbd6435ef40f1112c0a10a6e84c9ac982fad01f5c791f79b27adbe4c580405"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/public/file.svg",
+          "sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/public/globe.svg",
+          "sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/public/window.svg",
+          "sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/database.mjs",
+          "sha256": "203acfb30aa2d70ee522074f7eceb038f3aa1a57c09dd42fb1b4738f897ae481"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/employee-program-catalog-read.sql",
+          "sha256": "0fd56119bc28127a92d4c3fa834c2739d2bc445f95e8817fb40c4cb6b056592f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/externalize-seed.mjs",
+          "sha256": "4e9433bfbdbad856158c8449c050b615b3541130cd3806d6bc04ed8909e29da4"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/ingest_chats.py",
+          "sha256": "aed391de8aac179e324a2d88d2854e2447b348b6c708c59a00378c07d666704c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/lint.mjs",
+          "sha256": "82b85b1f4da5341174d8a9675e2cef5ac57125a6f45d56a970f14ee498010a70"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/operations/import_sources.py",
+          "sha256": "9a5bdb4f6ac14de6859d7a08fcbebc490c4ee7da9a9f214e1bc6b2032e3e7a7f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/update_accounts.py",
+          "sha256": "db74b7854eac19e094d1a7f3918ff508c7b04031d00a7f4b3764cf055519ab87"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/update_conversations.py",
+          "sha256": "3f0774bd3c9f4d47f38860bc12535fa05c97f89eb05f13395fa136145cf6c0d9"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/scripts/verify-state.mjs",
+          "sha256": "5dfc42f98952d3bc67267370ab868a2c7a6a6063d9dbda1c114974eaf8c394e5"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/database.mjs",
+          "sha256": "41e2971d2f199f7d9d93ce15ad1d110940b587de74b7061f32558812b60f95ad"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/legacy-source/api.mjs",
+          "sha256": "e42a086536eb0671af3bb988514b6251a6a7d6de034b7f8bb2d6914734a74486"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/legacy-source/conversations.mjs",
+          "sha256": "43bdf493c2a998bcf6ff958043c5da4b82a881bc1d18534e38ed9e7d1553a7ef"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/legacy-source/operations.mjs",
+          "sha256": "97528b1042fbc3f7441abf12ab2b3b0f37371d1ac7f92c051a5185575b61ca32"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/phase1-http.mjs",
+          "sha256": "ce924095953358f9430134518d1f0fafdd7a03232de7fe1ff696e6d36f786a95"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/phase1-unit.mjs",
+          "sha256": "ba07b2e088031f9c10842170d29a5fc5f5966a09f075140d2faf8b45ff73e195"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/source-register.mjs",
+          "sha256": "d89fd28514af8fe82d08336d10919bfcb5b7b076a1d36c55f2e72356651c509f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/test_accounts_import.py",
+          "sha256": "daf03af786aff3730fece427489f31b3407e778f28aa19e39a286d5ee89c4852"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/test_cash_archive.py",
+          "sha256": "d2252b0b333ff4194a3a866df5c7f0f7c462339dc055f3750c0620db3d68cd95"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/test_updated_conversations.py",
+          "sha256": "8337f0abd980f33a49235a6cb0dd7a2b687f9cada357a4c4aa79ded8013924aa"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tests/workflows.mjs",
+          "sha256": "2d05df6a500daad6f3aec6f00847700c808a5a91a5e021d359b6212e1eb5237f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tsconfig.json",
+          "sha256": "ba9b76bf972dfc1c4eba7bcc45ba3c651ea6386c1cd4fdc74c2810deda16fd7c"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/tsconfig.tsbuildinfo",
+          "sha256": "4f0f7706336ec8ec8e2619fd3fd64195b0ae63c6b15d021f7ffff263a33b16ff"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.LICENSE.md",
+          "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+        },
+        {
+          "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.css",
+          "sha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a"
+        }
+      ],
+      "counts": {
+        "new": 2,
+        "modified": 9,
+        "untouched": 194
+      },
+      "productionReadOnlyBeforeAfter": "BYTE_IDENTICAL",
+      "productionExecutionAuthorized": false,
+      "temporaryArtifacts": "Private /tmp/alrifai-rules-* read-only catalog, manifests, TAP and hash inventories; no source snapshots edited."
+    },
+    "baselineSourceFileCount": 205,
+    "newFiles": [
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/PROGRAM_LIFECYCLE_RULES_IMPLEMENTATION.md",
+        "sha256": "59367f558eb3362fc337be4438be52f179109871b57cc0d79b9b495ff38bb883"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/PROGRAM_LIFECYCLE_VERIFICATION_REPORT.md",
+        "sha256": "db59825c6f64e39ed59ef453478329bdf2f47c1dbfdc94ab4701894a1285e6e2"
+      }
+    ],
+    "modifiedFiles": [
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migration-candidates/0006_employee_program_identity.sql",
+        "beforeSha256": "3fec986388f6ac2c225d646d2f090e360c3cb0456e6e74535060e67195e14c57",
+        "afterSha256": "733cbd6bf9996e06e94117036d7dab38d4e299dcb07dcbe3bc9737c57c20130f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_DRY_RUN_REPORT.md",
+        "beforeSha256": "e80c35f2357b8d95d5f80328745e362702601a57e4c948d9adcb67fb9ab61be9",
+        "afterSha256": "5126bcada5bf6b1ff039658129f9e8c6a0b4337ac03db3fd4279788706796026"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SCHEMA_PROPOSAL.md",
+        "beforeSha256": "7369b42cf6ea17c171cfc88e65cee8210571ba60137340e133c8359489af668c",
+        "afterSha256": "0e431a726f6347c69c5ed0f03adb073da22ef670cb78278142fb509a90ff4934"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SOURCE_MAPPING.md",
+        "beforeSha256": "8d47f2dbec8c4b9adc384b5516b6118e955709fee3130b362354ba99fa607a30",
+        "afterSha256": "306394ba0c7e1ba54bc7c8aa230cf64a64ff42ff0531ceeb4492a97a4a775a7b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/OWNER_BUSINESS_POLICY.md",
+        "beforeSha256": "8f5198a464f4a610e57d8f8e37ff083fcb31ca10ce86ef67dffabd3816b0eed8",
+        "afterSha256": "e0bdc96e44843c2b71ee19c986fe1e86d37fb977a7dff6acdd8aaff571b3b29d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/employee-program-file-changes.json",
+        "beforeSha256": "1b130d00df09db6fd606f72ee8ebcb9c5147b20c73ea27736a5599384f2ec99d",
+        "afterSha256": "SELF_HASH_OMITTED"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/employee-program-mapping-v1.json",
+        "beforeSha256": "94e83f5b346f8e4c34ad4954d1c67e0fc051928c818382f76e4a5b545387dc1f",
+        "afterSha256": "84068005079b4c770f9d3e0c7f546ee0af176887ad7f8eb64dc69dc1f7d25afc"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/owner-business-rules.json",
+        "beforeSha256": "c8fe14c4bbe93d274cdb0934b96ee7ba2d175e7b20d9a3e92a4d8218c355a6bf",
+        "afterSha256": "adc9fe19d22f16a16749f0c03b9c160d28c3dcabc0e1904f01b291cff4a5d1f4"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/employee-program-validation.mjs",
+        "beforeSha256": "486eae8f77a4db5580cdbac2b52f33bc9cde86a5c86bd1a5d80a4f33782cde86",
+        "afterSha256": "dd5c3a3ddd0bab96a1a14dc315b5bedb5ba86db019d1591158bc6249b67b78ce"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/employee-program-dry-run.mjs",
+        "beforeSha256": "fb36cec541e0cfb192057641462ce3b6c678f78d40cf84d0fdea037a7a684209",
+        "afterSha256": "e981f61dee8ec4ca1dff4f3d997459f387245c1a2644d21cf969a7ac8c09b0b7"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/employee-program.mjs",
+        "beforeSha256": "8c124dfcfc003e450e0db7c0dec06776a07ff10010d18bc92ab87bd48038874e",
+        "afterSha256": "e298265168d9fac1df7daefeee474b09e7a2d6160fe5553eebe06fee382c3b30"
+      }
+    ],
+    "untouchedFiles": [
+      {
+        "path": "/opt/vps/apps/al-rifai/.dockerignore",
+        "sha256": "aa80dd58ac7406f048582e0d0ccc4260efe109c242fd3385341a0f6f693dae4c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/.env.example",
+        "sha256": "215757692020f956364c6c87e39a94daea3b8924ae40b0cb2e9eb036ac54d401"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/.gitignore",
+        "sha256": "0d5f450f53a9b253b5bf8e2104dc7746777806bdde29d2ebdb3892a8169a3095"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/.lint-results.json",
+        "sha256": "54ebc845316c52acb95259b14933edb459b9f05554371da36d1100ab06b745eb"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/.npmrc",
+        "sha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/Dockerfile",
+        "sha256": "08013cf855c354bae80142bae5889dd9bcb1e3e82511fabf599e119ab90eaa75"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/README.md",
+        "sha256": "76abf5425af3c0c605dd996983781c5117bcb84ea4a811afb532aff29e6a98dd"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/SOURCE-MANIFEST.json",
+        "sha256": "1ee70b73d337bac0c2043227dd8a6170d732b2402e916ac90e2e256df2371233"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/accounts-panel.tsx",
+        "sha256": "4597c485e179ff2f6c8c44e01cc81a6f69859f7b831dde18c0b74108b466eda7"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/assistant/route.ts",
+        "sha256": "a832d084d3053418c4be349313fe30f559595f0ebf715029bb8cac0837b9f0fd"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/conversations/route.ts",
+        "sha256": "b67e93e917638bea0cc787f010e2a4243d7379f084f708b2ebc39c5616fb1d23"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/core/route.ts",
+        "sha256": "bd9c4e7c08fa2d6641121a804d3a3b3b9049d2b154ca741550f994a6487bcc88"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/health/route.ts",
+        "sha256": "9efdd105ab018b852a3de4b75d943adc42ed3f0e30269f462cdb4abb59db5ca5"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/import-audit/route.ts",
+        "sha256": "23d057afcf519bb87952060454f368f271a9d7a85fdbf835e9c075fd5d6d0483"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/operations/route.ts",
+        "sha256": "923a29f8049f54a55f1551d1e3e19f33181d2028449fc4babed95290a337b60b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/program-tools/route.ts",
+        "sha256": "c1ce88340fdfc076addefa64fa812ad8e3b03e0dcb319ecead50959705567add"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/register/route.ts",
+        "sha256": "003818673bf23a30d29a10a2f4e2d1877f450dcb141947cd40a2e6f1d9fe5f38"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/api/vessels/route.ts",
+        "sha256": "5897bb7628c1a153d55df0f1070c96ecaf51e0fb477edf5ea870ab3cc8dcf79b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/assistant-popup.tsx",
+        "sha256": "33fa450a8e090341dd894fca11d934084d708e1c7b608b946e1973ff16b11754"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/chatgpt-auth.ts",
+        "sha256": "3599f3231238f517103bd9312caa2c77b3771729cfe52f18cdaed77d6f52f2fe"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/conversation-inspector.css",
+        "sha256": "f7624220d9a9e4ebc0435854a26512b80b487d9584cffa61a8d0a2042b54c481"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/conversations/inspector.tsx",
+        "sha256": "3f78d3a17fb756c9f1e40ba4f66fff21b57198c00552e90f826792ade9ed85de"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/conversations/page.tsx",
+        "sha256": "0625931ac53eef7ed186c4dee517bd6f86f29384ca01340965385770aceb55af"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/globals.css",
+        "sha256": "9cd8140b5c4b1d0556fdcb32f89e2beca16ce63b11eef06eee77e07dec063b30"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/historical-conversations.tsx",
+        "sha256": "5ba7daec340e9f97032f0fd4bfb15646581de419ba4dc466ae444d82991e6c89"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/import-review.tsx",
+        "sha256": "b2ffbe320d29ac3cf2b42e5a6ff8668ce92ce4a6e4e168e0f1068f85f30fdaf8"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/layout.tsx",
+        "sha256": "e6678cb4b2667c882ba11c5f33d8449ee7f4eb2fdfbe097ae0bb83f8fecbfd43"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/operations.tsx",
+        "sha256": "158f889b019dd88091fbe1b6e463198088f81b8ad253df62dc7c9d253f1d91c6"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/page.tsx",
+        "sha256": "27536e1c61dbae0c1aac698f53dd87f43418c1b045e6d3625af84045e1180510"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/program-tools.tsx",
+        "sha256": "5f83bfb1b6edbe8bd44b34eb96b3f16e6322caebaba40b0c23bd29813831b447"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/register-views.tsx",
+        "sha256": "9ee1ee6591975785f8c9e6ea9e70f0de8c2018afa47554a5af73f65b4538e84b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/register/page.tsx",
+        "sha256": "ef98f504e3fc6d278c33f862b06879fcc4741d17eb3341a23cb933952f189028"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/tracker.tsx",
+        "sha256": "0ed0873c505e1e24d00d21e35fcbda3b050afa022afe2455d74121698d330c28"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/vessel-dashboard.tsx",
+        "sha256": "ea089c971ea520e4a80565683fb0612354601f8c4eeadd81e1d499a6a86b3e33"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/app/vessel-register.css",
+        "sha256": "3f8142f9b849e0d6ea03845b7062322923341eacb14011dd7235eca4b4785bda"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components.json",
+        "sha256": "31f4ca67a4a62572571003d3d5aac85ee6fbfca67a192924bac6b168d95e98fd"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/accordion.tsx",
+        "sha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/alert-dialog.tsx",
+        "sha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/alert.tsx",
+        "sha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/aspect-ratio.tsx",
+        "sha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/attachment.tsx",
+        "sha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/avatar.tsx",
+        "sha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/badge.tsx",
+        "sha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/breadcrumb.tsx",
+        "sha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/bubble.tsx",
+        "sha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/button-group.tsx",
+        "sha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/button.tsx",
+        "sha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/calendar.tsx",
+        "sha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/card.tsx",
+        "sha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/carousel.tsx",
+        "sha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/chart.tsx",
+        "sha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/checkbox.tsx",
+        "sha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/collapsible.tsx",
+        "sha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/combobox.tsx",
+        "sha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/command.tsx",
+        "sha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/context-menu.tsx",
+        "sha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/dialog.tsx",
+        "sha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/direction.tsx",
+        "sha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/drawer.tsx",
+        "sha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/dropdown-menu.tsx",
+        "sha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/empty.tsx",
+        "sha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/field.tsx",
+        "sha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/form.tsx",
+        "sha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/hover-card.tsx",
+        "sha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/input-group.tsx",
+        "sha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/input-otp.tsx",
+        "sha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/input.tsx",
+        "sha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/item.tsx",
+        "sha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/kbd.tsx",
+        "sha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/label.tsx",
+        "sha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/marker.tsx",
+        "sha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/menubar.tsx",
+        "sha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/message-scroller.tsx",
+        "sha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/message.tsx",
+        "sha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/native-select.tsx",
+        "sha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/navigation-menu.tsx",
+        "sha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/pagination.tsx",
+        "sha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/popover.tsx",
+        "sha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/progress.tsx",
+        "sha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/radio-group.tsx",
+        "sha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/resizable.tsx",
+        "sha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/scroll-area.tsx",
+        "sha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/select.tsx",
+        "sha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/separator.tsx",
+        "sha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/sheet.tsx",
+        "sha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/sidebar.tsx",
+        "sha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/skeleton.tsx",
+        "sha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/slider.tsx",
+        "sha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/sonner.tsx",
+        "sha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/spinner.tsx",
+        "sha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/switch.tsx",
+        "sha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/table.tsx",
+        "sha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/tabs.tsx",
+        "sha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/textarea.tsx",
+        "sha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/toggle-group.tsx",
+        "sha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/toggle.tsx",
+        "sha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/components/ui/tooltip.tsx",
+        "sha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/compose.yaml",
+        "sha256": "38ae52a657061c6d621bada95f1dee201e9687a63c8fb667ee379566e056a782"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/data/conversation-policy.json",
+        "sha256": "640c7f92ed5c913e158679cfbc7e7b5db91bae35dd2198706c6955ee0c753983"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/index.ts",
+        "sha256": "63acb5965e5ffddd58b247fad5ae760e80ac5f327bff4e69d67e1923825a9023"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migrations/0000_gorgeous_the_executioner.sql",
+        "sha256": "fb2d9661657b954201adb7a6c7d6798b1c860a9f427f82b4cb8dddeee96eb6bf"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migrations/0001_loud_monster_badoon.sql",
+        "sha256": "32c8c1e5945d2a2e7b9a43469710f83e7a767d573680340b711abc16fb52044a"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migrations/0002_flashy_nico_minoru.sql",
+        "sha256": "2c72a9a3cf03675856ae96d8a0a37ec12023d84c09f7775dbb525181d9978552"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migrations/0003_wide_exodus.sql",
+        "sha256": "c1b8ccde321efbf92c2c4baaaa6abae6212b546474aade69541d0b5e821fc706"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migrations/0004_wonderful_warlock.sql",
+        "sha256": "541123a96038c7ca77cbeccd43c1d46d6bac0b6aacf9a65d3ffa0a9f3e601f57"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/migrations/0005_snapshot_immutability.sql",
+        "sha256": "1163d1f86f205aad01d813d4d7e962a573551cbad9aa09f820e1f458b7b36b8e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/postgres.mjs",
+        "sha256": "cf7aff9a56a898e29838c7f96b9fe9939a02b9ddfa35b40014974323bd697e40"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/raw.ts",
+        "sha256": "ca5b974f095cdde0cf6a719b4b40c2bb505622230fb26f841de2120873996fee"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/db/schema.ts",
+        "sha256": "5316c49032a5d12db686ddaa3fad31cd3eaf578c75cdb94140cab7669afb016d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/CONTROLLED_OPERATIONAL_IMPORT_PLAN.md",
+        "sha256": "20ecd01d28b63bad87a33bf26158eba5211744aa5cc83e59ca8b556dbeda0d92"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/DATA_QUALITY_AND_MIGRATION_RISKS.md",
+        "sha256": "7f35313c94cfcc642f287c3f2451c1e33a3a09529e09e0755d51c2ebd99cfa23"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/PHASE1_REPORT.md",
+        "sha256": "47ecaa8d6daa0da910e1d29cb93ce599032732cb021892f98fc5ebed7f04a03f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_DECISIONS_REQUIRED.md",
+        "sha256": "ac9dbbd1b8087b412e99da8ba00a97a487191353c8cf034698fc6ae711b6aa4b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_GAP_ANALYSIS.md",
+        "sha256": "b2771a753c0353b72eff10b3bc6a316713fadc375ffd5220f4e7e1620c4676bc"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/PHASE2_IMPLEMENTATION_PLAN.md",
+        "sha256": "70415c46484ba8f89c235abe236eeb25c7b8078ae332945aacad9a83e5fbe628"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/SOURCE_TO_OPERATIONAL_SCHEMA_AUDIT.md",
+        "sha256": "763e10f758347861f2e3e168263e1ec1e0d73467bc6fbc68132e952198c30407"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/employee-program-baseline.json",
+        "sha256": "934888ff30c33a09e62010fef919ec2be00768d716c4703addaa325637874e59"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/evidence-checksums.json",
+        "sha256": "bc4e8f6efc5d3146d285c54842aa2a5318c969dcb9cbe7b682aca28710e35b22"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0000_gorgeous_the_executioner.sql",
+        "sha256": "d854e332deb6ddad81c8f058a3a3d8ce536d52b59ac07a86dd049992b214188d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0001_loud_monster_badoon.sql",
+        "sha256": "251aabd0fad9f5428fd81a5ac090becf94e817abf772a28657abf3788f88632f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0002_flashy_nico_minoru.sql",
+        "sha256": "d6243f69f4a64f86d982ecfd81652c7362333fa5c67df14bc5c730026eb8fd3b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0003_wide_exodus.sql",
+        "sha256": "fd213f341ced405f212517cf429e7dab1dd9c644108616e22e0dc1ec4c3a4ecd"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0004_wonderful_warlock.sql",
+        "sha256": "c8605060398995f4eb2a47300a12fac7686ae69798096d5abd909fdad10bd45e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0000_snapshot.json",
+        "sha256": "c1416406d59e2c27deec30700db8ded6725af0b56cb637661bd4cd2f58ebda09"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0001_snapshot.json",
+        "sha256": "861c3e595dc76cba0bb7ef6d012f1e71fcec901eb0eea3aaee15c448501b280e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0002_snapshot.json",
+        "sha256": "55f6ddc584ede45d979e8538f0e456bf5a9caf603f0f35294dd11ffccd04489a"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0003_snapshot.json",
+        "sha256": "91f56f87913246d2eff55f9208962c5be0b9b8f377b53e3dfec061eaf0b4e185"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0004_snapshot.json",
+        "sha256": "0b679be1ac5a2b9f1bb24962c82c2aacba83e1f6ec18957a0092e440e2f84207"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/_journal.json",
+        "sha256": "311115468aee765561d30956fd63a3d744dd113a8c64357c4372069e78d022bf"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/phase1-file-changes.json",
+        "sha256": "2d54bdbbcdd1a64db5808416b8949d6f7814b52db461d0035fe83a7f04648e58"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/phase1-retired-paths.json",
+        "sha256": "d627cc1a66e59ef9c875ce608f8573af443e066aaf697bb76cc705b2f3ec82e9"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/v10/CONVERSATIONS.md",
+        "sha256": "6a7da88aad0f8ebbb4f20a617732918b5433018c2b3091ba5aa059054b4a29d6"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/v10/README-OPERATIONS.md",
+        "sha256": "0e917f17d75dbb3db4e5f63f9940e8f9c957c3bff9f165a0216a37063e9e6713"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/v10/README.md",
+        "sha256": "b670ba0eff3b6b1598f619278ca1f61eb609bebc1f80f68c56829905d715dac7"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/docs/v10/START-HERE-BN.md",
+        "sha256": "e30758abfe87ee1db2171f201467bb4de50c33244e9a5b652147b4a1349ce215"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/drizzle.config.ts",
+        "sha256": "25d2e504a12a74216dd58644866b90273ccfe3c6d94380618c6b9b7ed4d0a76d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/eslint.config.mjs",
+        "sha256": "f4f5de1c012112d21f25eb2f49b1e9d56cbeb0cb68290cc49e122ba5ecd74a53"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/hooks/use-mobile.ts",
+        "sha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/accounts-snapshot.ts",
+        "sha256": "4c2a2b9db298b75601396e4bd4757069d43f36250ffe6cdb12a61cb9efd4b8d1"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/cash-data.ts",
+        "sha256": "81603379a3970158037dd40b8b455e03acb9bb7fbf51dd52b78fce3890123c7a"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/cash-source.ts",
+        "sha256": "5346f34f8e6c310a22bf68334530235de62b01fd6074b7dcfc883e21103e2776"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/conversation-read.ts",
+        "sha256": "e13d4baf611e650672904b33163f1a7acc526acd73373e5f6910c75ede8377ee"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/conversation-snapshot.ts",
+        "sha256": "7bd6bc920203bc01392f64a460aacb9a100934d07ba289c5ae7526863576dd38"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/evidence-types.ts",
+        "sha256": "0a3cadb72793527ec742220984a9d31254397ada37c99763c3b3b970807567be"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/evidence.ts",
+        "sha256": "ee5a8753156fdb5c5520d743183033c89625373d8176bcd3bd49b45b22bb000e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/integrations.ts",
+        "sha256": "2dbead2575e9b7bac1775c0a9ba36ab053f2ca734da6eb50143467747f5a61bc"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/operations-assistant.ts",
+        "sha256": "4ee88afd273024e6e53e03de2e6aa3099d126b8545629156351f09fd1e7510d9"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/operations.ts",
+        "sha256": "5ee3c91b7b4f6c7f04387250a704901521bb93c796a303a6a3ceeaea9bbfb3b8"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/popup-position.ts",
+        "sha256": "c5d55aae8252e27377c42f5455a06093bb0e2b45255e7964faa1650371d7652c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/private-origin.ts",
+        "sha256": "7290d01da32f6bed73d81a358c7108ad4bf957cc411cca0b29268c1f01052635"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/program-workflows.ts",
+        "sha256": "8ac8a6d5d7c06a7788304168d056540bf379778d7decdd7282df1d2f99aa9206"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/programs.ts",
+        "sha256": "a2ce32a1749f3ab99e3778fe483e8284ed19a110b5a7e4bb7621b4f4b331a30e"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/register-assistant.ts",
+        "sha256": "c27cb31a39f5539ce4cec4e1611b7cd05aa59be30015f5051fd0f629bab0db2f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/register.ts",
+        "sha256": "365c681e14968a4cca6520ff9e95d5c85d67bc98f1a7a9b3f893e31619d410ab"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/seed.ts",
+        "sha256": "e8c4ada9ad36b8c6894a6155c5d15b66e814938cb613529e47745243d33e3f6d"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/utils.ts",
+        "sha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/validation-auth.mjs",
+        "sha256": "28bb9494c47f9ca4e49f90ded32e75c321ee15f08eeec8c2a8d264082fa0de4c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/vessel-data.ts",
+        "sha256": "da1fa75cb181ea972f9fa23979ee3a43dfa3d0521c654a89759ef786a2fc52b7"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/lib/vessel-source.ts",
+        "sha256": "b545132da16894d75dcad7b41c463020eb65fc1421cf2a25e8ada4fef301e172"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/next-env.d.ts",
+        "sha256": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/next.config.ts",
+        "sha256": "106f9e8becc8dc9a84347de2d218b5b474fe7a593cdca919140cafe6b82041a2"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/package.json",
+        "sha256": "213877e7afb19dad8b38b78158d11fcc104872e4ec0b104c6260710fe7b92ed6"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/pnpm-lock.yaml",
+        "sha256": "90686fa60558d70fe5239283591f1db9fa9f9bb4abd3304d7780d1da5b000cb5"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/pnpm-workspace.yaml",
+        "sha256": "da28734883e5ecb09985a0d6829c853b857b9a154d8c24fbdf64ba35e79372f9"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/postcss.config.mjs",
+        "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/proxy.ts",
+        "sha256": "f3b463cd146b963229ef1ba26d2979182493064bac06203a0735694fb01eb431"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/public/favicon.svg",
+        "sha256": "1ddbd6435ef40f1112c0a10a6e84c9ac982fad01f5c791f79b27adbe4c580405"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/public/file.svg",
+        "sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/public/globe.svg",
+        "sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/public/window.svg",
+        "sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/database.mjs",
+        "sha256": "203acfb30aa2d70ee522074f7eceb038f3aa1a57c09dd42fb1b4738f897ae481"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/employee-program-catalog-read.sql",
+        "sha256": "0fd56119bc28127a92d4c3fa834c2739d2bc445f95e8817fb40c4cb6b056592f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/externalize-seed.mjs",
+        "sha256": "4e9433bfbdbad856158c8449c050b615b3541130cd3806d6bc04ed8909e29da4"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/ingest_chats.py",
+        "sha256": "aed391de8aac179e324a2d88d2854e2447b348b6c708c59a00378c07d666704c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/lint.mjs",
+        "sha256": "82b85b1f4da5341174d8a9675e2cef5ac57125a6f45d56a970f14ee498010a70"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/operations/import_sources.py",
+        "sha256": "9a5bdb4f6ac14de6859d7a08fcbebc490c4ee7da9a9f214e1bc6b2032e3e7a7f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/update_accounts.py",
+        "sha256": "db74b7854eac19e094d1a7f3918ff508c7b04031d00a7f4b3764cf055519ab87"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/update_conversations.py",
+        "sha256": "3f0774bd3c9f4d47f38860bc12535fa05c97f89eb05f13395fa136145cf6c0d9"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/scripts/verify-state.mjs",
+        "sha256": "5dfc42f98952d3bc67267370ab868a2c7a6a6063d9dbda1c114974eaf8c394e5"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/database.mjs",
+        "sha256": "41e2971d2f199f7d9d93ce15ad1d110940b587de74b7061f32558812b60f95ad"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/legacy-source/api.mjs",
+        "sha256": "e42a086536eb0671af3bb988514b6251a6a7d6de034b7f8bb2d6914734a74486"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/legacy-source/conversations.mjs",
+        "sha256": "43bdf493c2a998bcf6ff958043c5da4b82a881bc1d18534e38ed9e7d1553a7ef"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/legacy-source/operations.mjs",
+        "sha256": "97528b1042fbc3f7441abf12ab2b3b0f37371d1ac7f92c051a5185575b61ca32"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/phase1-http.mjs",
+        "sha256": "ce924095953358f9430134518d1f0fafdd7a03232de7fe1ff696e6d36f786a95"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/phase1-unit.mjs",
+        "sha256": "ba07b2e088031f9c10842170d29a5fc5f5966a09f075140d2faf8b45ff73e195"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/source-register.mjs",
+        "sha256": "d89fd28514af8fe82d08336d10919bfcb5b7b076a1d36c55f2e72356651c509f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/test_accounts_import.py",
+        "sha256": "daf03af786aff3730fece427489f31b3407e778f28aa19e39a286d5ee89c4852"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/test_cash_archive.py",
+        "sha256": "d2252b0b333ff4194a3a866df5c7f0f7c462339dc055f3750c0620db3d68cd95"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/test_updated_conversations.py",
+        "sha256": "8337f0abd980f33a49235a6cb0dd7a2b687f9cada357a4c4aa79ded8013924aa"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tests/workflows.mjs",
+        "sha256": "2d05df6a500daad6f3aec6f00847700c808a5a91a5e021d359b6212e1eb5237f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tsconfig.json",
+        "sha256": "ba9b76bf972dfc1c4eba7bcc45ba3c651ea6386c1cd4fdc74c2810deda16fd7c"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/tsconfig.tsbuildinfo",
+        "sha256": "4f0f7706336ec8ec8e2619fd3fd64195b0ae63c6b15d021f7ffff263a33b16ff"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.LICENSE.md",
+        "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+      },
+      {
+        "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.css",
+        "sha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a"
+      }
+    ],
+    "counts": {
+      "new": 2,
+      "modified": 11,
+      "untouched": 194
+    },
+    "dependencyCacheFilesUnchanged": 38905,
+    "productionFramesBeforeAfter": "BYTE_IDENTICAL",
+    "evidenceSourceFilesChecksumsVerified": 6,
+    "migrationFiles0000Through0005": "UNCHANGED",
+    "productionExecutionAuthorized": false,
+    "tests": {
+      "pass": 113,
+      "fail": 0,
+      "skip": 0,
+      "cancelled": 0,
+      "existingRegressionScriptsPass": 3
+    },
+    "temporaryArtifacts": "Private /tmp/alrifai-lifecycle-* catalog frames/manifests/TAP/hash inventories; no historical source writes."
+  },
+  "baselineSourceFileCount": 207,
+  "newFiles": [
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/HISTORICAL_EVIDENCE_RECONCILIATION_REPORT.md",
+      "sha256": "957b7999356829997814efad6066c01e73be7a4ac691a2ae998f8c63d8c9352f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/ISOLATED_SQL_QUALIFICATION_REPORT.md",
+      "sha256": "375454c5629bad765eeac7e17d6febcb0e3105132ef141fbfb820ca33a914680"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_QUALIFICATION_SUMMARY.md",
+      "sha256": "f781ab5ed49795a65d22c8cb8b841b23ba6affdc9530cac9a038740d032c16fa"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/employee-program-reader-compatibility.patch",
+      "sha256": "48b2edeb383c96cce1e3ac0598f4a8a66b7355b9bbb1d6ffeed34c8695e4e167"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/employee-program-evidence-qualification.mjs",
+      "sha256": "b0228d4152a5c5068d236b52db2a3563a5c6f71e01d162b7a59f5719c2c5e3bc"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/employee-program-sql-qualification.py",
+      "sha256": "f5bcc8cf06b897d9af8be3ad9daad1dd54b30d244cc7042795ba4815fbd06933"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/employee-program-qualification.mjs",
+      "sha256": "d75da309f159840ab872451ba9f048e0f36a3a729db232991d54a698c1034d8f"
+    }
+  ],
+  "modifiedFiles": [
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migration-candidates/0006_employee_program_identity.sql",
+      "beforeSha256": "733cbd6bf9996e06e94117036d7dab38d4e299dcb07dcbe3bc9737c57c20130f",
+      "afterSha256": "3d98b7cf26d131842aa5e23ece1b786e5bc094c810807e81bf8e8dbb92f7efff"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/employee-program-file-changes.json",
+      "beforeSha256": "59eec27becd0d6024f152a26acb648392e4209ac367169d5c341ec9febaec054",
+      "afterSha256": "SELF_HASH_OMITTED"
+    }
+  ],
+  "untouchedFiles": [
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/PROGRAM_LIFECYCLE_RULES_IMPLEMENTATION.md",
+      "sha256": "59367f558eb3362fc337be4438be52f179109871b57cc0d79b9b495ff38bb883"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/PROGRAM_LIFECYCLE_VERIFICATION_REPORT.md",
+      "sha256": "db59825c6f64e39ed59ef453478329bdf2f47c1dbfdc94ab4701894a1285e6e2"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_DRY_RUN_REPORT.md",
+      "sha256": "5126bcada5bf6b1ff039658129f9e8c6a0b4337ac03db3fd4279788706796026"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SCHEMA_PROPOSAL.md",
+      "sha256": "0e431a726f6347c69c5ed0f03adb073da22ef670cb78278142fb509a90ff4934"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/EMPLOYEE_PROGRAM_SOURCE_MAPPING.md",
+      "sha256": "306394ba0c7e1ba54bc7c8aa230cf64a64ff42ff0531ceeb4492a97a4a775a7b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/OWNER_BUSINESS_POLICY.md",
+      "sha256": "e0bdc96e44843c2b71ee19c986fe1e86d37fb977a7dff6acdd8aaff571b3b29d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/employee-program-mapping-v1.json",
+      "sha256": "84068005079b4c770f9d3e0c7f546ee0af176887ad7f8eb64dc69dc1f7d25afc"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/owner-business-rules.json",
+      "sha256": "adc9fe19d22f16a16749f0c03b9c160d28c3dcabc0e1904f01b291cff4a5d1f4"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/employee-program-validation.mjs",
+      "sha256": "dd5c3a3ddd0bab96a1a14dc315b5bedb5ba86db019d1591158bc6249b67b78ce"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/employee-program-dry-run.mjs",
+      "sha256": "e981f61dee8ec4ca1dff4f3d997459f387245c1a2644d21cf969a7ac8c09b0b7"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/employee-program.mjs",
+      "sha256": "e298265168d9fac1df7daefeee474b09e7a2d6160fe5553eebe06fee382c3b30"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/.dockerignore",
+      "sha256": "aa80dd58ac7406f048582e0d0ccc4260efe109c242fd3385341a0f6f693dae4c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/.env.example",
+      "sha256": "215757692020f956364c6c87e39a94daea3b8924ae40b0cb2e9eb036ac54d401"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/.gitignore",
+      "sha256": "0d5f450f53a9b253b5bf8e2104dc7746777806bdde29d2ebdb3892a8169a3095"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/.lint-results.json",
+      "sha256": "54ebc845316c52acb95259b14933edb459b9f05554371da36d1100ab06b745eb"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/.npmrc",
+      "sha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/Dockerfile",
+      "sha256": "08013cf855c354bae80142bae5889dd9bcb1e3e82511fabf599e119ab90eaa75"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/README.md",
+      "sha256": "76abf5425af3c0c605dd996983781c5117bcb84ea4a811afb532aff29e6a98dd"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/SOURCE-MANIFEST.json",
+      "sha256": "1ee70b73d337bac0c2043227dd8a6170d732b2402e916ac90e2e256df2371233"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/accounts-panel.tsx",
+      "sha256": "4597c485e179ff2f6c8c44e01cc81a6f69859f7b831dde18c0b74108b466eda7"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/assistant/route.ts",
+      "sha256": "a832d084d3053418c4be349313fe30f559595f0ebf715029bb8cac0837b9f0fd"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/conversations/route.ts",
+      "sha256": "b67e93e917638bea0cc787f010e2a4243d7379f084f708b2ebc39c5616fb1d23"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/core/route.ts",
+      "sha256": "bd9c4e7c08fa2d6641121a804d3a3b3b9049d2b154ca741550f994a6487bcc88"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/health/route.ts",
+      "sha256": "9efdd105ab018b852a3de4b75d943adc42ed3f0e30269f462cdb4abb59db5ca5"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/import-audit/route.ts",
+      "sha256": "23d057afcf519bb87952060454f368f271a9d7a85fdbf835e9c075fd5d6d0483"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/operations/route.ts",
+      "sha256": "923a29f8049f54a55f1551d1e3e19f33181d2028449fc4babed95290a337b60b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/program-tools/route.ts",
+      "sha256": "c1ce88340fdfc076addefa64fa812ad8e3b03e0dcb319ecead50959705567add"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/register/route.ts",
+      "sha256": "003818673bf23a30d29a10a2f4e2d1877f450dcb141947cd40a2e6f1d9fe5f38"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/api/vessels/route.ts",
+      "sha256": "5897bb7628c1a153d55df0f1070c96ecaf51e0fb477edf5ea870ab3cc8dcf79b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/assistant-popup.tsx",
+      "sha256": "33fa450a8e090341dd894fca11d934084d708e1c7b608b946e1973ff16b11754"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/chatgpt-auth.ts",
+      "sha256": "3599f3231238f517103bd9312caa2c77b3771729cfe52f18cdaed77d6f52f2fe"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/conversation-inspector.css",
+      "sha256": "f7624220d9a9e4ebc0435854a26512b80b487d9584cffa61a8d0a2042b54c481"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/conversations/inspector.tsx",
+      "sha256": "3f78d3a17fb756c9f1e40ba4f66fff21b57198c00552e90f826792ade9ed85de"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/conversations/page.tsx",
+      "sha256": "0625931ac53eef7ed186c4dee517bd6f86f29384ca01340965385770aceb55af"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/globals.css",
+      "sha256": "9cd8140b5c4b1d0556fdcb32f89e2beca16ce63b11eef06eee77e07dec063b30"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/historical-conversations.tsx",
+      "sha256": "5ba7daec340e9f97032f0fd4bfb15646581de419ba4dc466ae444d82991e6c89"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/import-review.tsx",
+      "sha256": "b2ffbe320d29ac3cf2b42e5a6ff8668ce92ce4a6e4e168e0f1068f85f30fdaf8"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/layout.tsx",
+      "sha256": "e6678cb4b2667c882ba11c5f33d8449ee7f4eb2fdfbe097ae0bb83f8fecbfd43"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/operations.tsx",
+      "sha256": "158f889b019dd88091fbe1b6e463198088f81b8ad253df62dc7c9d253f1d91c6"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/page.tsx",
+      "sha256": "27536e1c61dbae0c1aac698f53dd87f43418c1b045e6d3625af84045e1180510"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/program-tools.tsx",
+      "sha256": "5f83bfb1b6edbe8bd44b34eb96b3f16e6322caebaba40b0c23bd29813831b447"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/register-views.tsx",
+      "sha256": "9ee1ee6591975785f8c9e6ea9e70f0de8c2018afa47554a5af73f65b4538e84b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/register/page.tsx",
+      "sha256": "ef98f504e3fc6d278c33f862b06879fcc4741d17eb3341a23cb933952f189028"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/tracker.tsx",
+      "sha256": "0ed0873c505e1e24d00d21e35fcbda3b050afa022afe2455d74121698d330c28"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/vessel-dashboard.tsx",
+      "sha256": "ea089c971ea520e4a80565683fb0612354601f8c4eeadd81e1d499a6a86b3e33"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/app/vessel-register.css",
+      "sha256": "3f8142f9b849e0d6ea03845b7062322923341eacb14011dd7235eca4b4785bda"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components.json",
+      "sha256": "31f4ca67a4a62572571003d3d5aac85ee6fbfca67a192924bac6b168d95e98fd"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/accordion.tsx",
+      "sha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/alert-dialog.tsx",
+      "sha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/alert.tsx",
+      "sha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/aspect-ratio.tsx",
+      "sha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/attachment.tsx",
+      "sha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/avatar.tsx",
+      "sha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/badge.tsx",
+      "sha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/breadcrumb.tsx",
+      "sha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/bubble.tsx",
+      "sha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/button-group.tsx",
+      "sha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/button.tsx",
+      "sha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/calendar.tsx",
+      "sha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/card.tsx",
+      "sha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/carousel.tsx",
+      "sha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/chart.tsx",
+      "sha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/checkbox.tsx",
+      "sha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/collapsible.tsx",
+      "sha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/combobox.tsx",
+      "sha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/command.tsx",
+      "sha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/context-menu.tsx",
+      "sha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/dialog.tsx",
+      "sha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/direction.tsx",
+      "sha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/drawer.tsx",
+      "sha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/dropdown-menu.tsx",
+      "sha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/empty.tsx",
+      "sha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/field.tsx",
+      "sha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/form.tsx",
+      "sha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/hover-card.tsx",
+      "sha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/input-group.tsx",
+      "sha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/input-otp.tsx",
+      "sha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/input.tsx",
+      "sha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/item.tsx",
+      "sha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/kbd.tsx",
+      "sha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/label.tsx",
+      "sha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/marker.tsx",
+      "sha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/menubar.tsx",
+      "sha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/message-scroller.tsx",
+      "sha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/message.tsx",
+      "sha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/native-select.tsx",
+      "sha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/navigation-menu.tsx",
+      "sha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/pagination.tsx",
+      "sha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/popover.tsx",
+      "sha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/progress.tsx",
+      "sha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/radio-group.tsx",
+      "sha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/resizable.tsx",
+      "sha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/scroll-area.tsx",
+      "sha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/select.tsx",
+      "sha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/separator.tsx",
+      "sha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/sheet.tsx",
+      "sha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/sidebar.tsx",
+      "sha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/skeleton.tsx",
+      "sha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/slider.tsx",
+      "sha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/sonner.tsx",
+      "sha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/spinner.tsx",
+      "sha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/switch.tsx",
+      "sha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/table.tsx",
+      "sha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/tabs.tsx",
+      "sha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/textarea.tsx",
+      "sha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/toggle-group.tsx",
+      "sha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/toggle.tsx",
+      "sha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/components/ui/tooltip.tsx",
+      "sha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/compose.yaml",
+      "sha256": "38ae52a657061c6d621bada95f1dee201e9687a63c8fb667ee379566e056a782"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/data/conversation-policy.json",
+      "sha256": "640c7f92ed5c913e158679cfbc7e7b5db91bae35dd2198706c6955ee0c753983"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/index.ts",
+      "sha256": "63acb5965e5ffddd58b247fad5ae760e80ac5f327bff4e69d67e1923825a9023"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migrations/0000_gorgeous_the_executioner.sql",
+      "sha256": "fb2d9661657b954201adb7a6c7d6798b1c860a9f427f82b4cb8dddeee96eb6bf"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migrations/0001_loud_monster_badoon.sql",
+      "sha256": "32c8c1e5945d2a2e7b9a43469710f83e7a767d573680340b711abc16fb52044a"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migrations/0002_flashy_nico_minoru.sql",
+      "sha256": "2c72a9a3cf03675856ae96d8a0a37ec12023d84c09f7775dbb525181d9978552"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migrations/0003_wide_exodus.sql",
+      "sha256": "c1b8ccde321efbf92c2c4baaaa6abae6212b546474aade69541d0b5e821fc706"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migrations/0004_wonderful_warlock.sql",
+      "sha256": "541123a96038c7ca77cbeccd43c1d46d6bac0b6aacf9a65d3ffa0a9f3e601f57"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/migrations/0005_snapshot_immutability.sql",
+      "sha256": "1163d1f86f205aad01d813d4d7e962a573551cbad9aa09f820e1f458b7b36b8e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/postgres.mjs",
+      "sha256": "cf7aff9a56a898e29838c7f96b9fe9939a02b9ddfa35b40014974323bd697e40"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/raw.ts",
+      "sha256": "ca5b974f095cdde0cf6a719b4b40c2bb505622230fb26f841de2120873996fee"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/db/schema.ts",
+      "sha256": "5316c49032a5d12db686ddaa3fad31cd3eaf578c75cdb94140cab7669afb016d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/CONTROLLED_OPERATIONAL_IMPORT_PLAN.md",
+      "sha256": "20ecd01d28b63bad87a33bf26158eba5211744aa5cc83e59ca8b556dbeda0d92"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/DATA_QUALITY_AND_MIGRATION_RISKS.md",
+      "sha256": "7f35313c94cfcc642f287c3f2451c1e33a3a09529e09e0755d51c2ebd99cfa23"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/PHASE1_REPORT.md",
+      "sha256": "47ecaa8d6daa0da910e1d29cb93ce599032732cb021892f98fc5ebed7f04a03f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_DECISIONS_REQUIRED.md",
+      "sha256": "ac9dbbd1b8087b412e99da8ba00a97a487191353c8cf034698fc6ae711b6aa4b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/PHASE2A_GAP_ANALYSIS.md",
+      "sha256": "b2771a753c0353b72eff10b3bc6a316713fadc375ffd5220f4e7e1620c4676bc"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/PHASE2_IMPLEMENTATION_PLAN.md",
+      "sha256": "70415c46484ba8f89c235abe236eeb25c7b8078ae332945aacad9a83e5fbe628"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/SOURCE_TO_OPERATIONAL_SCHEMA_AUDIT.md",
+      "sha256": "763e10f758347861f2e3e168263e1ec1e0d73467bc6fbc68132e952198c30407"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/employee-program-baseline.json",
+      "sha256": "934888ff30c33a09e62010fef919ec2be00768d716c4703addaa325637874e59"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/evidence-checksums.json",
+      "sha256": "bc4e8f6efc5d3146d285c54842aa2a5318c969dcb9cbe7b682aca28710e35b22"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0000_gorgeous_the_executioner.sql",
+      "sha256": "d854e332deb6ddad81c8f058a3a3d8ce536d52b59ac07a86dd049992b214188d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0001_loud_monster_badoon.sql",
+      "sha256": "251aabd0fad9f5428fd81a5ac090becf94e817abf772a28657abf3788f88632f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0002_flashy_nico_minoru.sql",
+      "sha256": "d6243f69f4a64f86d982ecfd81652c7362333fa5c67df14bc5c730026eb8fd3b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0003_wide_exodus.sql",
+      "sha256": "fd213f341ced405f212517cf429e7dab1dd9c644108616e22e0dc1ec4c3a4ecd"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/0004_wonderful_warlock.sql",
+      "sha256": "c8605060398995f4eb2a47300a12fac7686ae69798096d5abd909fdad10bd45e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0000_snapshot.json",
+      "sha256": "c1416406d59e2c27deec30700db8ded6725af0b56cb637661bd4cd2f58ebda09"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0001_snapshot.json",
+      "sha256": "861c3e595dc76cba0bb7ef6d012f1e71fcec901eb0eea3aaee15c448501b280e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0002_snapshot.json",
+      "sha256": "55f6ddc584ede45d979e8538f0e456bf5a9caf603f0f35294dd11ffccd04489a"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0003_snapshot.json",
+      "sha256": "91f56f87913246d2eff55f9208962c5be0b9b8f377b53e3dfec061eaf0b4e185"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/0004_snapshot.json",
+      "sha256": "0b679be1ac5a2b9f1bb24962c82c2aacba83e1f6ec18957a0092e440e2f84207"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/legacy-d1/meta/_journal.json",
+      "sha256": "311115468aee765561d30956fd63a3d744dd113a8c64357c4372069e78d022bf"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/phase1-file-changes.json",
+      "sha256": "2d54bdbbcdd1a64db5808416b8949d6f7814b52db461d0035fe83a7f04648e58"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/phase1-retired-paths.json",
+      "sha256": "d627cc1a66e59ef9c875ce608f8573af443e066aaf697bb76cc705b2f3ec82e9"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/v10/CONVERSATIONS.md",
+      "sha256": "6a7da88aad0f8ebbb4f20a617732918b5433018c2b3091ba5aa059054b4a29d6"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/v10/README-OPERATIONS.md",
+      "sha256": "0e917f17d75dbb3db4e5f63f9940e8f9c957c3bff9f165a0216a37063e9e6713"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/v10/README.md",
+      "sha256": "b670ba0eff3b6b1598f619278ca1f61eb609bebc1f80f68c56829905d715dac7"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/docs/v10/START-HERE-BN.md",
+      "sha256": "e30758abfe87ee1db2171f201467bb4de50c33244e9a5b652147b4a1349ce215"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/drizzle.config.ts",
+      "sha256": "25d2e504a12a74216dd58644866b90273ccfe3c6d94380618c6b9b7ed4d0a76d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/eslint.config.mjs",
+      "sha256": "f4f5de1c012112d21f25eb2f49b1e9d56cbeb0cb68290cc49e122ba5ecd74a53"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/hooks/use-mobile.ts",
+      "sha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/accounts-snapshot.ts",
+      "sha256": "4c2a2b9db298b75601396e4bd4757069d43f36250ffe6cdb12a61cb9efd4b8d1"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/cash-data.ts",
+      "sha256": "81603379a3970158037dd40b8b455e03acb9bb7fbf51dd52b78fce3890123c7a"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/cash-source.ts",
+      "sha256": "5346f34f8e6c310a22bf68334530235de62b01fd6074b7dcfc883e21103e2776"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/conversation-read.ts",
+      "sha256": "e13d4baf611e650672904b33163f1a7acc526acd73373e5f6910c75ede8377ee"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/conversation-snapshot.ts",
+      "sha256": "7bd6bc920203bc01392f64a460aacb9a100934d07ba289c5ae7526863576dd38"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/evidence-types.ts",
+      "sha256": "0a3cadb72793527ec742220984a9d31254397ada37c99763c3b3b970807567be"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/evidence.ts",
+      "sha256": "ee5a8753156fdb5c5520d743183033c89625373d8176bcd3bd49b45b22bb000e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/integrations.ts",
+      "sha256": "2dbead2575e9b7bac1775c0a9ba36ab053f2ca734da6eb50143467747f5a61bc"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/operations-assistant.ts",
+      "sha256": "4ee88afd273024e6e53e03de2e6aa3099d126b8545629156351f09fd1e7510d9"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/operations.ts",
+      "sha256": "5ee3c91b7b4f6c7f04387250a704901521bb93c796a303a6a3ceeaea9bbfb3b8"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/popup-position.ts",
+      "sha256": "c5d55aae8252e27377c42f5455a06093bb0e2b45255e7964faa1650371d7652c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/private-origin.ts",
+      "sha256": "7290d01da32f6bed73d81a358c7108ad4bf957cc411cca0b29268c1f01052635"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/program-workflows.ts",
+      "sha256": "8ac8a6d5d7c06a7788304168d056540bf379778d7decdd7282df1d2f99aa9206"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/programs.ts",
+      "sha256": "a2ce32a1749f3ab99e3778fe483e8284ed19a110b5a7e4bb7621b4f4b331a30e"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/register-assistant.ts",
+      "sha256": "c27cb31a39f5539ce4cec4e1611b7cd05aa59be30015f5051fd0f629bab0db2f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/register.ts",
+      "sha256": "365c681e14968a4cca6520ff9e95d5c85d67bc98f1a7a9b3f893e31619d410ab"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/seed.ts",
+      "sha256": "e8c4ada9ad36b8c6894a6155c5d15b66e814938cb613529e47745243d33e3f6d"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/utils.ts",
+      "sha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/validation-auth.mjs",
+      "sha256": "28bb9494c47f9ca4e49f90ded32e75c321ee15f08eeec8c2a8d264082fa0de4c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/vessel-data.ts",
+      "sha256": "da1fa75cb181ea972f9fa23979ee3a43dfa3d0521c654a89759ef786a2fc52b7"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/lib/vessel-source.ts",
+      "sha256": "b545132da16894d75dcad7b41c463020eb65fc1421cf2a25e8ada4fef301e172"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/next-env.d.ts",
+      "sha256": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/next.config.ts",
+      "sha256": "106f9e8becc8dc9a84347de2d218b5b474fe7a593cdca919140cafe6b82041a2"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/package.json",
+      "sha256": "213877e7afb19dad8b38b78158d11fcc104872e4ec0b104c6260710fe7b92ed6"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/pnpm-lock.yaml",
+      "sha256": "90686fa60558d70fe5239283591f1db9fa9f9bb4abd3304d7780d1da5b000cb5"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/pnpm-workspace.yaml",
+      "sha256": "da28734883e5ecb09985a0d6829c853b857b9a154d8c24fbdf64ba35e79372f9"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/postcss.config.mjs",
+      "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/proxy.ts",
+      "sha256": "f3b463cd146b963229ef1ba26d2979182493064bac06203a0735694fb01eb431"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/public/favicon.svg",
+      "sha256": "1ddbd6435ef40f1112c0a10a6e84c9ac982fad01f5c791f79b27adbe4c580405"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/public/file.svg",
+      "sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/public/globe.svg",
+      "sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/public/window.svg",
+      "sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/database.mjs",
+      "sha256": "203acfb30aa2d70ee522074f7eceb038f3aa1a57c09dd42fb1b4738f897ae481"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/employee-program-catalog-read.sql",
+      "sha256": "0fd56119bc28127a92d4c3fa834c2739d2bc445f95e8817fb40c4cb6b056592f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/externalize-seed.mjs",
+      "sha256": "4e9433bfbdbad856158c8449c050b615b3541130cd3806d6bc04ed8909e29da4"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/ingest_chats.py",
+      "sha256": "aed391de8aac179e324a2d88d2854e2447b348b6c708c59a00378c07d666704c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/lint.mjs",
+      "sha256": "82b85b1f4da5341174d8a9675e2cef5ac57125a6f45d56a970f14ee498010a70"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/operations/import_sources.py",
+      "sha256": "9a5bdb4f6ac14de6859d7a08fcbebc490c4ee7da9a9f214e1bc6b2032e3e7a7f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/update_accounts.py",
+      "sha256": "db74b7854eac19e094d1a7f3918ff508c7b04031d00a7f4b3764cf055519ab87"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/update_conversations.py",
+      "sha256": "3f0774bd3c9f4d47f38860bc12535fa05c97f89eb05f13395fa136145cf6c0d9"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/scripts/verify-state.mjs",
+      "sha256": "5dfc42f98952d3bc67267370ab868a2c7a6a6063d9dbda1c114974eaf8c394e5"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/database.mjs",
+      "sha256": "41e2971d2f199f7d9d93ce15ad1d110940b587de74b7061f32558812b60f95ad"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/legacy-source/api.mjs",
+      "sha256": "e42a086536eb0671af3bb988514b6251a6a7d6de034b7f8bb2d6914734a74486"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/legacy-source/conversations.mjs",
+      "sha256": "43bdf493c2a998bcf6ff958043c5da4b82a881bc1d18534e38ed9e7d1553a7ef"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/legacy-source/operations.mjs",
+      "sha256": "97528b1042fbc3f7441abf12ab2b3b0f37371d1ac7f92c051a5185575b61ca32"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/phase1-http.mjs",
+      "sha256": "ce924095953358f9430134518d1f0fafdd7a03232de7fe1ff696e6d36f786a95"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/phase1-unit.mjs",
+      "sha256": "ba07b2e088031f9c10842170d29a5fc5f5966a09f075140d2faf8b45ff73e195"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/source-register.mjs",
+      "sha256": "d89fd28514af8fe82d08336d10919bfcb5b7b076a1d36c55f2e72356651c509f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/test_accounts_import.py",
+      "sha256": "daf03af786aff3730fece427489f31b3407e778f28aa19e39a286d5ee89c4852"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/test_cash_archive.py",
+      "sha256": "d2252b0b333ff4194a3a866df5c7f0f7c462339dc055f3750c0620db3d68cd95"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/test_updated_conversations.py",
+      "sha256": "8337f0abd980f33a49235a6cb0dd7a2b687f9cada357a4c4aa79ded8013924aa"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tests/workflows.mjs",
+      "sha256": "2d05df6a500daad6f3aec6f00847700c808a5a91a5e021d359b6212e1eb5237f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tsconfig.json",
+      "sha256": "ba9b76bf972dfc1c4eba7bcc45ba3c651ea6386c1cd4fdc74c2810deda16fd7c"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/tsconfig.tsbuildinfo",
+      "sha256": "4f0f7706336ec8ec8e2619fd3fd64195b0ae63c6b15d021f7ffff263a33b16ff"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.LICENSE.md",
+      "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+    },
+    {
+      "path": "/opt/vps/apps/al-rifai/vendor/shadcn-tailwind-4.13.0.css",
+      "sha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a"
+    }
+  ],
+  "counts": {
+    "new": 7,
+    "modified": 2,
+    "untouched": 205,
+    "sourceFilesAfter": 214
+  },
+  "productionFramesBeforeAfter": "BYTE_IDENTICAL",
+  "evidenceSourceFilesChecksumsVerified": true,
+  "productionExecutionAuthorized": false,
+  "tests": {
+    "existing": {
+      "pass": 113,
+      "fail": 0,
+      "skip": 0
+    },
+    "reader": {
+      "pass": 9,
+      "fail": 0,
+      "skip": 0,
+      "limitation": "reproduces unchanged reader defects; proposal not applied"
+    },
+    "sqlInitial": {
+      "pass": 29,
+      "fail": 1,
+      "skip": 0
+    },
+    "sqlCorrected": {
+      "pass": 30,
+      "fail": 0,
+      "skip": 0
+    },
+    "legacyAssertionScripts": "3 PASS"
+  },
+  "temporaryArtifacts": [
+    "/tmp/alrifai-evidence-qualification-final-c.json",
+    "/tmp/alrifai-sql-qualification-first.json",
+    "/tmp/alrifai-sql-qualification-final.json",
+    "/tmp/alrifai-authorized-media-discovery.json"
+  ],
+  "cleanup": "Both isolated containers and private test credential removed; no persistent test volume"
+}

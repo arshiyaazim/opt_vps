@@ -1,0 +1,3591 @@
+{
+  "version": "employee-program-v4-lifecycle",
+  "canonicalization": "Recursively sort object keys using UTF-16 code unit order; preserve array order; JSON.stringify UTF-8; absent/null/blank distinct.",
+  "sources": {
+    "conversation-snapshot.json": {
+      "path": "/var/lib/vps/al-rifai/evidence/conversation-snapshot.json",
+      "sha256": "63cd86a078268046deb2ce0e3186dba7ebda0cf323ed7e5e7e58df6f2fb0d8d4",
+      "selectors": {
+        "programs": {
+          "count": 646,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "aliases": {
+                "types": [
+                  "array"
+                ],
+                "items": {
+                  "types": [
+                    "string"
+                  ]
+                }
+              },
+              "conflicts": {
+                "types": [
+                  "array"
+                ],
+                "items": {
+                  "types": [
+                    "object"
+                  ],
+                  "properties": {
+                    "existing": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "field": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "incoming": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "sourceRow": {
+                      "types": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "existing",
+                    "field",
+                    "incoming",
+                    "sourceRow"
+                  ]
+                }
+              },
+              "createdAt": {
+                "types": [
+                  "string"
+                ]
+              },
+              "destination": {
+                "types": [
+                  "string"
+                ]
+              },
+              "details": {
+                "types": [
+                  "object"
+                ],
+                "properties": {
+                  "documentKind": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "endShift": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "issues": {
+                    "types": [
+                      "array"
+                    ],
+                    "items": {
+                      "types": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "legacyMisprojectedDestination": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "location": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "rawPhones": {
+                    "types": [
+                      "object"
+                    ],
+                    "properties": {
+                      "escortMobile": {
+                        "types": [
+                          "string"
+                        ]
+                      },
+                      "masterMobile": {
+                        "types": [
+                          "string"
+                        ]
+                      }
+                    },
+                    "required": []
+                  },
+                  "recordKind": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "releaseConfirmed": {
+                    "types": [
+                      "boolean"
+                    ]
+                  },
+                  "releaseDate": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "releasePoint": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sender": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceChat": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceLine": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceMessageDate": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceMessageId": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceSha256": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceStatus": {
+                    "types": [
+                      "string"
+                    ]
+                  }
+                },
+                "required": [
+                  "issues",
+                  "recordKind",
+                  "releaseConfirmed",
+                  "sourceLine"
+                ]
+              },
+              "duplicateOf": {
+                "types": [
+                  "null"
+                ]
+              },
+              "endDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortName": {
+                "types": [
+                  "string"
+                ]
+              },
+              "evidence": {
+                "types": [
+                  "array"
+                ],
+                "items": {
+                  "types": [
+                    "object"
+                  ],
+                  "properties": {
+                    "id": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "reason": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "source": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "sourceLine": {
+                      "types": [
+                        "string"
+                      ]
+                    },
+                    "sourceRef": {
+                      "types": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "reason",
+                    "source",
+                    "sourceLine",
+                    "sourceRef"
+                  ]
+                }
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              },
+              "lighterVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "masterMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "motherVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "notes": {
+                "types": [
+                  "string"
+                ]
+              },
+              "revision": {
+                "types": [
+                  "number"
+                ]
+              },
+              "shift": {
+                "types": [
+                  "string"
+                ]
+              },
+              "source": {
+                "types": [
+                  "string"
+                ]
+              },
+              "startDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "status": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "aliases",
+              "conflicts",
+              "createdAt",
+              "destination",
+              "details",
+              "duplicateOf",
+              "endDate",
+              "escortMobile",
+              "escortName",
+              "evidence",
+              "id",
+              "lighterVessel",
+              "masterMobile",
+              "motherVessel",
+              "notes",
+              "revision",
+              "shift",
+              "source",
+              "startDate",
+              "status"
+            ]
+          },
+          "fields": {
+            "aliases": {
+              "exactSourceField": "aliases",
+              "sourceTypes": [
+                "array"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "conflicts": {
+              "exactSourceField": "conflicts",
+              "sourceTypes": [
+                "array"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "createdAt": {
+              "exactSourceField": "createdAt",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "destination": {
+              "exactSourceField": "destination",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "programs.destination",
+              "actualOperationalTarget": "programs.destination",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "MANUAL_REVIEW"
+            },
+            "details": {
+              "exactSourceField": "details",
+              "sourceTypes": [
+                "object"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "duplicateOf": {
+              "exactSourceField": "duplicateOf",
+              "sourceTypes": [
+                "null"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "endDate": {
+              "exactSourceField": "endDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.end_date",
+              "actualOperationalTarget": "programs.endDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "escortMobile": {
+              "exactSourceField": "escortMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortMobile",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-004 optional existing program field; normalize identically and associate to matching Employee Ledger employee_id; no duplicate employee or new escort_mobile column",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "escortName": {
+              "exactSourceField": "escortName",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortName",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "evidence": {
+              "exactSourceField": "evidence",
+              "sourceTypes": [
+                "array"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "lighterVessel": {
+              "exactSourceField": "lighterVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.lighterVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "masterMobile": {
+              "exactSourceField": "masterMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "motherVessel": {
+              "exactSourceField": "motherVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.motherVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "notes": {
+              "exactSourceField": "notes",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "revision": {
+              "exactSourceField": "revision",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "shift": {
+              "exactSourceField": "shift",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.shift",
+              "actualOperationalTarget": "programs.shift",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "source": {
+              "exactSourceField": "source",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "startDate": {
+              "exactSourceField": "startDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.start_date",
+              "actualOperationalTarget": "programs.startDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "status": {
+              "exactSourceField": "status",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.lifecycle",
+              "actualOperationalTarget": "programs.status",
+              "transform": "Preserve raw historical status; lifecycle classification requires owner message-role and transition proof; release/completion/settlement/payment are distinct",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            }
+          }
+        },
+        "programEvidence": {
+          "count": 1668,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "createdAt": {
+                "types": [
+                  "string"
+                ]
+              },
+              "destination": {
+                "types": [
+                  "string"
+                ]
+              },
+              "details": {
+                "types": [
+                  "object"
+                ],
+                "properties": {
+                  "alongside": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "documentKind": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "endShift": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "issues": {
+                    "types": [
+                      "array"
+                    ],
+                    "items": {
+                      "types": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "loadingPoint": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "location": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "masterName": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "rawPhones": {
+                    "types": [
+                      "object"
+                    ],
+                    "properties": {
+                      "escortMobile": {
+                        "types": [
+                          "string"
+                        ]
+                      },
+                      "masterMobile": {
+                        "types": [
+                          "string"
+                        ]
+                      }
+                    },
+                    "required": []
+                  },
+                  "recordKind": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "releaseConfirmed": {
+                    "types": [
+                      "boolean"
+                    ]
+                  },
+                  "releasePoint": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sender": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceChat": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceLine": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceMessageDate": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceMessageId": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceSha256": {
+                    "types": [
+                      "string"
+                    ]
+                  }
+                },
+                "required": [
+                  "documentKind",
+                  "endShift",
+                  "issues",
+                  "recordKind",
+                  "releaseConfirmed",
+                  "sender",
+                  "sourceChat",
+                  "sourceLine",
+                  "sourceMessageDate",
+                  "sourceMessageId",
+                  "sourceSha256"
+                ]
+              },
+              "duplicateOf": {
+                "types": [
+                  "null"
+                ]
+              },
+              "endDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortName": {
+                "types": [
+                  "string"
+                ]
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              },
+              "lighterVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "masterMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "motherVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "notes": {
+                "types": [
+                  "string"
+                ]
+              },
+              "revision": {
+                "types": [
+                  "number"
+                ]
+              },
+              "shift": {
+                "types": [
+                  "string"
+                ]
+              },
+              "source": {
+                "types": [
+                  "string"
+                ]
+              },
+              "startDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "status": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "createdAt",
+              "destination",
+              "details",
+              "duplicateOf",
+              "endDate",
+              "escortMobile",
+              "escortName",
+              "id",
+              "lighterVessel",
+              "masterMobile",
+              "motherVessel",
+              "notes",
+              "revision",
+              "shift",
+              "source",
+              "startDate",
+              "status"
+            ]
+          },
+          "fields": {
+            "createdAt": {
+              "exactSourceField": "createdAt",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "destination": {
+              "exactSourceField": "destination",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "programs.destination",
+              "actualOperationalTarget": "programs.destination",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "MANUAL_REVIEW"
+            },
+            "details": {
+              "exactSourceField": "details",
+              "sourceTypes": [
+                "object"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "duplicateOf": {
+              "exactSourceField": "duplicateOf",
+              "sourceTypes": [
+                "null"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "endDate": {
+              "exactSourceField": "endDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.end_date",
+              "actualOperationalTarget": "programs.endDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "escortMobile": {
+              "exactSourceField": "escortMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortMobile",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-004 optional existing program field; normalize identically and associate to matching Employee Ledger employee_id; no duplicate employee or new escort_mobile column",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "escortName": {
+              "exactSourceField": "escortName",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortName",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "lighterVessel": {
+              "exactSourceField": "lighterVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.lighterVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "masterMobile": {
+              "exactSourceField": "masterMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "motherVessel": {
+              "exactSourceField": "motherVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.motherVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "notes": {
+              "exactSourceField": "notes",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "revision": {
+              "exactSourceField": "revision",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "shift": {
+              "exactSourceField": "shift",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.shift",
+              "actualOperationalTarget": "programs.shift",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "source": {
+              "exactSourceField": "source",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "startDate": {
+              "exactSourceField": "startDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.start_date",
+              "actualOperationalTarget": "programs.startDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "status": {
+              "exactSourceField": "status",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.lifecycle",
+              "actualOperationalTarget": "programs.status",
+              "transform": "Preserve raw historical status; lifecycle classification requires owner message-role and transition proof; release/completion/settlement/payment are distinct",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            }
+          }
+        },
+        "links": {
+          "count": 843,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "alias": {
+                "types": [
+                  "string"
+                ]
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "alias",
+              "id"
+            ]
+          },
+          "fields": {
+            "alias": {
+              "exactSourceField": "alias",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            }
+          }
+        },
+        "conflicts": {
+          "count": 94,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "existing": {
+                "types": [
+                  "string"
+                ]
+              },
+              "field": {
+                "types": [
+                  "string"
+                ]
+              },
+              "incoming": {
+                "types": [
+                  "string"
+                ]
+              },
+              "programId": {
+                "types": [
+                  "string"
+                ]
+              },
+              "sourceRow": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "existing",
+              "field",
+              "incoming",
+              "programId",
+              "sourceRow"
+            ]
+          },
+          "fields": {
+            "existing": {
+              "exactSourceField": "existing",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "field": {
+              "exactSourceField": "field",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "incoming": {
+              "exactSourceField": "incoming",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "programId": {
+              "exactSourceField": "programId",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "sourceRow": {
+              "exactSourceField": "sourceRow",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            }
+          }
+        }
+      }
+    },
+    "accounts-snapshot.json": {
+      "path": "/var/lib/vps/al-rifai/evidence/accounts-snapshot.json",
+      "sha256": "e8bb01f520f035362acd1284419e6929ec02547edaef1b0ebcfcf2c0a914e5c2",
+      "selectors": {
+        "accountsCash": {
+          "count": 7038,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "amountCents": {
+                "types": [
+                  "number"
+                ]
+              },
+              "category": {
+                "types": [
+                  "string"
+                ]
+              },
+              "date": {
+                "types": [
+                  "string"
+                ]
+              },
+              "employeePhone": {
+                "types": [
+                  "string"
+                ]
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              },
+              "identityProofKind": {
+                "types": [
+                  "string"
+                ]
+              },
+              "identityRule": {
+                "types": [
+                  "string"
+                ]
+              },
+              "identityVerified": {
+                "types": [
+                  "boolean"
+                ]
+              },
+              "issues": {
+                "types": [
+                  "array"
+                ],
+                "items": {
+                  "types": [
+                    "string"
+                  ]
+                }
+              },
+              "method": {
+                "types": [
+                  "string"
+                ]
+              },
+              "name": {
+                "types": [
+                  "string"
+                ]
+              },
+              "payoutPhone": {
+                "types": [
+                  "string"
+                ]
+              },
+              "purpose": {
+                "types": [
+                  "string"
+                ]
+              },
+              "receiverIdentity": {
+                "types": [
+                  "string"
+                ]
+              },
+              "sender": {
+                "types": [
+                  "string"
+                ]
+              },
+              "senderPhone": {
+                "types": [
+                  "string"
+                ]
+              },
+              "source": {
+                "types": [
+                  "string"
+                ]
+              },
+              "sourceId": {
+                "types": [
+                  "string"
+                ]
+              },
+              "sourceLine": {
+                "types": [
+                  "number"
+                ]
+              },
+              "status": {
+                "types": [
+                  "string"
+                ]
+              },
+              "time": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "amountCents",
+              "category",
+              "date",
+              "employeePhone",
+              "id",
+              "identityProofKind",
+              "identityRule",
+              "identityVerified",
+              "issues",
+              "method",
+              "name",
+              "payoutPhone",
+              "purpose",
+              "receiverIdentity",
+              "sender",
+              "senderPhone",
+              "source",
+              "sourceId",
+              "sourceLine",
+              "status",
+              "time"
+            ]
+          },
+          "fields": {
+            "amountCents": {
+              "exactSourceField": "amountCents",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "category": {
+              "exactSourceField": "category",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "date": {
+              "exactSourceField": "date",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "employeePhone": {
+              "exactSourceField": "employeePhone",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employees.employee_id",
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-001..006: source-attested accounts parser/UI Employee ID phone is the owner-defined mobile-valued Employee Ledger employee_id; normalize as primary operational key; same mobile names are aliases; reject missing/invalid/ambiguous/unestablished roles",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": null,
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "identityProofKind": {
+              "exactSourceField": "identityProofKind",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "identityRule": {
+              "exactSourceField": "identityRule",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "identityVerified": {
+              "exactSourceField": "identityVerified",
+              "sourceTypes": [
+                "boolean"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "issues": {
+              "exactSourceField": "issues",
+              "sourceTypes": [
+                "array"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "method": {
+              "exactSourceField": "method",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "name": {
+              "exactSourceField": "name",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-002/003: preserve every raw name as alias of normalized employee_id; spelling variation requires no separate employee/manual merge",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": null,
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "payoutPhone": {
+              "exactSourceField": "payoutPhone",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "purpose": {
+              "exactSourceField": "purpose",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "receiverIdentity": {
+              "exactSourceField": "receiverIdentity",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "sender": {
+              "exactSourceField": "sender",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "senderPhone": {
+              "exactSourceField": "senderPhone",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "source": {
+              "exactSourceField": "source",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "sourceId": {
+              "exactSourceField": "sourceId",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "sourceLine": {
+              "exactSourceField": "sourceLine",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "status": {
+              "exactSourceField": "status",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.lifecycle",
+              "actualOperationalTarget": "programs.status",
+              "transform": "Preserve raw historical status; lifecycle classification requires owner message-role and transition proof; release/completion/settlement/payment are distinct",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "time": {
+              "exactSourceField": "time",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            }
+          }
+        }
+      }
+    },
+    "chat-archive.json": {
+      "path": "/var/lib/vps/al-rifai/evidence/chat-archive.json",
+      "sha256": "9f2ba5c0e881e19bb1a7df50ac86c25fc479550dc707bc0737b20c22a46ec872",
+      "selectors": {
+        "programs": {
+          "count": 1204,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "createdAt": {
+                "types": [
+                  "string"
+                ]
+              },
+              "destination": {
+                "types": [
+                  "string"
+                ]
+              },
+              "details": {
+                "types": [
+                  "object"
+                ],
+                "properties": {
+                  "alongside": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "issues": {
+                    "types": [
+                      "array"
+                    ],
+                    "items": {
+                      "types": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "loadingPoint": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "location": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "masterName": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "recordKind": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "releaseDate": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "releasePoint": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sender": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceLine": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceMessageDate": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceMessageId": {
+                    "types": [
+                      "string"
+                    ]
+                  }
+                },
+                "required": [
+                  "issues",
+                  "recordKind",
+                  "sender",
+                  "sourceLine",
+                  "sourceMessageDate",
+                  "sourceMessageId"
+                ]
+              },
+              "duplicateOf": {
+                "types": [
+                  "null"
+                ]
+              },
+              "endDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortName": {
+                "types": [
+                  "string"
+                ]
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              },
+              "lighterVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "masterMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "motherVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "notes": {
+                "types": [
+                  "string"
+                ]
+              },
+              "revision": {
+                "types": [
+                  "number"
+                ]
+              },
+              "shift": {
+                "types": [
+                  "string"
+                ]
+              },
+              "source": {
+                "types": [
+                  "string"
+                ]
+              },
+              "startDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "status": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "createdAt",
+              "destination",
+              "details",
+              "duplicateOf",
+              "endDate",
+              "escortMobile",
+              "escortName",
+              "id",
+              "lighterVessel",
+              "masterMobile",
+              "motherVessel",
+              "notes",
+              "revision",
+              "shift",
+              "source",
+              "startDate",
+              "status"
+            ]
+          },
+          "fields": {
+            "createdAt": {
+              "exactSourceField": "createdAt",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "destination": {
+              "exactSourceField": "destination",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "programs.destination",
+              "actualOperationalTarget": "programs.destination",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "MANUAL_REVIEW"
+            },
+            "details": {
+              "exactSourceField": "details",
+              "sourceTypes": [
+                "object"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "duplicateOf": {
+              "exactSourceField": "duplicateOf",
+              "sourceTypes": [
+                "null"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "endDate": {
+              "exactSourceField": "endDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.end_date",
+              "actualOperationalTarget": "programs.endDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "escortMobile": {
+              "exactSourceField": "escortMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortMobile",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-004 optional existing program field; normalize identically and associate to matching Employee Ledger employee_id; no duplicate employee or new escort_mobile column",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "escortName": {
+              "exactSourceField": "escortName",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortName",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "lighterVessel": {
+              "exactSourceField": "lighterVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.lighterVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "masterMobile": {
+              "exactSourceField": "masterMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "motherVessel": {
+              "exactSourceField": "motherVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.motherVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "notes": {
+              "exactSourceField": "notes",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "revision": {
+              "exactSourceField": "revision",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "shift": {
+              "exactSourceField": "shift",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.shift",
+              "actualOperationalTarget": "programs.shift",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "source": {
+              "exactSourceField": "source",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "startDate": {
+              "exactSourceField": "startDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.start_date",
+              "actualOperationalTarget": "programs.startDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "status": {
+              "exactSourceField": "status",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.lifecycle",
+              "actualOperationalTarget": "programs.status",
+              "transform": "Preserve raw historical status; lifecycle classification requires owner message-role and transition proof; release/completion/settlement/payment are distinct",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            }
+          }
+        }
+      }
+    },
+    "operations.json": {
+      "path": "/var/lib/vps/al-rifai/evidence/operations.json",
+      "sha256": "e41b24393a6822c74e9f8f87dca538e9dc0e2f38c93c1e8791907d805d6a8547",
+      "selectors": {
+        "programs": {
+          "count": 85,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "createdAt": {
+                "types": [
+                  "string"
+                ]
+              },
+              "destination": {
+                "types": [
+                  "string"
+                ]
+              },
+              "details": {
+                "types": [
+                  "object"
+                ],
+                "properties": {
+                  "endShift": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "issues": {
+                    "types": [
+                      "array"
+                    ],
+                    "items": {
+                      "types": [
+                        "string"
+                      ]
+                    }
+                  },
+                  "recordKind": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "releasePoint": {
+                    "types": [
+                      "string"
+                    ]
+                  },
+                  "sourceLine": {
+                    "types": [
+                      "string"
+                    ]
+                  }
+                },
+                "required": [
+                  "endShift",
+                  "issues",
+                  "recordKind",
+                  "releasePoint",
+                  "sourceLine"
+                ]
+              },
+              "duplicateOf": {
+                "types": [
+                  "null"
+                ]
+              },
+              "endDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortName": {
+                "types": [
+                  "string"
+                ]
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              },
+              "lighterVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "masterMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "motherVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "notes": {
+                "types": [
+                  "string"
+                ]
+              },
+              "revision": {
+                "types": [
+                  "number"
+                ]
+              },
+              "shift": {
+                "types": [
+                  "string"
+                ]
+              },
+              "source": {
+                "types": [
+                  "string"
+                ]
+              },
+              "startDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "status": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "createdAt",
+              "destination",
+              "details",
+              "duplicateOf",
+              "endDate",
+              "escortMobile",
+              "escortName",
+              "id",
+              "lighterVessel",
+              "masterMobile",
+              "motherVessel",
+              "notes",
+              "revision",
+              "shift",
+              "source",
+              "startDate",
+              "status"
+            ]
+          },
+          "fields": {
+            "createdAt": {
+              "exactSourceField": "createdAt",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "destination": {
+              "exactSourceField": "destination",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "programs.destination",
+              "actualOperationalTarget": "programs.destination",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "MANUAL_REVIEW"
+            },
+            "details": {
+              "exactSourceField": "details",
+              "sourceTypes": [
+                "object"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "duplicateOf": {
+              "exactSourceField": "duplicateOf",
+              "sourceTypes": [
+                "null"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "endDate": {
+              "exactSourceField": "endDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.end_date",
+              "actualOperationalTarget": "programs.endDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "escortMobile": {
+              "exactSourceField": "escortMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortMobile",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-004 optional existing program field; normalize identically and associate to matching Employee Ledger employee_id; no duplicate employee or new escort_mobile column",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "escortName": {
+              "exactSourceField": "escortName",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortName",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "lighterVessel": {
+              "exactSourceField": "lighterVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.lighterVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "masterMobile": {
+              "exactSourceField": "masterMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "motherVessel": {
+              "exactSourceField": "motherVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.motherVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "notes": {
+              "exactSourceField": "notes",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "revision": {
+              "exactSourceField": "revision",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "shift": {
+              "exactSourceField": "shift",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.shift",
+              "actualOperationalTarget": "programs.shift",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "source": {
+              "exactSourceField": "source",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "startDate": {
+              "exactSourceField": "startDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.start_date",
+              "actualOperationalTarget": "programs.startDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "status": {
+              "exactSourceField": "status",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.lifecycle",
+              "actualOperationalTarget": "programs.status",
+              "transform": "Preserve raw historical status; lifecycle classification requires owner message-role and transition proof; release/completion/settlement/payment are distinct",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            }
+          }
+        }
+      }
+    },
+    "recovered-programs.json": {
+      "path": "/var/lib/vps/al-rifai/evidence/recovered-programs.json",
+      "sha256": "5b1761598fe4619ab416b6ead7c3502b8670a8eda9fd103ce6a55b40fde3bf86",
+      "selectors": {
+        "rows": {
+          "count": 5,
+          "shape": {
+            "types": [
+              "object"
+            ],
+            "properties": {
+              "createdAt": {
+                "types": [
+                  "string"
+                ]
+              },
+              "destination": {
+                "types": [
+                  "string"
+                ]
+              },
+              "details": {
+                "types": [
+                  "object"
+                ],
+                "properties": {},
+                "required": []
+              },
+              "duplicateOf": {
+                "types": [
+                  "null"
+                ]
+              },
+              "endDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "escortName": {
+                "types": [
+                  "string"
+                ]
+              },
+              "id": {
+                "types": [
+                  "string"
+                ]
+              },
+              "lighterVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "masterMobile": {
+                "types": [
+                  "string"
+                ]
+              },
+              "motherVessel": {
+                "types": [
+                  "string"
+                ]
+              },
+              "notes": {
+                "types": [
+                  "string"
+                ]
+              },
+              "revision": {
+                "types": [
+                  "number"
+                ]
+              },
+              "shift": {
+                "types": [
+                  "string"
+                ]
+              },
+              "source": {
+                "types": [
+                  "string"
+                ]
+              },
+              "startDate": {
+                "types": [
+                  "string"
+                ]
+              },
+              "status": {
+                "types": [
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "createdAt",
+              "destination",
+              "details",
+              "duplicateOf",
+              "endDate",
+              "escortMobile",
+              "escortName",
+              "id",
+              "lighterVessel",
+              "masterMobile",
+              "motherVessel",
+              "notes",
+              "revision",
+              "shift",
+              "source",
+              "startDate",
+              "status"
+            ]
+          },
+          "fields": {
+            "createdAt": {
+              "exactSourceField": "createdAt",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "destination": {
+              "exactSourceField": "destination",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "programs.destination",
+              "actualOperationalTarget": "programs.destination",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "MANUAL_REVIEW"
+            },
+            "details": {
+              "exactSourceField": "details",
+              "sourceTypes": [
+                "object"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "duplicateOf": {
+              "exactSourceField": "duplicateOf",
+              "sourceTypes": [
+                "null"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "endDate": {
+              "exactSourceField": "endDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.end_date",
+              "actualOperationalTarget": "programs.endDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "escortMobile": {
+              "exactSourceField": "escortMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortMobile",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "EMP-004 optional existing program field; normalize identically and associate to matching Employee Ledger employee_id; no duplicate employee or new escort_mobile column",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP",
+              "transformationVersion": "employee-mobile-v3"
+            },
+            "escortName": {
+              "exactSourceField": "escortName",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_employee_history.value",
+              "actualOperationalTarget": "programs.escortName",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "id": {
+              "exactSourceField": "id",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "lighterVessel": {
+              "exactSourceField": "lighterVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.lighterVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "masterMobile": {
+              "exactSourceField": "masterMobile",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "motherVessel": {
+              "exactSourceField": "motherVessel",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_vessel_aliases.label",
+              "actualOperationalTarget": "programs.motherVessel",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "notes": {
+              "exactSourceField": "notes",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "revision": {
+              "exactSourceField": "revision",
+              "sourceTypes": [
+                "number"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "shift": {
+              "exactSourceField": "shift",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.shift",
+              "actualOperationalTarget": "programs.shift",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "source": {
+              "exactSourceField": "source",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": null,
+              "actualOperationalTarget": null,
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "PROVENANCE_ONLY",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": null,
+              "actualOperationalTargetType": null,
+              "liveClassification": "PROVENANCE_ONLY"
+            },
+            "startDate": {
+              "exactSourceField": "startDate",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.start_date",
+              "actualOperationalTarget": "programs.startDate",
+              "transform": "exact raw preservation; comparison-v1 separately; ISO calendar validation for dates; explicit approval required for operational values",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "date",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            },
+            "status": {
+              "exactSourceField": "status",
+              "sourceTypes": [
+                "string"
+              ],
+              "preservationTarget": "ep_source_occurrences.raw_record",
+              "proposedOperationalTarget": "ep_programs.lifecycle",
+              "actualOperationalTarget": "programs.status",
+              "transform": "Preserve raw historical status; lifecycle classification requires owner message-role and transition proof; release/completion/settlement/payment are distinct",
+              "nullMissing": "preserve distinctly; required business values reject null, absent or blank",
+              "identity": "source-occurrence-bound approval; vessel/program names are not unique identity; employee mobile identity follows EMP-001–006 with established field role",
+              "provenance": "file SHA256 + documentPointer + decodedPointer + payload SHA256 + record ID + record SHA256",
+              "duplicate": "same occurrence is idempotent; same business key requires explicit binding; changed source version never overwrites",
+              "classification": "CONDITIONAL_MAPPING",
+              "preservationTargetType": "jsonb (candidate; absent live)",
+              "proposedOperationalTargetType": "text",
+              "actualOperationalTargetType": "text",
+              "liveClassification": "SCHEMA_GAP"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ownerBusinessRules": {
+    "version": "employee-mobile-v3",
+    "authority": "Owner business rules reconciliation request; production execution not authorized",
+    "contextCounts": {
+      "messages": 6221,
+      "accountMessages": 10434
+    },
+    "identity": {
+      "rules": [
+        "EMP-001",
+        "EMP-002",
+        "EMP-003",
+        "EMP-004",
+        "EMP-005",
+        "EMP-006"
+      ],
+      "primaryMatchingField": "Employee Ledger employee_id (mobile)",
+      "actualCanonicalProjectionField": "accountsCash.employeePhone, already labeled Employee ID phone by parser/UI",
+      "normalization": "one BD national or +880 E164 mobile; formatting/Bengali digits only; multiple values/JID/LID invalid",
+      "sameMobileNames": "one operational employee, preserve all name spellings as source-bound aliases",
+      "sameNameMobiles": "separate unless explicit owner-approved link",
+      "escortMobile": "optional association to same employee_id; no new escort_mobile column proposed",
+      "internalId": "technical relational ID only; never substitutes the mobile-valued employee_id",
+      "employment": "not inferred from alias or primary mobile match",
+      "sourceRoles": "source-attested parser employeePhone accepted as ledger employee-mobile role; sender/master/client/payout/JID/LID excluded"
+    },
+    "program": {
+      "clientOrder": "Draft only after exact client message-role verification",
+      "adminConfirmation": "confirmation candidate after exact admin-role verification and complete labeled fields",
+      "required": [
+        "motherVessel",
+        "lighterVessel",
+        "escortName",
+        "employeeMobile",
+        "startDate",
+        "shift"
+      ],
+      "optional": [
+        "destination",
+        "masterMobile",
+        "separate escort_mobile column"
+      ],
+      "windows": {
+        "sameDay": "exact business details duplicate candidate",
+        "threeDaysInclusive": "matching details duplicate/correction candidate, based on message-calendar dates and retained local message time",
+        "fiveDaysInclusive": "same lighter cancellation/restart/replacement review; name match is not physical identity"
+      },
+      "history": "append approved events referencing existing program; no silent cancellation; mother has no program-count cap"
+    },
+    "release": {
+      "ocr": "only when original media bytes supplied; absent bytes are OCR_MEDIA_UNAVAILABLE",
+      "milestones": [
+        "Released",
+        "Program Completed",
+        "Settlement Approved",
+        "Payment Completed"
+      ],
+      "nextAssignment": "new verified Admin confirmation creates closure review for prior open assignment; no guessed release/duty"
+    },
+    "ghat": {
+      "amountCents": 20000,
+      "currencyContext": "BDT supplied by owner for pattern review only",
+      "days": 3,
+      "consecutive": "distinct calendar dates, duplicate source evidence/day does not add days",
+      "posting": "none; instructions distinct from independently verified receipts/transfers"
+    },
+    "references": {
+      "nativeLinks": "retain if present; currently absent, never manufacture wa.me message links",
+      "archive": "file hash, chunk/decoded pointer, source ID, raw hash, original export hash/Library ID/line and media references retained"
+    },
+    "messageRoleBindings": [],
+    "supersededIdentityPolicies": [
+      "v1: independent HR identity binding is mandatory for every phone/name operational match",
+      "v2: only an explicit Escort Mobile label may identify an employee",
+      "v2: accountsCash.employeePhone remains merely an unresolved payment label despite the canonical Employee Ledger role"
+    ],
+    "lifecycleRuleIds": [
+      "PRG-001",
+      "PRG-002",
+      "PRG-003",
+      "PRG-004",
+      "PRG-005",
+      "PRG-006",
+      "PRG-007",
+      "PRG-008",
+      "REL-001",
+      "REL-002",
+      "REL-003",
+      "GHAT-001",
+      "GHAT-002"
+    ],
+    "lifecycleVersion": "employee-program-v4-lifecycle"
+  },
+  "ownerRuleRegister": {
+    "path": "docs/owner-business-rules.json",
+    "sha256": "1127430d3c8444e158dd4b4a2ab1891c60ae9200d538fca8fab896f531196732",
+    "version": "employee-program-v4-lifecycle"
+  },
+  "lifecycleBindingScope": {
+    "sourceOccurrenceId": "Original message file/checksum/document/decoded pointer occurrence; unchanged",
+    "event_key": "SHA256(canonical({messageOccurrence:sourceOccurrenceId,startLine:sourceBlockStartLine})); derived comparison/binding scope, not invented JSON pointer",
+    "targetColumns": [
+      "ep_review_decisions.event_key",
+      "ep_source_bindings.event_key"
+    ],
+    "sourceBlockStartLine": "Actual first accepted body field line; marker-only blocks use actual first body line 1",
+    "blankEventKey": "Whole selected record scope retains prior occurrence+role uniqueness",
+    "approval": "Exact source-bound approved decision must use same event key; no source values modified"
+  }
+}

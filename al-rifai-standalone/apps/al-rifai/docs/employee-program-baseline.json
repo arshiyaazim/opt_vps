@@ -1,0 +1,1011 @@
+{
+  "version": "employee-program-v1",
+  "identity": {
+    "database": "alrifai",
+    "user": "vps_pg_admin",
+    "readOnly": "on",
+    "version": "16.15",
+    "cluster": "7694012476208082978"
+  },
+  "catalog": {
+    "columns": [
+      {
+        "table_name": "alrifai_schema_migrations",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "alrifai_schema_migrations",
+        "column_name": "sha256",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "alrifai_schema_migrations",
+        "column_name": "applied_at",
+        "ordinal_position": 3,
+        "data_type": "timestamp with time zone",
+        "udt_name": "timestamptz",
+        "column_default": "now()",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "datasets",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "datasets",
+        "column_name": "importedAt",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "motherVessel",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "lighterVessel",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "masterMobile",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "destination",
+        "ordinal_position": 5,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "escortName",
+        "ordinal_position": 6,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "escortMobile",
+        "ordinal_position": 7,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "startDate",
+        "ordinal_position": 8,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "endDate",
+        "ordinal_position": 9,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "shift",
+        "ordinal_position": 10,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "status",
+        "ordinal_position": 11,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "'Recorded'::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "source",
+        "ordinal_position": 12,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "'Manual entry'::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "notes",
+        "ordinal_position": 13,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "duplicateOf",
+        "ordinal_position": 14,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "YES"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "createdAt",
+        "ordinal_position": 15,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "revision",
+        "ordinal_position": 16,
+        "data_type": "integer",
+        "udt_name": "int4",
+        "column_default": "0",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "programs",
+        "column_name": "details",
+        "ordinal_position": 17,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "'{}'::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "reviews",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "reviews",
+        "column_name": "aId",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "reviews",
+        "column_name": "bId",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "reviews",
+        "column_name": "decision",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "reviews",
+        "column_name": "note",
+        "ordinal_position": 5,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": "''::text",
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "reviews",
+        "column_name": "createdAt",
+        "ordinal_position": 6,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "date",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "source",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "employeePhone",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "name",
+        "ordinal_position": 5,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "method",
+        "ordinal_position": 6,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "amountCents",
+        "ordinal_position": 7,
+        "data_type": "integer",
+        "udt_name": "int4",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_cash_archive",
+        "column_name": "details",
+        "ordinal_position": 8,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_operation_notes",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_operation_notes",
+        "column_name": "status",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_operation_notes",
+        "column_name": "note",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_operation_notes",
+        "column_name": "actor",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_operation_notes",
+        "column_name": "updatedAt",
+        "ordinal_position": 5,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_payment_drafts",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_payment_drafts",
+        "column_name": "details",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_payment_drafts",
+        "column_name": "actor",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_payment_drafts",
+        "column_name": "createdAt",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_settlement_drafts",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_settlement_drafts",
+        "column_name": "details",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_settlement_drafts",
+        "column_name": "actor",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_settlement_drafts",
+        "column_name": "createdAt",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_source_snapshots",
+        "column_name": "id",
+        "ordinal_position": 1,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_source_snapshots",
+        "column_name": "datasetId",
+        "ordinal_position": 2,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_source_snapshots",
+        "column_name": "kind",
+        "ordinal_position": 3,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_source_snapshots",
+        "column_name": "payload",
+        "ordinal_position": 4,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      },
+      {
+        "table_name": "site_source_snapshots",
+        "column_name": "contentHash",
+        "ordinal_position": 5,
+        "data_type": "text",
+        "udt_name": "text",
+        "column_default": null,
+        "is_nullable": "NO"
+      }
+    ],
+    "constraints": [
+      {
+        "relation": "alrifai_schema_migrations",
+        "conname": "alrifai_schema_migrations_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "datasets",
+        "conname": "datasets_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "programs",
+        "conname": "programs_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "reviews",
+        "conname": "reviews_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "site_cash_archive",
+        "conname": "site_cash_archive_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "site_operation_notes",
+        "conname": "site_operation_notes_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "site_payment_drafts",
+        "conname": "site_payment_drafts_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "site_settlement_drafts",
+        "conname": "site_settlement_drafts_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "relation": "site_source_snapshots",
+        "conname": "site_source_snapshots_pkey",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "tablename": "alrifai_schema_migrations",
+        "indexname": "alrifai_schema_migrations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX alrifai_schema_migrations_pkey ON public.alrifai_schema_migrations USING btree (id)"
+      },
+      {
+        "tablename": "datasets",
+        "indexname": "datasets_pkey",
+        "indexdef": "CREATE UNIQUE INDEX datasets_pkey ON public.datasets USING btree (id)"
+      },
+      {
+        "tablename": "programs",
+        "indexname": "programs_pkey",
+        "indexdef": "CREATE UNIQUE INDEX programs_pkey ON public.programs USING btree (id)"
+      },
+      {
+        "tablename": "reviews",
+        "indexname": "reviews_pkey",
+        "indexdef": "CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id)"
+      },
+      {
+        "tablename": "site_cash_archive",
+        "indexname": "site_cash_archive_pkey",
+        "indexdef": "CREATE UNIQUE INDEX site_cash_archive_pkey ON public.site_cash_archive USING btree (id)"
+      },
+      {
+        "tablename": "site_operation_notes",
+        "indexname": "site_operation_notes_pkey",
+        "indexdef": "CREATE UNIQUE INDEX site_operation_notes_pkey ON public.site_operation_notes USING btree (id)"
+      },
+      {
+        "tablename": "site_payment_drafts",
+        "indexname": "site_payment_drafts_pkey",
+        "indexdef": "CREATE UNIQUE INDEX site_payment_drafts_pkey ON public.site_payment_drafts USING btree (id)"
+      },
+      {
+        "tablename": "site_settlement_drafts",
+        "indexname": "site_settlement_drafts_pkey",
+        "indexdef": "CREATE UNIQUE INDEX site_settlement_drafts_pkey ON public.site_settlement_drafts USING btree (id)"
+      },
+      {
+        "tablename": "site_source_snapshots",
+        "indexname": "site_source_snapshots_pkey",
+        "indexdef": "CREATE UNIQUE INDEX site_source_snapshots_pkey ON public.site_source_snapshots USING btree (id)"
+      }
+    ],
+    "triggers": [
+      {
+        "tgname": "alrifai_snapshot_immutable",
+        "tgenabled": "O",
+        "definition": "CREATE TRIGGER alrifai_snapshot_immutable BEFORE DELETE OR UPDATE ON public.site_source_snapshots FOR EACH ROW EXECUTE FUNCTION alrifai_reject_snapshot_change()"
+      },
+      {
+        "tgname": "alrifai_snapshot_no_truncate",
+        "tgenabled": "O",
+        "definition": "CREATE TRIGGER alrifai_snapshot_no_truncate BEFORE TRUNCATE ON public.site_source_snapshots FOR EACH STATEMENT EXECUTE FUNCTION alrifai_reject_snapshot_change()"
+      }
+    ],
+    "function": [
+      {
+        "definition": "CREATE OR REPLACE FUNCTION public.alrifai_reject_snapshot_change()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'Evidence snapshots are immutable'; END;\n$function$\n"
+      }
+    ],
+    "ownership": [
+      {
+        "tablename": "alrifai_schema_migrations",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "datasets",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "programs",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "reviews",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "site_cash_archive",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "site_operation_notes",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "site_payment_drafts",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "site_settlement_drafts",
+        "tableowner": "alrifai_app"
+      },
+      {
+        "tablename": "site_source_snapshots",
+        "tableowner": "alrifai_app"
+      }
+    ],
+    "grants": [
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "alrifai_schema_migrations",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "datasets",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "programs",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "reviews",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_cash_archive",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_operation_notes",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_payment_drafts",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_settlement_drafts",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "alrifai_app",
+        "table_name": "site_source_snapshots",
+        "privilege_type": "UPDATE"
+      }
+    ]
+  },
+  "catalogSha256": "1c139104917bd756b7ab930701c8f9872f5b210b936808220d12cb329544ce4a",
+  "migrations": [
+    {
+      "id": "0000_gorgeous_the_executioner.sql",
+      "sha256": "fb2d9661657b954201adb7a6c7d6798b1c860a9f427f82b4cb8dddeee96eb6bf",
+      "applied_at": "2026-10-07T21:05:59.743047+00:00"
+    },
+    {
+      "id": "0001_loud_monster_badoon.sql",
+      "sha256": "32c8c1e5945d2a2e7b9a43469710f83e7a767d573680340b711abc16fb52044a",
+      "applied_at": "2026-10-07T21:05:59.743047+00:00"
+    },
+    {
+      "id": "0002_flashy_nico_minoru.sql",
+      "sha256": "2c72a9a3cf03675856ae96d8a0a37ec12023d84c09f7775dbb525181d9978552",
+      "applied_at": "2026-10-07T21:05:59.743047+00:00"
+    },
+    {
+      "id": "0003_wide_exodus.sql",
+      "sha256": "c1b8ccde321efbf92c2c4baaaa6abae6212b546474aade69541d0b5e821fc706",
+      "applied_at": "2026-10-07T21:05:59.743047+00:00"
+    },
+    {
+      "id": "0004_wonderful_warlock.sql",
+      "sha256": "541123a96038c7ca77cbeccd43c1d46d6bac0b6aacf9a65d3ffa0a9f3e601f57",
+      "applied_at": "2026-10-07T21:05:59.743047+00:00"
+    },
+    {
+      "id": "0005_snapshot_immutability.sql",
+      "sha256": "1163d1f86f205aad01d813d4d7e962a573551cbad9aa09f820e1f458b7b36b8e",
+      "applied_at": "2026-10-07T21:05:59.743047+00:00"
+    }
+  ],
+  "counts": {
+    "programs": 0,
+    "reviews": 0,
+    "datasets": 0,
+    "site_cash_archive": 0,
+    "site_operation_notes": 0,
+    "site_payment_drafts": 0,
+    "site_settlement_drafts": 0,
+    "site_source_snapshots": 54,
+    "alrifai_schema_migrations": 6
+  },
+  "snapshotSha256": "01380f11d01d79de24f1de3ecc2b166e1627c75fba10e19c80375149f136beed"
+}

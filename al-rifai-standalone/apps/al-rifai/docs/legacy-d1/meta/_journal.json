@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790865358192,
+      "tag": "0000_gorgeous_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790870167276,
+      "tag": "0001_loud_monster_badoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790906441811,
+      "tag": "0002_flashy_nico_minoru",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790906985788,
+      "tag": "0003_wide_exodus",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791290843250,
+      "tag": "0004_wonderful_warlock",
+      "breakpoints": true
+    }
+  ]
+}

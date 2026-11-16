@@ -1,0 +1,13 @@
+[Unit]
+Description=Al-Rifai encrypted local recovery backup
+After=docker.service
+Requires=docker.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/python3 /opt/vps/apps/al-rifai/scripts/operations/recovery.py
+TimeoutStartSec=900
+Nice=10
+StandardOutput=journal
+StandardError=journal

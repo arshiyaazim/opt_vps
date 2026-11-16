@@ -1,0 +1,204 @@
+/* Register legacy skin — Path 1 of the approved design work.
+ *
+ * Scope: /vessel-register and /employee/[phone]/programs only. Everything below is
+ * nested under .register-legacy-skin, applied to those two page roots, so no other
+ * /platform/* route can pick any of it up. No shared token in workspace.css is
+ * redefined here; this file only restates the legacy register's table and filter
+ * card inside the boundaries of those two pages.
+ *
+ * The values are the ones the legacy /vessel register already uses (.vr-table-card
+ * and .vr-filters in vessel-register.css), so the two vessel surfaces finally read
+ * as one product without porting the .vr-* shell (Path 3, not approved).
+ *
+ * Visual only: no selector here touches behaviour, and the toolbar's handlers live
+ * in data-toolbar.tsx, untouched by this file.
+ */
+
+/* ---------- table ---------- */
+
+.register-legacy-skin table {
+  font-size: 13px;
+  border-collapse: collapse;
+}
+
+/* Uppercase 10px headers on the legacy #f8fafb band. Both table implementations
+ * (the shadcn Table on the register and the wx-table on employee programs) use a
+ * plain thead/th, so one rule covers them. */
+.register-legacy-skin table thead th {
+  background: #f8fafb;
+  color: #8496a3;
+  text-transform: uppercase;
+  letter-spacing: .65px;
+  font-size: 10px;
+  font-weight: 650;
+  padding: 11px 19px;
+  height: auto;
+  border-bottom: 0;
+  vertical-align: middle;
+}
+
+.register-legacy-skin table thead {
+  border-bottom: 1px solid #e0e8ec;
+}
+
+/* Row separators come from the top of each cell, as the legacy table does it. The
+ * default shadcn row border-b is switched off so a row cannot be double-ruled. */
+.register-legacy-skin table tbody td {
+  padding: 14px 19px;
+  font-size: 13px;
+  border-top: 1px solid #eaf0f3;
+  vertical-align: middle;
+}
+
+.register-legacy-skin table tbody tr {
+  border-bottom: 0;
+}
+
+.register-legacy-skin table tbody tr:first-child td {
+  border-top: 1px solid #eaf0f3;
+}
+
+.register-legacy-skin table tbody tr:hover {
+  background: #f6fbfc;
+}
+
+/* Cells that hold a two-line name/mobile pair keep the legacy rhythm. */
+.register-legacy-skin table tbody td small,
+.register-legacy-skin table tbody td .text-muted-foreground {
+  font-size: 11px;
+}
+
+/* ---------- filter card ---------- */
+
+/* The toolbar becomes a white card with a labelled grid, matching .vr-filters. */
+.register-legacy-skin .rls-toolbar {
+  background: #ffffff;
+  border: 1px solid #e0e8ec;
+  border-radius: 7px;
+  padding: 15px 19px 17px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.register-legacy-skin .rls-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 13px 12px;
+  align-items: end;
+}
+
+/* Labels sit above their control, 11px and 600 like the legacy filter card. */
+.register-legacy-skin .rls-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.register-legacy-skin .rls-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #748691;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.register-legacy-skin .rls-field > .relative,
+.register-legacy-skin .rls-field > div {
+  min-width: 0;
+}
+
+/* Controls: 35px, #fbfcfd, matching the legacy filter inputs. */
+.register-legacy-skin .rls-field input,
+.register-legacy-skin .rls-field summary,
+.register-legacy-skin .rls-field [data-slot="select-trigger"] {
+  height: 35px;
+  min-height: 35px;
+  border: 1px solid #dbe5e9;
+  border-radius: 4px;
+  background: #fbfcfd;
+  color: #3e5969;
+  font-size: 13px;
+  padding: 7px 9px;
+  width: 100%;
+}
+
+.register-legacy-skin .rls-field summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.register-legacy-skin .rls-field summary::-webkit-details-marker {
+  display: none;
+}
+
+.register-legacy-skin .rls-field input[type="date"] {
+  padding-right: 4px;
+}
+
+/* ---------- buttons ---------- */
+
+.register-legacy-skin [data-slot="button"] {
+  min-height: 36px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.register-legacy-skin .rls-quick button {
+  min-height: 36px;
+  padding-left: 10px;
+  padding-right: 10px;
+  flex: 1 1 0;
+}
+
+.register-legacy-skin .rls-quick {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ---------- footer ---------- */
+
+.register-legacy-skin .rls-toolbar-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #edf1f4;
+  padding-top: 11px;
+  font-size: 11px;
+  color: #8196a3;
+}
+
+/* Narrow screens keep the card but collapse the grid, exactly like .vr-filters. */
+@media (max-width: 650px) {
+  .register-legacy-skin .rls-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .register-legacy-skin .rls-field[data-wide="true"] {
+    grid-column: 1 / -1;
+  }
+  .register-legacy-skin table thead th {
+    padding: 10px 13px;
+  }
+  .register-legacy-skin table tbody td {
+    padding: 12px 13px;
+  }
+}
+
+/* When the toolbar already sits inside a workspace card (employee programs), the
+ * nested card would double the frame. It keeps the labelled grid and the divider
+ * but drops its own border and radius. */
+.register-legacy-skin .wx-card-body.flush > .rls-toolbar {
+  border: 0;
+  border-radius: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid #e0e8ec;
+}

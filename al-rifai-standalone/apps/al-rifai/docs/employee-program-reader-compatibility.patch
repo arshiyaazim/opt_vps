@@ -1,0 +1,11 @@
+--- a/lib/vessel-source.ts
++++ b/lib/vessel-source.ts
+@@ -47,7 +47,7 @@
+    if(Number(p.revision)>0){const target=rows.find(r=>r.aliases?.includes(row.id));if(target){target.issues.push('A stored correction exists; compare it with the updated source evidence.');target.conflicts=[...(target.conflicts??[]),{field:'storedCorrection',existing:JSON.stringify(row),incoming:'Updated source evidence',sourceRow:row.id}];}}
+    continue;
+   }
+-  const candidates=rows.filter(r=>row.startDate&&r.startDate===row.startDate&&((phone(row.masterMobile)&&phone(row.escortMobile)&&phone(row.masterMobile)===phone(r.masterMobile)&&phone(row.escortMobile)===phone(r.escortMobile))||(row.shift&&row.shift===r.shift&&normalize(row.lighterVessel)===normalize(r.lighterVessel)&&((phone(row.escortMobile)&&phone(row.escortMobile)===phone(r.escortMobile))||(row.escortName&&normalize(row.escortName)===normalize(r.escortName))))));
++  const candidates=rows.filter(r=>row.startDate&&r.startDate===row.startDate&&((phone(row.masterMobile)&&phone(row.escortMobile)&&phone(row.masterMobile)===phone(r.masterMobile)&&phone(row.escortMobile)===phone(r.escortMobile))||(row.shift&&row.shift===r.shift&&normalize(row.lighterVessel)===normalize(r.lighterVessel)&&((phone(row.escortMobile)&&phone(row.escortMobile)===phone(r.escortMobile))||(!phone(row.escortMobile)&&!phone(r.escortMobile)&&row.escortName&&normalize(row.escortName)===normalize(r.escortName))))));
+   if(candidates.length===1){const r=candidates[0];r.aliases=[...(r.aliases??[]),row.id];r.evidence=[...(r.evidence??[]),{id:row.id,source:row.source,sourceRef:row.sourceRef,sourceLine:'',reason:'Linked stored source evidence; no second program'}];for(const field of ['motherVessel','lighterVessel','masterMobile','escortMobile','escortName','destination','endDate','shift'] as const){if(row[field]&&!r[field])r[field]=row[field];else if(row[field]&&r[field]&&normalize(row[field])!==normalize(r[field]))r.issues.push('Stored '+field+' differs; original record '+row.id+' retained.');}}
+   else rows.push(row);
+  }

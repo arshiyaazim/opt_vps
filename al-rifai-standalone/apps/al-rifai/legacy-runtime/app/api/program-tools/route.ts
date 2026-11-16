@@ -1,0 +1,9 @@
+import {getChatGPTUser} from '@/app/chatgpt-auth';
+import {loadSnapshot,RegisterError} from '@/lib/vessel-source';
+import {filterRows,queryFilters} from '@/lib/vessel-data';
+import {motherNameCandidates,releaseState} from '@/lib/program-workflows';
+export const dynamic='force-dynamic';
+const reply=(v:unknown,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'private, no-store',Vary:'Cookie','X-Content-Type-Options':'nosniff'}});
+export async function GET(request:Request){if(!await getChatGPTUser())return reply({error:'Sign in to view program workflows.'},401);try{const q=new URL(request.url).searchParams,s=await loadSnapshot(q.get('source')??'historical'),f=queryFilters(q),rows=filterRows(s.rows,f),release=q.get('release')??'',filtered=release?rows.filter(r=>releaseState(r).key===release):rows,page=Math.max(1,Number(q.get('page'))||1);const summary={complete:0,incomplete:0,ended:0,unknown:0};for(const r of rows)summary[releaseState(r).key as keyof typeof summary]++;return reply({rows:filtered.slice((page-1)*40,page*40).map(r=>({...r,release:releaseState(r)})),summary,total:filtered.length,pages:Math.max(1,Math.ceil(filtered.length/40)),candidates:motherNameCandidates(rows),checkedAt:s.checkedAt,notice:s.notice,complete:s.complete,canCorrect:false,correctionNotice:'Core admin authentication and a verified canonical correction endpoint are required. Corrections are locked in this read-only Site.'});}catch(e){return reply({error:e instanceof RegisterError?e.message:'Program workflow data could not be read.'},e instanceof RegisterError?e.status:400);}}
+const denied=()=>reply({error:'Operational corrections, assignments, releases and sends are disabled. Core admin credentials are not configured here.'},405);
+export const POST=denied;export const PUT=denied;export const PATCH=denied;export const DELETE=denied;

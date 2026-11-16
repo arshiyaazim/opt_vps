@@ -1,0 +1,10 @@
+.git
+node_modules
+qualification
+data/*
+!data/conversation-policy.json
+.pnpm-store
+**/__pycache__
+**/*.pyc
+.next/cache
+.next/diagnostics

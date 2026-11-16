@@ -1,0 +1,8 @@
+// Compatibility endpoint retained from the newer source, using one shared data implementation.
+import {getChatGPTUser} from '@/app/chatgpt-auth';
+import {loadSnapshot,enrichRecord,RegisterError,connectionState} from '@/lib/vessel-source';
+export const dynamic='force-dynamic';
+const readResponse=(v:unknown,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie','X-Content-Type-Options':'nosniff'}});
+export async function GET(request:Request){if(!await getChatGPTUser())return readResponse({error:'Sign in to read the private register.'},401);try{const q=new URL(request.url).searchParams,source=q.get('source')??'historical',snapshot=await loadSnapshot(source==='core'?'live':source),id=q.get('id');if(id){const record=snapshot.rows.find(r=>r.id===id||r.aliases?.includes(id));return record?readResponse({record:enrichRecord(record),source,checkedAt:snapshot.checkedAt,warning:snapshot.notice}):readResponse({error:'This record is not available in the loaded dataset.'},404);}return readResponse({records:snapshot.rows.map(enrichRecord),source:snapshot.source==='live'?'core':snapshot.source==='archive'?'archive':'historical',sourceLabel:snapshot.sourceLabel,checkedAt:snapshot.checkedAt,complete:snapshot.complete,total:snapshot.availableTotal,warning:snapshot.notice,liveConfigured:connectionState().coreConfigured,aiConfigured:connectionState().aiConfigured});}catch(e){return readResponse({error:e instanceof RegisterError?e.message:'The register could not be read.'},e instanceof RegisterError?e.status:503);}}
+const denied=()=>readResponse({error:'This register is read-only.'},405);
+export const POST=denied;export const PUT=denied;export const PATCH=denied;export const DELETE=denied;

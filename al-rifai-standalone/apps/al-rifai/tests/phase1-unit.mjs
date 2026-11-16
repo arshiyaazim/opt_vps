@@ -1,0 +1,27 @@
+import {privateSameOrigin} from '../lib/private-origin.ts';
+import assert from 'node:assert/strict';
+import {verifyAuthorization} from '../lib/validation-auth.mjs';
+import {conversationConnection,readConversation} from '../lib/conversation-read.ts';
+import {localPlan,answerPlan} from '../lib/register-assistant.ts';
+import {emptyRegisterFilters} from '../lib/vessel-data.ts';
+import {integrationConfig} from '../lib/integrations.ts';
+const password='synthetic-local-password-for-test-only-0123456789';
+const valid='Basic '+Buffer.from('validator:'+password).toString('base64');
+assert.equal(verifyAuthorization(valid,password),true);
+for(const header of [null,'','Basic invalid!','Bearer '+password,'Basic '+Buffer.from('other:'+password).toString('base64'),'Basic '+Buffer.from('validator:wrong').toString('base64')])assert.equal(verifyAuthorization(header,password),false);
+assert.equal(verifyAuthorization(valid,''),false);
+assert.equal(Object.isFrozen(integrationConfig),true);assert.deepEqual(integrationConfig,{});
+const config={FAZLE_CORE_CONVERSATION_URL:'https://example.test',FAZLE_CONVERSATION_READ_BEARER:password,FAZLE_CONVERSATION_READ_VERIFIED:'true'};
+assert.equal(conversationConnection(config).configured,false);
+await assert.rejects(()=>readConversation(config,new URLSearchParams(),()=>{throw new Error('Outbound fetch must never be called');}),/not connected/);
+const snapshot={rows:[],source:'historical',checkedAt:'2026-10-08',complete:true,availableTotal:0,sourceLabel:'Test',notice:'Test'};
+const plan=localPlan('Summary of current filters',[]);const answer=answerPlan(snapshot,'Summary of current filters',plan,emptyRegisterFilters,'structured');assert.equal(answer.mode,'structured');
+console.log('Phase 1 authentication, fail-closed integrations and deterministic-query tests passed.');
+
+const req=(host,origin,forwarded='')=>new Request('http://internal-container:3000/api/assistant',{headers:{host,origin,'x-forwarded-host':forwarded}});
+assert.equal(privateSameOrigin(req('127.0.0.1:3000','http://127.0.0.1:3000')),true);
+assert.equal(privateSameOrigin(req('localhost:3001','http://localhost:3001')),true);
+assert.equal(privateSameOrigin(req('127.0.0.1:3000','http://localhost:3000')),false);
+assert.equal(privateSameOrigin(req('attacker.example:3000','http://attacker.example:3000')),false);
+assert.equal(privateSameOrigin(req('127.0.0.1:3000','http://attacker.example:3000','attacker.example:3000')),false);
+console.log('Private-origin and forwarded-host spoof tests passed.');

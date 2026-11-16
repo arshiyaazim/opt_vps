@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {validateDraft,calculateSettlement} from '../lib/operations.ts';
+const draft=validateDraft({name:'Test Worker',employeePhone:'01712345678',payoutPhone:'01812345678',method:'bkash',amount:'500.50',purpose:'Verified advance',date:'2026-10-02'});
+assert.equal(draft.amountCents,50050);assert.match(draft.instruction,/ID: 01712345678 Test Worker 01812345678\(B\) 500.50\/-/);
+assert.throws(()=>validateDraft({...draft,amount:'-10'}));assert.throws(()=>validateDraft({...draft,amount:'10',date:'2026-02-30'}));
+const settlement=calculateSettlement({name:'Worker',employeePhone:'01712345678',reference:'Release verified',verified:true,days:10,rate:400,foodDays:10,advance:1000,otherDeductions:100,allowance:300});assert.equal(settlement.netCents,170000);assert.throws(()=>calculateSettlement({name:'Worker',employeePhone:'01712345678',verified:false}));
+console.log('PASS: retained historical draft validation and arithmetic; no operational API writes are exercised.');
