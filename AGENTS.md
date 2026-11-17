@@ -1408,3 +1408,13 @@ foundation" hold note, which is now false in several places.
   `app/vessel-register` → `view.tsx`). `/vessel` is the 11-column unified view
   (`1ec95aa`); `/vessel-register` keeps the legacy register skin. Any change must
   say which one it is changing.
+
+## 0B. Current addendum — 2026-11-17 (Task C + E2 final)
+
+- **Platform release:** `local/al-rifai-platform:v3.3.17-final` (app + sync), schema `1.13.8`, 67 tables, 29 migration files (002–029).
+- **Postgres baseline:** container `vps-infra-postgres-1`, DB `alrifai_v2_phase3`, admin `vps_pg_admin`, runtime `alrifai_v2_runtime`; `cash_instructions` baseline **2523**. No host port is published; use `docker exec … psql`.
+- **Daily backup:** `/opt/vps/scripts/backup-daily.sh` (cron `/etc/cron.d/al-rifai-backup`, 02:30) → `/var/backups/vps/al-rifai/daily/db_*.sql.gz` + `uploads_*.tar.gz`, 7-day retention, optional offsite via `/opt/vps/config/offsite-backup.env` (`OFFSITE_DEST`); currently local-only. Logs: `/var/log/alrifai-backup.log`.
+- **Nightly recovery (existing):** `alrifai-recovery.timer` 03:15 — GPG-encrypted restore rehearsal; `offHost: NOT_CONFIGURED`.
+- **TLS:** cert `CN=app.al-rifai.iamazim.com` valid to 2027-01-14; ACME DNS-01 manual. `alrifai-tls-check.timer` runs daily 04:15 and alerts at <30 days (`/opt/vps/scripts/tls-expiry-check.sh`, `/var/log/alrifai-tls-check.log`).
+- **Monitoring:** Uptime Kuma container `uptime-kuma` (`louislam/uptime-kuma:1`) on `127.0.0.1:3001`, data `/var/lib/vps/uptime-kuma`.
+- **Never touch without approval:** `docker compose down`, postgres/whatsapp/recruitment/ollama/open-webui containers; `.env` beyond `ALRIFAI_TAG`.

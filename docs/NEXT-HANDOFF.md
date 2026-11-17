@@ -874,3 +874,15 @@ main host and **404** on the cash host, with 0-byte bodies.
   `2026-11-02T03:50:59Z`, then `ALRIFAI_ROSTER_SOURCE=DB`, then the generated
   bridge profile with the two LID channels (11 chats, epoch 4) and one WA-01
   restart. No backfill; cursors start at the stream boundary.
+
+---
+
+## Final handoff — 2026-11-17 (Phase A–E complete)
+
+**Platform:** `/opt/al-rifai-platform` on `main`, image `local/al-rifai-platform:v3.3.17-final` (app + sync), schema `1.13.8`, 67 tables, 29 migration files (002–029; 28 ledger rows). Rollback: set `ALRIFAI_TAG` to `v3.3.16-smart-sql` (or older) and run `docker compose -p al-rifai-phase3 -f compose.yaml -f compose.phase3.yaml up -d --no-deps app sync`.
+
+**AI Assistant (E2.1–E2.8):** fuzzy pg_trgm search + transliteration + multi-variant names; 7 templates; date parser (Bengali word numbers, relative/offset ranges); dated summaries; person/“হিসাব” intent; walkthrough KB with 10-minute context tokens; read-only NL2SQL (SELECT-only guard, LIMIT 50, 5s READ ONLY transaction); orange Ask launcher with single হ্যাঁ/না confirmation, chips, auto-minimize, mobile layout. `/attendance` now accepts `from,to,q,employee_mobile` and `/employees` accepts `q,state,designation` as deep links.
+
+**Task C maintenance:** daily backup script + cron, TLS expiry timer, Uptime Kuma monitoring, 1.25 GB disk cleanup (archive kept at `/var/backups/vps/al-rifai/al-rifai-phase3-test.tar.gz`).
+
+**Operational rules:** no `compose down`; only `up -d --no-deps app sync`; back up `.env` before tag changes; never force-push; recruitment AI is a separate container; WA bridges are source-of-truth readers only. Post-deploy: `bash /root/post-reboot-check.sh`.
